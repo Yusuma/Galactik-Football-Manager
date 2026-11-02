@@ -3,13 +3,13 @@
 Jeu de gestion **7 contre 7** inspiré de *Galactik Football*. Dirigez un club de la Galactik League, la sélection d’une planète dans la Galactik Cup, ou les deux.
 
 > **Projet de fan, gratuit et sans but lucratif.** Non affilié aux ayants droit de la série.
-> Version actuelle : **1.28.0.0 (bêta)**
+> Version actuelle : **1.29.0.0 (bêta)**
 
 Le jeu tient dans **une seule page web** (`index.html`) : aucune installation, aucun serveur, aucun compte, aucune publicité.
 
 ## Jouer
 
-Ouvrez l’adresse GitHub Pages du dépôt (*Settings → Pages*). Le jeu fonctionne dans un navigateur récent (Chrome, Edge, Firefox, Safari), sur ordinateur comme sur mobile. Il peut aussi être installé comme application (PWA) depuis le navigateur.
+Ouvrez l’adresse GitHub Pages du dépôt (*Settings → Pages*). Le jeu fonctionne dans un navigateur récent (Chrome, Edge, Firefox, Safari), sur ordinateur (le jeu est désormais optimisé pour PC uniquement). Il peut aussi être installé comme application (PWA) depuis le navigateur.
 
 ## Fonctionnalités
 
@@ -25,6 +25,7 @@ Ouvrez l’adresse GitHub Pages du dépôt (*Settings → Pages*). Le jeu foncti
 - **Aperçu** : tableau de bord avec jauges, prochain match et informations clés.
 - **Éditeur de mods** : équipes, joueurs, Fluides, couleurs et compétitions.
 - **Confort** : taille du texte, contraste élevé, animations réduites, sons, raccourcis clavier, interface aux couleurs du club.
+- **Animation des matchs** : terrain 2D aux couleurs de la planète, aura de Fluide, rejeu, ambiance de foule, rythme du match ; tout est désactivable dans Paramètres > Animation des matchs.
 - **Tutoriel** et **visite guidée** intégrés, avec des bulles d’aide « ? » partout.
 
 ## Sauvegardes
@@ -48,7 +49,7 @@ Merci d’indiquer la version du jeu (affichée à côté du titre) et ce que vo
 
 ## Feuille de route
 
-Consultable dans le jeu (bouton Roadmap) : logos personnalisés pour toutes les équipes, création du manager améliorée, intégration Twitch (à l’étude).
+Consultable dans le jeu (bouton Roadmap) : logos personnalisés pour toutes les équipes, éditeur d’écusson, création du manager améliorée, intégration Twitch (à l’étude).
 
 ## Hébergement (pour le mainteneur)
 
