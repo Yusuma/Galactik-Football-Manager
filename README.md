@@ -3,7 +3,7 @@
 Jeu de gestion **7 contre 7** inspiré de *Galactik Football*. Dirigez un club de la Galactik League, la sélection d’une planète dans la Galactik Cup, ou les deux.
 
 > **Projet de fan, gratuit et sans but lucratif.** Non affilié aux ayants droit de la série.
-> Version actuelle : **1.30.0.0 (bêta)**
+> Version actuelle : **1.35.0.2 (bêta)**
 
 > **Avertissement** : Galactik Manager est un **projet de fans non officiel**, entièrement **gratuit et sans aucun but lucratif**. Il n’est ni affilié, ni approuvé, ni sponsorisé par les ayants droit de « Galactik Football », dont les noms, personnages et univers restent la propriété de leurs titulaires. Pour toute demande de modification ou de retrait, contactez l’auteur.
 
@@ -68,3 +68,7 @@ Aucun cookie, aucun compte, aucun traceur. Le jeu charge ses polices depuis Goog
 
 ## Photos des joueurs (emplacement prévu)
 Les fiches joueurs affichent un cadre « photo de visage » (silhouette par défaut). Pour ajouter une photo, renseignez le tableau `PHOTOS` dans `index.html` : `PHOTOS['Nom du joueur']='photos/nom.png'` (ou une adresse data:). Dossier conseillé : `photos/`, images carrées.
+
+## Annonce d'une mise à jour
+
+Le fichier `version.json` prévient les joueurs. Pour annoncer une mise à jour, renseigne `next` (version et date, ex. `"2026-11-20T08:00:00+01:00"`) ; le jeu affiche alors un bandeau. Une fois la nouvelle version en ligne, mets `"next": null` et la bonne `version` : les joueurs reçoivent « Nouvelle version disponible » et rechargent quand ils veulent (jamais en plein match).
