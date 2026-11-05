@@ -4904,3 +4904,45 @@ td .pxp { width: 44px; margin: 0 auto; }
 .mtoast[data-tp='k'] { --tc: #b99bff; }
 .mtoast[data-tp='a'] { --tc: #4fe0d0; }
 .mtoast[data-tp='s'] { --tc: #6fb2ff; }
+
+/* Réserve */
+.rvc .pg { display: flex; flex-wrap: wrap; gap: 10px; }
+.rvw { display: flex; flex-direction: column; align-items: center; }
+
+.eqc tr.rvr td { opacity: 0.75; }
+.pc.rvx { opacity: 0.85; border-style: dashed; }
+
+/* Journal de match : hauteur fixe (LOGN lignes), il ne s'agrandit plus */
+.mxr .log.cap, .card.log.cap {
+  max-height: none;
+  height: 205px;
+  overflow: hidden;
+}
+@media (max-width: 950px) {
+  .mxr .log.cap, .card.log.cap { height: 190px; max-height: none; }
+}
+
+/* Bulles explicatives de la Galerie (survol ou toucher) */
+.gtw { position: relative; display: inline-block; cursor: help; }
+.gtw .tip { top: calc(100% + 4px); z-index: 500; }
+.gtw:hover .tip, .gtw:focus .tip, .gtw:focus-within .tip { display: block; }
+.gtw .tip i { opacity: 0.8; }
+
+/* Tactique pendant le match : panneau compact */
+.mtac { grid-column: 1 / -1; width: 100%; box-sizing: border-box; margin-top: 10px; padding: 10px; }
+.mtac .tcv { grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: 10px; }
+.mtac .tvbd { max-height: 330px; overflow-y: auto; }
+.mtac .tvrow { padding: 5px 8px; }
+.mtac .tvh { margin-bottom: 4px; }
+.mtac .tvsc { padding: 6px 8px; }
+@media (max-width: 900px) { .mtac .tcv { grid-template-columns: minmax(0, 1fr); } .mtac .tvc .tvp { max-width: 330px; margin: 0 auto; } }
+
+/* Analyse du match : taille fixe, les barres s'adaptent au cadre */
+.anab { height: 218px; overflow: hidden; box-sizing: border-box; }
+
+/* Tactique du match en fenêtre flottante au-dessus de l'animation */
+.mtm { position: fixed; inset: 0; z-index: 95; background: #000b; display: flex; align-items: center; justify-content: center; padding: 12px; }
+.mtm .mtac { margin: 0; width: min(1080px, 100%); max-height: calc(100vh - 24px); overflow-y: auto; }
+
+.tvt.tv4 { grid-template-columns: repeat(4, 1fr); }
+.mtac .tvbd .tvg { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
