@@ -3,7 +3,7 @@
 Jeu de gestion **7 contre 7** inspiré de *Galactik Football*. Dirigez un club de la Galactik League, la sélection d’une planète dans la Galactik Cup, ou les deux.
 
 > **Projet de fan, gratuit et sans but lucratif.** Non affilié aux ayants droit de la série.
-> Version actuelle : **1.35.0.3 (bêta)**
+> Version actuelle : **1.40.0.0 (bêta)**
 
 > **Avertissement** : Galactik Manager est un **projet de fans non officiel**, entièrement **gratuit et sans aucun but lucratif**. Il n’est ni affilié, ni approuvé, ni sponsorisé par les ayants droit de « Galactik Football », dont les noms, personnages et univers restent la propriété de leurs titulaires. Pour toute demande de modification ou de retrait, contactez l’auteur.
 
@@ -55,9 +55,9 @@ Consultable dans le jeu (bouton Roadmap) : logos personnalisés pour toutes les 
 
 ## Hébergement (pour le mainteneur)
 
-Fichiers du dépôt : `index.html` (le jeu), `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`, `.nojekyll`.
+Fichiers du dépôt : `index.html` (page), `css/` (apparence), `js/` (le jeu), `img/`, `music/`, `version.json`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`, `.nojekyll`.
 1. *Settings → Pages* → source : branche `main`, dossier `/ (root)`.
-2. Pour mettre à jour : remplacer `index.html` par la nouvelle version et valider (*commit*).
+2. Pour mettre à jour : remplacer les fichiers modifiés (en gardant les dossiers) et valider (*commit*). Le dossier `music/` est géré à part.
 3. Après une mise à jour, un rechargement forcé (Ctrl+F5) peut être nécessaire pour voir la nouvelle version.
 
 ## Vie privée et légal
@@ -67,8 +67,16 @@ Aucun cookie, aucun compte, aucun traceur. Le jeu charge ses polices depuis Goog
 *Fan game non officiel, réalisé avec Claude. Galactik Football appartient à ses ayants droit.*
 
 ## Photos des joueurs (emplacement prévu)
-Les fiches joueurs affichent un cadre « photo de visage » (silhouette par défaut). Pour ajouter une photo, renseignez le tableau `PHOTOS` dans `index.html` : `PHOTOS['Nom du joueur']='photos/nom.png'` (ou une adresse data:). Dossier conseillé : `photos/`, images carrées.
+Les fiches joueurs affichent un cadre « photo de visage » (silhouette par défaut). Pour ajouter une photo, renseignez le tableau `PHOTOS` dans `js/app.js` : `PHOTOS['Nom du joueur']='photos/nom.png'` (ou une adresse data:). Dossier conseillé : `photos/`, images carrées.
 
 ## Annonce d'une mise à jour
 
 Le fichier `version.json` prévient les joueurs. Pour annoncer une mise à jour, renseigne `next` (version et date, ex. `"2026-11-20T08:00:00+01:00"`) ; le jeu affiche alors un bandeau. Une fois la nouvelle version en ligne, mets `"next": null` et la bonne `version` : les joueurs reçoivent « Nouvelle version disponible » et rechargent quand ils veulent (jamais en plein match).
+
+## Où modifier quoi (guide rapide)
+
+Le jeu est découpé en fichiers indépendants, **commentés en français** :
+- `js/app.js` : toute la logique. Un en-tête en haut explique la structure ; des grands titres (lignes de `=`) séparent les parties ; chaque fonction a un commentaire. Cherche avec Ctrl+F : `PAL` (couleurs des équipes), `HELP` (bulles « ? »), `RMP` (roadmap), `price` (prix des joueurs), `MER` (boutique), `TH` (décors de match).
+- `css/style.css` : l'apparence. `css/donnees.css` et `js/images.js` contiennent des images intégrées : ne pas les modifier à la main.
+- `music/playlist.js` : la liste des musiques.
+- Après une modification, mets à jour le numéro de version (`GV` dans `js/app.js`, les `?v=` dans `index.html`, `version.json`) pour que les navigateurs rechargent les fichiers.
