@@ -2431,7 +2431,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.42.0.6';
+  GV = '1.42.0.7';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -6114,7 +6114,21 @@ function eqList(t) {
   if (f == 'st') L = L.filter(([, i]) => lu.has(i));
   if (f == 'bn') L = L.filter(([p, i]) => !lu.has(i) && !p.rv);
   if (f == 'rv') L = L.filter(([p]) => p.rv);
-  if (f == 'ln') L = L.filter(([p]) => p.ln);
+  const LT = new Map();
+  if (f == 'ln') {
+    // Joueurs empruntés (dans notre effectif) + joueurs que nous avons prêtés (ils sont dans l'effectif d'un autre club).
+    L = L.filter(([p]) => p.ln);
+    S.teams.forEach((x, ti) => {
+      if (x === t) return;
+      x.sq.forEach((p) => {
+        if (p.ln && p.ln.own == S.t) {
+          ensure(p);
+          LT.set(p, x.name);
+          L.push([p, 'T' + ti + '|' + p.n]);
+        }
+      });
+    });
+  }
   L.sort((a, b) => {
     const x = col[2](a[0]),
       y = col[2](b[0]);
@@ -6128,7 +6142,7 @@ function eqList(t) {
       .join(''),
     rows = L.map(
       ([p, i]) =>
-        `<tr class="${lu.has(i) ? 'st' : p.rv ? 'rvr' : ''}" onclick="prof('sq',${i})" title="Ouvrir le profil">${cols.map((c) => `<td class="c-${c[0]}">${c[3](p)}</td>`).join('')}</tr>`,
+        `<tr class="${lu.has(i) ? 'st' : p.rv ? 'rvr' : ''}" ${typeof i == 'string' ? `data-k="${i.replace(/"/g, '&quot;')}" onclick="prof('lt',this.dataset.k)"` : `onclick="prof('sq',${i})"`} title="Ouvrir le profil">${cols.map((c) => `<td class="c-${c[0]}">${c[3](p)}${c[0] == 'n' && LT.has(p) ? ` <span class="mu">(prêté à ${LT.get(p)} · reste ${p.ln.left})</span>` : ''}</td>`).join('')}</tr>`,
     ).join(''),
     tabs = [
       ['all', 'Effectif'],
@@ -16350,7 +16364,7 @@ function pfTrend(p) {
 function profBox() {
   const f = V.pf;
   if (!f) return '';
-  const p = f.k == 'sq' ? me().sq[f.i] : f.k == 'mk' ? S.mkt[f.i] : f.k == 'lo' ? lop(f.i) : f.k == 'nm' ? plIndex().get(f.i) : f.k == 'db' ? (dbPool().find(([x]) => x.n == f.i) || [])[0] : V.ep[f.i];
+  const p = f.k == 'sq' ? me().sq[f.i] : f.k == 'mk' ? S.mkt[f.i] : f.k == 'lo' ? lop(f.i) : f.k == 'nm' ? plIndex().get(f.i) : f.k == 'lt' ? (() => { const [a, n] = String(f.i).slice(1).split('|'); return ((S.teams[+a] || {}).sq || []).find((x) => x.n == n); })() : f.k == 'db' ? (dbPool().find(([x]) => x.n == f.i) || [])[0] : V.ep[f.i];
   if (!p) return '';
   ensure(p);
   const at = attrs(p),
