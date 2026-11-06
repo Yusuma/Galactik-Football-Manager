@@ -19,5 +19,7 @@ window.GFM_PLAYLIST = [
   { id:'t8',  t:'Mama',                a:'CallMeYusu', bpm:130, src:'music/mama.mp3' },
   { id:'t9',  t:'Panama Night',                a:'CallMeYusu', bpm:130, src:'music/panama-night.mp3' },
   { id:'t10', t:'Miso (Remix)',                a:'CallMeYusu', bpm:130, src:'music/miso.mp3' },
+  { id:'t11', t:'Hot Groove',                a:'CallMeYusu', bpm:130, src:'music/hotgroove.mp3' },
+  { id:'t12', t:'StarLane',                a:'CallMeYusu', bpm:130, src:'music/starlane.mp3' },
    
 ];
