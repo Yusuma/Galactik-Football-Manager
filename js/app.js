@@ -1259,6 +1259,17 @@ function galView() {
     '</div></div>'
   );
 }
+// Le brassard est mémorisé PAR ÉQUIPE (p.cpt = {nom d'équipe: 1}) : en mode « Les deux », le même joueur est dans le
+// club et dans la sélection, chacun a son propre capitaine. (p.cap = ancien format, toujours lu.)
+const isCap = (p, t) => !!p && !!t && (p.cap === t.name || !!(p.cpt && p.cpt[t.name]));
+const putCap = (p, t) => {
+  p.cpt = p.cpt || {};
+  p.cpt[t.name] = 1;
+};
+const clrCap = (p, t) => {
+  if (p.cap === t.name) p.cap = 0;
+  if (p.cpt) delete p.cpt[t.name];
+};
 // Score qui sert à choisir automatiquement le capitaine (âge, note, expérience, blessures).
 function capSc(p) {
   return (p.age || 26) * 1.2 + p.o * 0.6 + (p.mp || 0) * 0.05 - (p.inj || p.sus ? 30 : 0);
@@ -1266,15 +1277,13 @@ function capSc(p) {
 // Renvoie le capitaine d'une équipe (le choix du joueur, ou un capitaine par défaut).
 function capOf(t) {
   try {
-    let c = t.sq.find((p) => p.cap === t.name);
+    let c = t.sq.find((p) => isCap(p, t));
     if (c) return c;
     const gone = !!t.hc;
     c = t.sq.slice().sort((a, b) => capSc(b) - capSc(a))[0];
     if (!c) return null;
-    t.sq.forEach((p) => {
-      if (p.cap) p.cap = 0;
-    });
-    c.cap = t.name;
+    t.sq.forEach((p) => clrCap(p, t));
+    putCap(c, t);
     t.hc = 1;
     t.capT = gone ? t.pl || 0 : -9;
     if (gone && t == me()) {
@@ -1319,8 +1328,8 @@ function capSync(t) {
     if (!m || t.lu.includes(t.sq.indexOf(m))) return null;
     const n = capOn(t);
     if (!n || n === m) return null;
-    m.cap = 0;
-    n.cap = t.name;
+    clrCap(m, t);
+    putCap(n, t);
     t.hc = 1;
     t.capT = t.pl || 0;
     return n;
@@ -1374,12 +1383,12 @@ function setCap(i) {
   const t = me(),
     p = t.sq[i],
     o = capOf(t);
-  if (!p || p.cap === t.name) return;
+  if (!p || isCap(p, t)) return;
   if (o) {
-    o.cap = 0;
+    clrCap(o, t);
     o.mo = Math.max(0, (o.mo ?? 60) - 4);
   }
-  p.cap = t.name;
+  putCap(p, t);
   t.hc = 1;
   t.capT = t.pl || 0;
   p.mo = Math.min(100, (p.mo ?? 60) + 3);
@@ -1395,7 +1404,7 @@ function setCap(i) {
 // Petit badge « C » affiché sur les cartes du capitaine.
 function capB(p) {
   try {
-    if (p.cap && p.cap === me().name) return '<span class="cpb" title="Capitaine">C</span>';
+    if (isCap(p, me())) return '<span class="cpb" title="Capitaine">C</span>';
     return capAct(me()) === p ? '<span class="cpb" title="Capitaine suppléant : le capitaine désigné ne joue pas">C</span>' : '';
   } catch (e) {
     return '';
@@ -1406,7 +1415,7 @@ function capSec(p, f) {
   try {
     if (f.k != 'sq') return '';
     const t = me(),
-      is = p.cap === t.name,
+      is = isCap(p, t),
       k = is ? capL(t, p) : null,
       st = is
         ? k.a < 1
@@ -2387,13 +2396,13 @@ function natPrep() {
 }
 // Crée les équipes de la Cup.
 function buildNat(ni) {
-  const tm = TN.map(([name, l, em]) => ({
+  const tm = TN.map(([name, l, em], ni0) => ({
       name,
       em,
       sq: [],
       ros: null,
       nat: 1,
-      form: '2-3-1',
+      form: Object.keys(FORM)[(ni0 * 3 + 1) % Object.keys(FORM).length],
       m: 1,
       lu: [],
       pts: 0,
@@ -2431,7 +2440,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.42.0.7';
+  GV = '1.42.0.10';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -2614,6 +2623,12 @@ function resetC() {
         p.e = 100;
         p.g = 0;
       });
+      // Les équipes IA changent de formation d'une saison à l'autre.
+      if (t !== me()) {
+        const ks = Object.keys(FORM);
+        t.form = ks[(Math.random() * ks.length) | 0];
+        delete t.fs;
+      }
       autoLU(t);
     } else {
       t.sq.forEach((p) => {
@@ -3232,8 +3247,9 @@ const CANON = [
 const POS = ['GK', 'DEF', 'MID', 'ATT'],
   // Toutes les répartitions possibles des 6 joueurs de champ (défense-milieu-attaque) devant le gardien.
   FORM = (() => {
+    // Au moins 1 joueur et au plus 3 par poste (défense, milieu, attaque) : 7 formations possibles.
     const F = { '2-3-1': [1, 2, 3, 1], '2-2-2': [1, 2, 2, 2], '3-2-1': [1, 3, 2, 1] };
-    for (let d = 4; d >= 0; d--) for (let m = Math.min(4, 6 - d); m >= 0; m--) if (6 - d - m <= 4) F[d + '-' + m + '-' + (6 - d - m)] ||= [1, d, m, 6 - d - m]; // 4 joueurs maximum par poste
+    for (let d = 3; d >= 1; d--) for (let m = 3; m >= 1; m--) { const a = 6 - d - m; if (a >= 1 && a <= 3) F[d + '-' + m + '-' + a] ||= [1, d, m, a]; }
     return F;
   })(),
   MENT = ['Défensive', 'Équilibrée', 'Offensive'];
@@ -3461,6 +3477,16 @@ function init(ti, mode, ni) {
       return t;
     }),
   };
+  // Chaque équipe démarre avec sa propre formation (mélange fixe, réparties sur les 7 formations).
+  {
+    const ks = Object.keys(FORM),
+      rr = rng(31),
+      o = ks.slice().sort(() => rr() - 0.5);
+    S.teams.forEach((t, i) => {
+      t.form = o[i % o.length];
+      autoLU(t);
+    });
+  }
   S.teams.forEach((t) =>
     t.sq.forEach((p) => {
       if (!p.og) {
@@ -5101,7 +5127,7 @@ const RMP = [
   ['Placement individuel des joueurs', 'Hauteur (cinq niveaux) et décalage latéral (trois niveaux) réglables joueur par joueur, avec un vrai effet sur le match.', 'Disponible (bêta)'],
   ['Fluides propres à chaque origine', 'Multifluide pour Paradisia (compatible avec tout), aucun Fluide pour les Pirates (compensés par leurs attributs).', 'Disponible (bêta)'],
   ['Notifications en couleurs', 'Une couleur par type de notification : mails, musique, déblocages, manager, sauvegarde, système.', 'Disponible (bêta)'],
-  ['Formations libres', '19 formations possibles (4 joueurs maximum par poste) pour laisser chacun explorer son style de jeu.', 'Disponible (bêta)'],
+  ['Formations libres', '7 formations possibles (de 1 à 3 joueurs par poste) pour laisser chacun explorer son style de jeu.', 'Disponible (bêta)'],
   ['Tactique en match', 'Terrain, instructions et rôles modifiables pendant la pause d’un match.', 'Disponible (bêta)'],
   ['Réserve et base de joueurs', 'Jusqu’à 15 joueurs de réserve utilisables hors match, et un moteur de recherche pour consulter tous les joueurs du jeu.', 'Disponible (bêta)'],
   ['Succès expliqués', 'Pop-ups au survol des balles, titres et décorations pour savoir comment les débloquer.', 'Disponible (bêta)'],
@@ -6213,6 +6239,8 @@ function preLoad(i) {
     if (r.s[k] !== undefined) t[k] = JSON.parse(JSON.stringify(r.s[k]));
     else if (k == 'ti' || k == 'fo') delete t[k];
   });
+  if (!FORM[t.form]) t.form = '2-3-1';
+  if (t.fs && !FORM[t.fs]) delete t.fs;
   const n = slots(t.form).length;
   // Retrouve les titulaires par leur nom (et non par leur ancien numéro, qui a pu changer).
   let miss = false;
@@ -7153,7 +7181,7 @@ function render() {
       (end
         ? S.ctx == 'C'
           ? `<div class="card"><b>🏆 ${S.cup ? (S.cup.champ != null ? 'Champion : ' + S.teams[S.cup.champ].name : 'Phase finale en cours') : 'Phase de poules terminée'}</b><br>${S.cup ? '' : '<button class="p" style="margin-top:8px" onclick="cupStart()">🏆 Lancer la phase finale</button>'}${S.cup && S.cup.champ != null ? '<button class="p" style="margin-top:8px" onclick="newSeason()">Nouvelle saison</button>' : ''}</div>`
-          : `<div class="card"><b>🏆 Champion : ${S.teams.slice().sort((a, b) => b.pts - a.pts || b.gf - b.ga - (a.gf - a.ga))[0].name}</b><br><button class="p" style="margin-top:8px" onclick="newSeason()">Nouvelle saison</button> ${S.cup ? '' : '<button class="p" style="margin-top:8px" onclick="cupStart()">🏆 Coupe de la Ligue</button>'}</div>`
+          : `<div class="card"><b>🏆 Champion : ${S.teams.slice().sort((a, b) => b.pts - a.pts || b.gf - b.ga - (a.gf - a.ga))[0].name}</b><br><button class="p" style="margin-top:8px" onclick="newSeason()">Nouvelle saison</button></div>`
         : '') +
       cupView() +
       table() +
@@ -8229,6 +8257,8 @@ function cont() {
     cupAdvance();
     if (!V.m) V.tab = 'table';
   }
+  // Dernier match de la saison : on va directement sur la page Championnat.
+  if (!V.m && S.md >= S.fx.length && !nextEv()) V.tab = 'table';
   save();
   autosave();
   render();
@@ -12575,7 +12605,7 @@ function tacView() {
     else if (st == 'sch') {
       const fo = fsOf(t),
         sp = spShape(t),
-        cp = t.sq.findIndex((p) => p.cap === t.name);
+        cp = t.sq.findIndex((p) => isCap(p, t));
       r = `<div class="tvh"><b>Schémas et capitaine</b>${hp('tvq')}</div>${tvRow('Schéma avec le ballon', '', `<b>${t.form}</b>`)}${tvRow('Schéma sans ballon', 'La forme que prend l’équipe quand elle défend.', `<select onchange="setFo(this.value)">${Object.keys(FORM).map((f) => `<option ${f == fo ? 'selected' : ''}>${f}</option>`).join('')}</select>`)}<div class="mu" style="font-size:12px;padding:4px 12px">${fo != t.form ? (sp.d > 0 ? 'Défense renforcée' : sp.d < 0 ? 'Défense allégée' : 'Défense inchangée') + (sp.f ? ', repli fatigant.' : '.') : 'Même schéma avec et sans ballon.'}</div>${tvRow('Capitaine', 'Il porte le brassard et apporte un petit bonus à l’équipe.', `<select onchange="setCap(+this.value)">${t.sq.map((p, i) => `<option value="${i}" ${i == cp ? 'selected' : ''}>${p.n}</option>`).join('')}</select>`)}`;
     } else if (st == 'gen')
       r = `<div class="tvh"><b>Général</b>${hp('tvg')}</div>${tvIns(t, 'wid')}${tvRow('Mentalité', 'Défensive, équilibrée ou offensive.', tvSel(MENT, t.m ?? 1, 'me().m=+this.value;me().sty=0;save();render()'))}${tvIns(t, 'tmp')}${tvIns(t, 'cre')}${tvIns(t, 'wst')}`;
@@ -12820,7 +12850,7 @@ const HELP = {
   mt3: 'Une offre comporte deux parties. Le club vendeur répond d’abord sous 2 à 4 jours sur le montant du transfert (accord, refus ou contre-offre). Ensuite le joueur étudie ses conditions : prime de signature, salaire par match, prime de titre (versée si vous gagnez le championnat) et durée du contrat. Il peut accepter, refuser ou demander un meilleur salaire ; chaque contre-proposition est à traiter sous 3 jours. Rien n’est payé avant l’accord final.',
   mt1: 'Les joueurs les mieux notés du marché en ce moment. Touchez une ligne pour l’ouvrir dans la recherche, ou l’étoile pour le suivre.',
   fin1: 'Bilan de la saison : revenus et dépenses par catégorie, et courbe de votre trésorerie match après match.',
-  form: 'Disposition de vos 6 joueurs de champ devant le gardien (ex. 2-3-1 = 2 défenseurs, 3 milieux, 1 attaquant). Plus de défenseurs = plus solide ; plus d’attaquants = plus de buts mais plus de risques. 19 formations sont possibles, avec 4 joueurs maximum par poste.',
+  form: 'Disposition de vos 6 joueurs de champ devant le gardien (ex. 2-3-1 = 2 défenseurs, 3 milieux, 1 attaquant). Plus de défenseurs = plus solide ; plus d’attaquants = plus de buts mais plus de risques. 7 formations sont possibles, avec de 1 à 3 joueurs par poste.',
   ment: 'Votre état d’esprit : Défensive (ne pas encaisser), Équilibrée, Offensive (marquer). Modifie la force de votre attaque et de votre défense.',
   press:
     'Intensité avec laquelle vous récupérez le ballon. Haut = milieu plus fort, mais vos joueurs se fatiguent plus vite.',
@@ -12970,7 +13000,7 @@ const TU = [
   ],
   [
     'La tactique',
-    'Le jeu se joue à 7 : 1 gardien et 6 joueurs de champ. La formation décrit la répartition (2-3-1 = 2 défenseurs, 3 milieux, 1 attaquant). La mentalité déplace la force entre attaque et défense. Le pressing renforce le milieu mais fatigue. Dans Tactique, touchez deux joueurs pour les échanger ; un joueur en rouge est hors de son poste. 19 formations sont possibles (4 joueurs maximum par poste, même les plus audacieuses). Sur le terrain, touchez un joueur : ses flèches le placent plus haut ou plus bas (deux crans) ou légèrement à gauche ou à droite (un cran), joueur par joueur, avec un vrai effet sur le match ; un clic dans le vide ou la touche Échap désélectionne. Trois vues : Équipe (formation et placement), Instructions (stratégies générales, d’attaque et de défense, et schéma sans ballon) et Rôles. Les compositions favorites s’enregistrent comme préréglages dans le Planificateur. Dans Instructions, la « ligne d’engagement du pressing » fixe la hauteur à partir de laquelle l’équipe presse l’adversaire.',
+    'Le jeu se joue à 7 : 1 gardien et 6 joueurs de champ. La formation décrit la répartition (2-3-1 = 2 défenseurs, 3 milieux, 1 attaquant). La mentalité déplace la force entre attaque et défense. Le pressing renforce le milieu mais fatigue. Dans Tactique, touchez deux joueurs pour les échanger ; un joueur en rouge est hors de son poste. 7 formations sont possibles (de 1 à 3 joueurs par poste). Sur le terrain, touchez un joueur : ses flèches le placent plus haut ou plus bas (deux crans) ou légèrement à gauche ou à droite (un cran), joueur par joueur, avec un vrai effet sur le match ; un clic dans le vide ou la touche Échap désélectionne. Trois vues : Équipe (formation et placement), Instructions (stratégies générales, d’attaque et de défense, et schéma sans ballon) et Rôles. Les compositions favorites s’enregistrent comme préréglages dans le Planificateur. Dans Instructions, la « ligne d’engagement du pressing » fixe la hauteur à partir de laquelle l’équipe presse l’adversaire.',
   ],
   [
     'Le match en direct',
@@ -13108,7 +13138,7 @@ const TOUR = [
   [
     'tac',
     'La tactique',
-    'Réglez la formation, la mentalité et le pressing, choisissez un style de jeu, puis affinez les consignes d’équipe (passes, tempo, ligne défensive…). Le terrain montre vos joueurs à leur poste : un joueur en rouge est hors de son poste. Choisissez parmi 19 formations, puis touchez un joueur pour le placer plus haut, plus bas ou légèrement sur le côté grâce à ses flèches. Un clic dans le vide le désélectionne. Dans Instructions, la « ligne d’engagement du pressing » règle où l’équipe commence à presser. Tout se règle avant le coup d’envoi, et aussi pendant la pause d’un match grâce au bouton « ⚙ Tactique ».',
+    'Réglez la formation, la mentalité et le pressing, choisissez un style de jeu, puis affinez les consignes d’équipe (passes, tempo, ligne défensive…). Le terrain montre vos joueurs à leur poste : un joueur en rouge est hors de son poste. Choisissez parmi 7 formations, puis touchez un joueur pour le placer plus haut, plus bas ou légèrement sur le côté grâce à ses flèches. Un clic dans le vide le désélectionne. Dans Instructions, la « ligne d’engagement du pressing » règle où l’équipe commence à presser. Tout se règle avant le coup d’envoi, et aussi pendant la pause d’un match grâce au bouton « ⚙ Tactique ».',
   ],
   [
     'ov',
@@ -14637,7 +14667,7 @@ function aiTransfers() {
       sellers = T.filter((t) => t.sq.length > 11),
       s = sellers[(Math.random() * sellers.length) | 0];
     if (!s) return;
-    const c = s.sq.filter((p, i) => !s.lu.includes(i) && !p.c && !p.pr && !p.rare && !p.ln && p.cap !== s.name);
+    const c = s.sq.filter((p, i) => !s.lu.includes(i) && !p.c && !p.pr && !p.rare && !p.ln && !isCap(p, s));
     if (!c.length) return;
     const p = c[(Math.random() * c.length) | 0],
       buyers = T.filter((t) => t !== s && t.sq.length < 15);
@@ -15836,8 +15866,13 @@ const sbTog = () => {
         (S.res || []).slice(0, 4).map(([a, b, x, y]) => `${S.teams[a].name} ${x}-${y} ${S.teams[b].name}`),
       )
       .join('   |   ') || 'Bienvenue dans la Ligue Galactique';
+// Vrai quand la saison est entièrement terminée (plus aucun match à jouer, champion connu) : il ne reste que « Nouvelle saison ».
+function seasonOver() {
+  return !!S && !V.m && S.md >= S.fx.length && !nextEv() && (S.ctx != 'C' || (S.cup && S.cup.champ != null));
+}
 // Bouton principal « Continuer » / « Jouer le match ».
 function cont2() {
+  if (seasonOver()) return;
   if (V.m && V.m.done) return cont();
   if (V.m) {
     V.tab = 'match';
@@ -15903,7 +15938,7 @@ function shell(c) {
   const foc = V.tab == 'match' && V.m && !V.m.done; // MODE MATCH : plein écran, sans menus
   if (foc)
     return `<div class="sh foc"><div class="mn"><div class="tb"><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt=""><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span style="flex:1"></span><button onclick="stop();V.menu=1;render()" title="Met le match en pause et ouvre le menu principal.">🏠 Menu</button></div><div class="ct">${c}</div></div></div>`;
-  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button></aside><div class="mn"><div class="tb"><button class="hb" onclick="V.sb=!V.sb;render()">☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()">${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
+  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button></aside><div class="mn"><div class="tb"><button class="hb" onclick="V.sb=!V.sb;render()">☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()" ${seasonOver() ? 'disabled title="La saison est terminée : lancez une nouvelle saison depuis le Championnat."' : ''}>${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
 }
 // Dessine une jauge en arc (confiance, moral, note globale…).
 function gg(v, o = {}) {
@@ -16417,7 +16452,7 @@ function profBox() {
   if (p.nz) info.push(p.nz.x ? 'Il subit actuellement un rejet sévère du Fluide.' : 'Il souffre de nausées liées au Fluide.');
   info.push(`${p.age} ans · ${p.ct} an${p.ct > 1 ? 's' : ''} de contrat restant${p.ct > 1 ? 's' : ''}, salaire ${sal(p)} par match.`);
   if (p.pt && p.age <= PTA) info.push(`Potentiel estimé : ${p.pt}.`);
-  if (p.cap === T0.name) info.push('Il porte le brassard de capitaine.');
+  if (isCap(p, T0)) info.push('Il porte le brassard de capitaine.');
   if (p.ln) info.push(`En prêt (${p.ln.left} match${p.ln.left > 1 ? 's' : ''} restant${p.ln.left > 1 ? 's' : ''}).`);
   const infoCard = `<div class="pk"><div class="pkt"><b>Informations</b>${hp('pfi')}</div><ul class="pfin">${info.map((x) => `<li>${x}</li>`).join('')}</ul></div>`;
   // Statut et contrat.
@@ -16964,7 +16999,7 @@ function menuView() {
     ? `<div class="mo" onclick="V.pr=0;render()"><div class="card" style="max-width:440px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">⚙️ Préférences</b><div class="row"><span class="nm">Affichage des joueurs</span><select onchange="V.vw=this.value;try{localStorage.setItem('gmvw',V.vw)}catch(e){}render()"><option value="c" ${V.vw != 'l' ? 'selected' : ''}>Cartes</option><option value="l" ${V.vw == 'l' ? 'selected' : ''}>Liste</option></select></div><div class="row"><span class="nm">Événements de scénario (nouvelles parties)</span><input type="checkbox" ${V.evt !== 0 ? 'checked' : ''} onchange="V.evt=this.checked?1:0"></div><div class="row"><span class="nm">Difficulté (nouvelles parties)</span><select onchange="V.df=+this.value">${['Facile', 'Normal', 'Difficile'].map((n, i) => `<option value="${i}" ${(V.df ?? 1) == i ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div class="row"><span class="nm">Interface aux couleurs du club</span><input type="checkbox" ${V.nth ? '' : 'checked'} onchange="V.nth=!this.checked;theme()"></div><div class="ctl" style="margin-top:10px"><button class="p" onclick="V.pr=0;render()">Fermer</button></div></div></div>`
     : '';
   const nw = V.nw
-    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Tactique en match</b> : le bouton « ⚙ Tactique » ouvre, pendant la pause, le terrain, les remplaçants, les instructions et les rôles. Vous réorganisez l’équipe avant de relancer le match.</li><li><b>Réserve</b> : jusqu’à 15 joueurs en plus de l’effectif, ni titulaires ni remplaçants, absents des matchs. Ils se placent comme titulaires ou remplaçants dans la tactique hors match et peuvent être prêtés.</li><li><b>Base de joueurs</b> : un moteur de recherche dans Transferts pour consulter la fiche de n’importe quel joueur de la partie (nom, poste, origine, club, note). Consultation seule, aucun achat.</li><li><b>Match plus lisible</b> : le commentaire est limité à 7 lignes (les anciens messages disparaissent un par un) et le bouton « Gérer l’équipe » mène aux joueurs à tout moment. Le pressing devient la « ligne d’engagement du pressing ».</li><li><b>Succès expliqués</b> : au survol, les balles, titres et décorations de maillot indiquent comment les débloquer.</li><li><b>Fluides propres à chaque origine</b> : les joueurs de Paradisia ont le multifluide, composant de tous les Fluides, et sont donc compatibles à 100 % avec toutes les équipes. Les Pirates n’ont aucun Fluide : pas de rejet ni de nausées, mais aucune compatibilité avec les autres Fluides. Pour compenser, ils sont plus physiques, plus endurants et plus déterminés, et jouent avec un peu plus de rage.</li><li><b>Notifications en couleurs</b> : chaque type de notification a sa couleur (mails, musique, déblocages, manager, sauvegarde automatique, système).</li><li><b>Portraits réactivés</b> : les photos de profil de toutes les planètes sont de retour, et les écrans de but, d’arrêt et de Fluide retrouvent leur grande taille.</li><li><b>Hauteur et côté</b> : chaque joueur de champ se place plus haut ou plus bas (deux crans) et légèrement à gauche ou à droite (un cran), avec un vrai effet sur le match.</li><li><b>19 formations</b> : toutes les répartitions de 6 joueurs de champ, avec 4 joueurs maximum par poste.</li><li><b>Sélection plus simple</b> : un clic dans le vide ou la touche Échap désélectionne le joueur.</li><li><b>Sponsors et mails</b> : un contrat ne dépasse plus sa durée et la liste des mails n’a plus de lignes superposées.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
+    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Tactique en match</b> : le bouton « ⚙ Tactique » ouvre, pendant la pause, le terrain, les remplaçants, les instructions et les rôles. Vous réorganisez l’équipe avant de relancer le match.</li><li><b>Réserve</b> : jusqu’à 15 joueurs en plus de l’effectif, ni titulaires ni remplaçants, absents des matchs. Ils se placent comme titulaires ou remplaçants dans la tactique hors match et peuvent être prêtés.</li><li><b>Base de joueurs</b> : un moteur de recherche dans Transferts pour consulter la fiche de n’importe quel joueur de la partie (nom, poste, origine, club, note). Consultation seule, aucun achat.</li><li><b>Match plus lisible</b> : le commentaire est limité à 7 lignes (les anciens messages disparaissent un par un) et le bouton « Gérer l’équipe » mène aux joueurs à tout moment. Le pressing devient la « ligne d’engagement du pressing ».</li><li><b>Succès expliqués</b> : au survol, les balles, titres et décorations de maillot indiquent comment les débloquer.</li><li><b>Fluides propres à chaque origine</b> : les joueurs de Paradisia ont le multifluide, composant de tous les Fluides, et sont donc compatibles à 100 % avec toutes les équipes. Les Pirates n’ont aucun Fluide : pas de rejet ni de nausées, mais aucune compatibilité avec les autres Fluides. Pour compenser, ils sont plus physiques, plus endurants et plus déterminés, et jouent avec un peu plus de rage.</li><li><b>Notifications en couleurs</b> : chaque type de notification a sa couleur (mails, musique, déblocages, manager, sauvegarde automatique, système).</li><li><b>Portraits réactivés</b> : les photos de profil de toutes les planètes sont de retour, et les écrans de but, d’arrêt et de Fluide retrouvent leur grande taille.</li><li><b>Hauteur et côté</b> : chaque joueur de champ se place plus haut ou plus bas (deux crans) et légèrement à gauche ou à droite (un cran), avec un vrai effet sur le match.</li><li><b>7 formations</b> : toutes les répartitions de 6 joueurs de champ, avec au moins 1 et au plus 3 joueurs par poste.</li><li><b>Sélection plus simple</b> : un clic dans le vide ou la touche Échap désélectionne le joueur.</li><li><b>Sponsors et mails</b> : un contrat ne dépasse plus sa durée et la liste des mails n’a plus de lignes superposées.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
     : '';
   const ins = V.ins
     ? `<div class="mo" onclick="V.ins=0;render()"><div class="card" style="max-width:460px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">📥 Télécharger et installer sur PC</b><p class="mu">Deux façons de jouer hors du navigateur par défaut :</p><p><b>1. Télécharger</b> : un dossier à extraire, avec un lanceur Windows.</p><div class="ctl"><button class="p" onclick="pcDl()">⬇ Télécharger pour PC (.zip)</button>${PWA ? '<button onclick="pwaI();V.ins=0;render()">Installer maintenant</button>' : ''}</div><p class="mu">${V.pcm || 'Le dossier contient le jeu et un lanceur Windows qui l’ouvre dans sa propre fenêtre (Edge ou Chrome), sans toucher à votre navigateur par défaut.'}</p><p><b>2. Installer comme application</b> :</p><ol style="line-height:1.5;padding-left:20px"><li>Ouvrez le jeu dans <b>Chrome</b> ou <b>Edge</b>, directement depuis son lien.</li><li>Cliquez sur l’icône d’installation à droite de la barre d’adresse, ou sur le menu ⋮ puis <b>« Installer Galactik Manager »</b>.</li></ol><p class="mu">Si l’option n’apparaît pas, le navigateur ne la propose pas pour cette page. Firefox et Safari ne permettent pas cette installation sur PC.</p><button onclick="V.ins=0;V.pcm='';render()">Fermer</button></div></div>`
