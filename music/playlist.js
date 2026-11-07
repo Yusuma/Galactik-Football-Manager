@@ -14,12 +14,12 @@ window.GFM_PLAYLIST = [
   { id:'t3',  t:'Champions',                a:'CallMeYusu', bpm:130, src:'music/champions.mp3' },
   { id:'t4',  t:'DAMN!SON!',        a:'CallMeYusu', bpm:140, src:'music/damn-son.mp3' },
   { id:'t5',  t:'Youth Flash (Remix)',          a:'How To Loot Brazil remixed by CallMeYusu', bpm:120, src:'music/youth-flash.mp3' },
-   { id:'t6',  t:'HyperLane',                a:'CallMeYusu', bpm:120, src:'music/hyperlane.mp3' },
+  { id:'t6',  t:'HyperLane',                a:'CallMeYusu', bpm:130, src:'music/hyperlane.mp3' },
   { id:'t7',  t:'Lonely',                a:'CallMeYusu', bpm:130, src:'music/lonely.mp3' },
   { id:'t8',  t:'Mama',                a:'CallMeYusu', bpm:130, src:'music/mama.mp3' },
   { id:'t9',  t:'Panama Night',                a:'CallMeYusu', bpm:130, src:'music/panama-night.mp3' },
   { id:'t10', t:'Miso (Remix)',                a:'CallMeYusu', bpm:130, src:'music/miso.mp3' },
-  { id:'t11', t:'Hot Groove',                a:'CallMeYusu', bpm:130, src:'music/hot-groove.mp3' },
-  { id:'t12', t:'StarLane',                a:'CallMeYusu', bpm:130, src:'music/Starlane.mp3' },
+  { id:'t11', t:'Hot Groove',                a:'CallMeYusu', bpm:130, src:'music/hotgroove.mp3' },
+  { id:'t12', t:'StarLane',                a:'CallMeYusu', bpm:130, src:'music/starlane.mp3' },
    
 ];
