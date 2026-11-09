@@ -2454,7 +2454,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.45.0.3';
+  GV = '1.46.0.0';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -5603,6 +5603,8 @@ const RMP = [
   ['Gestion du club façon site web', 'Stade, billet, sponsors et boutique présentés comme une page web aux couleurs du club, avec illustrations.', 'Disponible (bêta)'],
   ['Boutique et sponsors illustrés', 'Produits dérivés aux couleurs et au logo du club, et un logo pour chacun des 8 sponsors.', 'Disponible (bêta)'],
   ['Staff en encadrés', 'Entraîneur, kiné, analyste et centre de formation séparés, avec pictogrammes et jauges de niveau.', 'Disponible (bêta)'],
+  ['Fenêtres de match flottantes', 'Stats, Journal, Compo et Consignes déplaçables, épinglables et semi-transparentes pendant le match.', 'Disponible (bêta)'],
+  ['Avance jour par jour', 'Le bouton « Continuer » fait passer un jour à la fois jusqu’au match.', 'Disponible (bêta)'],
   ['Marché façon Football Manager', 'Tableau triable, prix calculé, numéros de maillot et séparation Ligue/Coupe.', 'Disponible (bêta)'],
   ['Tactique en match', 'Terrain, instructions et rôles modifiables pendant la pause d’un match.', 'Disponible (bêta)'],
   ['Réserve et base de joueurs', 'Jusqu’à 15 joueurs de réserve utilisables hors match, et un moteur de recherche pour consulter tous les joueurs du jeu.', 'Disponible (bêta)'],
@@ -7507,6 +7509,7 @@ function render() {
     if (V.tab === 'tac' && V.tlast !== 'tac') V.tt = 'eq';
     V.tlast = V.tab;
   }
+  if (V && V.mxdg) return;
   if (DND.on && Date.now() - DND.t < 20000) {
     DND.sk = 1;
     return;
@@ -12694,8 +12697,84 @@ function lnClose() {
 const LOGN = 7;
 // Bascule l'un des panneaux superposés de l'écran de match (stats, journal, consignes, compo).
 function mxp(k) {
-  V.mxp = V.mxp == k ? null : k;
+  const pin = V.mxpin || (V.mxpin = {});
+  if (pin[k]) {
+    // Un panneau épinglé se ferme avec son bouton (ou la croix) ; les autres panneaux ne bougent pas.
+    delete pin[k];
+    if (V.mxp == k) V.mxp = null;
+  } else V.mxp = V.mxp == k ? null : k;
+  if (V.mxp == k) mxFront(k);
   render();
+}
+// Passe un panneau au premier plan.
+function mxFront(k) {
+  (V.mxz || (V.mxz = {}))[k] = (V.mxzn = (V.mxzn || 8) + 1);
+}
+// Ferme un panneau (même épinglé).
+function mxClose(k) {
+  if (V.mxpin) delete V.mxpin[k];
+  if (V.mxp == k) V.mxp = null;
+  render();
+}
+// Épingle ou désépingle un panneau : épinglé, il garde sa place et reste ouvert quand on utilise les autres boutons.
+function mxPin(k) {
+  const pin = V.mxpin || (V.mxpin = {});
+  if (pin[k]) delete pin[k];
+  else {
+    pin[k] = 1;
+    if (V.mxp == k) V.mxp = null;
+  }
+  mxFront(k);
+  render();
+}
+// Déplacement libre d'un panneau en le tirant par son titre.
+function mxDrag(e, k) {
+  if ((V.mxpin || {})[k] || e.target.closest('button') || (e.button != null && e.button > 0)) return;
+  const el = e.currentTarget.parentElement,
+    host = el.parentElement.getBoundingClientRect(),
+    r = el.getBoundingClientRect(),
+    ox = e.clientX - r.left,
+    oy = e.clientY - r.top,
+    h = e.currentTarget;
+  mxFront(k);
+  el.style.zIndex = V.mxz[k];
+  V.mxdg = 1;
+  try {
+    h.setPointerCapture(e.pointerId);
+  } catch (_) {}
+  const mv = (ev) => {
+      const x = Math.max(0, Math.min(host.width - 60, ev.clientX - host.left - ox)),
+        y = Math.max(0, Math.min(host.height - 40, ev.clientY - host.top - oy));
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      el.style.right = 'auto';
+      (V.mxpos || (V.mxpos = {}))[k] = { x, y };
+    },
+    up = () => {
+      h.removeEventListener('pointermove', mv);
+      h.removeEventListener('pointerup', up);
+      h.removeEventListener('pointercancel', up);
+      V.mxdg = 0;
+    };
+  h.addEventListener('pointermove', mv);
+  h.addEventListener('pointerup', up);
+  h.addEventListener('pointercancel', up);
+  e.preventDefault();
+}
+// Panneaux flottants de l'écran de match : déplaçables, épinglables, semi-transparents.
+function mxPanels(PNL) {
+  const pin = V.mxpin || {},
+    ks = ['st', 'lg', 'rg', 'cp'].filter((k) => PNL[k] && (pin[k] || V.mxp == k)),
+    W = (document.querySelector('.mxf') || {}).clientWidth || innerWidth,
+    pw = Math.min(440, W - 20);
+  return ks
+    .map((k, i) => {
+      const pn = PNL[k](),
+        pos = (V.mxpos || {})[k] || { x: Math.max(0, W - pw - 10 - i * 28), y: 62 + i * 28 },
+        z = (V.mxz || {})[k] || 8;
+      return `<div class="mxp mxp-${k}${pin[k] ? ' pinned' : ''}" style="left:${pos.x}px;top:${pos.y}px;right:auto;z-index:${z}" onpointerdown="mxFront('${k}');this.style.zIndex=V.mxz['${k}']"><div class="mxph" onpointerdown="mxDrag(event,'${k}')" title="${pin[k] ? 'Épinglé : ne bouge plus' : 'Tirez pour déplacer'}"><b>${pn[0]}</b><span class="mxhb"><button class="mxpin${pin[k] ? ' on' : ''}" onclick="mxPin('${k}')" aria-label="${pin[k] ? 'Désépingler' : 'Épingler'}" aria-pressed="${pin[k] ? 'true' : 'false'}" title="${pin[k] ? 'Désépingler' : 'Épingler : garde le panneau en place'}"><svg viewBox="0 0 24 24" width="16" height="16" fill="${pin[k] ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(${pin[k] ? 0 : 45}deg)"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg></button><button onclick="mxClose('${k}')" aria-label="Fermer">✕</button></span></div><div class="mxpb">${pn[1]}</div></div>`;
+    })
+    .join('');
 }
 // Page « Match » façon Football Manager : la 3D en plein écran, avec par-dessus un bandeau score/chrono,
 // des boutons (Tactiques, Consignes, Stats, Journal, Compo, Menu), un commentaire et les commandes.
@@ -12711,20 +12790,20 @@ function mxView(M, t) {
     V.mxd = 1;
     V.mxp = 'st';
   }
-  const bt = (k, ic, l) => `<button class="mxb${V.mxp == k ? ' on' : ''}" onclick="mxp('${k}')" title="${l}"><span>${ic}</span><em>${l}</em></button>`,
+  const bt = (k, ic, l) => `<button class="mxb${V.mxp == k || (V.mxpin || {})[k] ? ' on' : ''}" onclick="mxp('${k}')" title="${l}"><span>${ic}</span><em>${l}</em></button>`,
     pre = !M.min && !V.iv && !M.done,
     sel = (lab, on, opts, cur) => `<label>${lab} <select onchange="${on}">${opts.map((m, i) => `<option value="${i}" ${i == cur ? 'selected' : ''}>${m}</option>`).join('')}</select></label>`,
-    pan = {
-      st: ['Statistiques', `<div id="anst">${statsBox(M)}</div>`],
-      lg: ['Journal du match', `<div class="log" id="anlg">${MAN.lg(M).map((l) => `<div>${l}</div>`).join('') || "<div class='mu'>Le match n’a pas commencé.</div>"}</div>`],
-      rg: [
+    PNL = {
+      st: () => ['Statistiques', `<div id="anst">${statsBox(M)}</div>`],
+      lg: () => ['Journal du match', `<div class="log" id="anlg">${MAN.lg(M).map((l) => `<div>${l}</div>`).join('') || "<div class='mu'>Le match n’a pas commencé.</div>"}</div>`],
+      rg: () => [
         'Consignes',
         M.done
           ? '<span class="mu">Le match est terminé.</span>'
           : `<div class="ctl">${sel('Mentalité', 'me().m=+this.value;me().sty=0;save()', MENT, t.m)}${sel('Pressing', 'me().pr=+this.value;me().sty=0;save()', ['Bas', 'Moyen', 'Haut'], t.pr ?? 1)}${foSel()}<span class="mu">Remplacements : ${V.sub}</span></div>${shoutBox(M)}`,
       ],
-      cp: ['Compositions', `${pre ? preBar(t) : ''}<div class="lni">${lnTeam(M.t[0])}${lnTeam(M.t[1])}</div>`],
-    }[V.mxp],
+      cp: () => ['Compositions', `${pre ? preBar(t) : ''}<div class="lni">${lnTeam(M.t[0])}${lnTeam(M.t[1])}</div>`],
+    },
     bar = !M.done
       ? `${V.iv ? `<button class="mxg1" onclick="stop();render()">⏸ Pause</button>` : `<button class="mxg1 p" onclick="loop();render()">▶ ${M.min ? 'Reprendre' : 'Coup d’envoi'}</button>`}<select onchange="V.sp=+this.value;if(V.iv)loop()"><option value="0" ${V.sp == 0 ? 'selected' : ''}>Lent</option><option value="1" ${V.sp == 1 ? 'selected' : ''}>Normal</option><option value="2" ${V.sp == 2 ? 'selected' : ''}>Rapide</option></select>`
       : MAN.busy()
@@ -12734,7 +12813,7 @@ function mxView(M, t) {
 <div class="mxt"><div class="mxtl">${M.done ? '' : `<button class="mxb${V.mtc ? ' on' : ''}" onclick="mtacTog()" title="Tactique et équipe"><span>⚙</span><em>Tactiques</em></button>${bt('rg', '🎚', 'Consignes')}`}</div>
 <div class="mxm"><div class="mxcp" title="${S.ctx == 'C' ? 'Galactik Cup' : 'Galactik League'}"><img src="${S.ctx == 'C' ? LGC : LGL}" alt=""></div><div class="mxs">${M.dby ? `<small>${M.dby == 'C' ? '⚡ CLASSICO' : '🔥 DERBY'}</small>` : ''}<span class="mxn l">${M.t[0].name}${chip(0)}</span><span class="mxsc" id="ansc">${MAN.sc(M)[0]} - ${MAN.sc(M)[1]}</span><span class="mxn r">${chip(1)}${M.t[1].name}</span><span class="mxc" id="anclk">${MAN.clk(M)}</span></div></div>
 <div class="mxtr">${bt('st', '📊', 'Stats')}${bt('lg', '📝', 'Journal')}${bt('cp', '📋', 'Compo')}${M.done ? '' : `<button class="mxb" onclick="stop();V.menu=1;render()" title="Met le match en pause et ouvre le menu principal."><span>🏠</span><em>Menu</em></button>`}</div></div>
-${pan ? `<div class="mxp mxp-${V.mxp}"><div class="mxph"><b>${pan[0]}</b><button onclick="mxp('${V.mxp}')" aria-label="Fermer">✕</button></div><div class="mxpb">${pan[1]}</div></div>` : ''}
+${mxPanels(PNL)}
 ${pre && !V.lnx && !V.mxp ? lnUp(M) : ''}
 <div class="mxcm" id="ancm">${lgR(MAN.lg(M)[0] || '')}</div>
 <div class="mxbar">${bar}</div></div>`;
@@ -13793,7 +13872,7 @@ const HELP = {
   orig: 'Fluide (Fl) = puissance du pouvoir spécial du joueur, liée à sa planète d’origine. Endurance = capacité physique à encaisser les matchs (attribut). Énergie = fraîcheur du moment (barre). Compatibilité = à quel point un joueur s’accorde à un Fluide : 100 % pour celui de son origine (et pour tous les Fluides si le joueur vient de Paradisia, qui a le multifluide ; les Pirates n’ont aucun Fluide), moins pour les autres, et d’autant plus difficile que l’équipe est forte. En changeant d’équipe, il peut rejeter le nouveau Fluide : léger malaise (🤢) quelques matchs si la compatibilité est d’au moins 30 %. En dessous de 30 %, le rejet devient sévère et progressif : le joueur peut être incapable de jouer plusieurs matchs, jusqu’à une saison entière vers 5 %.',
   chc: 'Vos crédits : l’argent du club. Gagnés à chaque match (droits TV, billetterie, primes, sponsors, boutique), dépensés en salaires, transferts, staff et travaux. Détail dans Finances.',
   chf: 'Confiance du conseil d’administration (0 à 100 %). Elle monte avec les victoires et les objectifs réussis, baisse avec les défaites et les objectifs manqués. Très basse, elle mène au licenciement. Détail dans Manager.',
-  chd: 'Date du jeu. Les matchs ont lieu environ une fois par semaine : entre deux, avancez jour par jour.',
+  chd: 'Date du jeu. Les matchs ont lieu environ une fois par semaine : entre deux, « Continuer » fait passer un jour par clic.',
   go: 'Fait avancer le jeu jusqu’au prochain événement : le jour du match il devient « Jouer le match », sinon il avance les jours et s’arrête si une offre arrive.',
   w_mail: 'Vos 6 derniers messages. Touchez-en un pour le lire dans la boîte de réception.',
   w_club: 'Le prochain match du championnat avec sa date, ou votre joueur le plus fort.',
@@ -14055,7 +14134,7 @@ const TU = [
   ],
   [
     'Calendrier et jours sans match',
-    'Les matchs ont lieu environ une fois par semaine, avec une pause hivernale. Entre deux matchs, avancez jour par jour (▶ Jour suivant) ou jusqu’au prochain match (⏩) : profitez-en pour le mercato, la tactique, l’entraînement et les résultats des autres clubs dans l’onglet Cal. L’énergie et la progression des joueurs avancent chaque jour.',
+    'Les matchs ont lieu environ une fois par semaine, avec une pause hivernale. Entre deux matchs, le bouton « Continuer » fait passer un jour à chaque clic, jusqu’au jour du match : profitez-en pour le mercato, la tactique, l’entraînement et les résultats des autres clubs dans l’onglet Cal. L’énergie et la progression des joueurs avancent chaque jour.',
   ],
   [
     'Carrière, difficulté et marché',
@@ -14103,7 +14182,7 @@ const TU = [
   ],
   [
     'Le match plein écran',
-    'Pendant un match, la vue 3D occupe tout l’écran. Le tableau en haut affiche les équipes, le score, le chrono et le logo de la compétition. Les boutons du bas ouvrent les panneaux Stats, Journal, Compo et Consignes. Avant le coup d’envoi, une fenêtre montre les compositions.',
+    'Pendant un match, la vue 3D occupe tout l’écran. Le tableau en haut affiche les équipes, le score, le chrono et le logo de la compétition. Les boutons du haut ouvrent les fenêtres Stats, Journal, Compo et Consignes : tirez-les par leur titre pour les déplacer, et utilisez l’épingle pour les garder en place et ouvertes ; elles sont un peu transparentes pour laisser voir le terrain. Avant le coup d’envoi, une fenêtre montre les compositions.',
   ],
   [
     'Conférences de presse',
@@ -18646,7 +18725,7 @@ function menuView() {
   const au = slotMeta('gmauto'),
     has = !!S;
   const nw = V.nw
-    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Gestion du club en page web</b> : l’onglet est présenté comme un site : barre d’adresse, bandeau aux couleurs et au logo de votre club, puis les rubriques Match (stade, prix du billet), Sponsors et Boutique, chacune avec ses illustrations. Les coûts et les revenus ne changent pas.</li><li><b>Boutique aux couleurs du club</b> : maillots, écharpes, mugs et posters reprennent les couleurs du maillot et le logo de votre club. Le fond des images est noir, ou clair si le club porte du noir.</li><li><b>Logos des sponsors</b> : les 8 sponsors (Nova Corp, Technoid Inc., Comet Cola, Orion Bank, Zéta Motors, Vega Foods, Plasma Drinks, Akillian Dairy) ont chacun leur logo, dans vos sponsors et dans les offres du moment.</li><li><b>Staff en encadrés</b> : dans Transferts, l’onglet Staff sépare Entraîneur, Kiné, Analyste et Centre de formation, chacun avec son pictogramme, sa jauge de niveau et son bouton d’amélioration. Le bouton « Améliorer le centre » de la Formation y mène directement.</li><li><b>Historique des offres</b> : l’encadré Historique de l’onglet Offres a une hauteur limitée et défile à l’intérieur.</li><li><b>Menu principal compact</b> : les tuiles s’adaptent à la hauteur de l’écran (PC, tablette, mobile) : plus besoin de défiler. Les pastilles (clubs, planètes…) et la mention de projet de fans tiennent sur une seule ligne.</li><li><b>Contraste élevé activé par défaut</b> : les textes secondaires et les bordures sont renforcés dès le départ ; vous pouvez le couper dans les Paramètres.</li><li><b>Correction</b> : les cartes de joueurs affichées dans les mails (« Joueur cité ») s’affichent de nouveau correctement.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
+    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Fenêtres de match flottantes</b> : dans l’écran de match, les fenêtres Stats, Journal, Compo et Consignes se déplacent librement : tirez-les par leur titre. Un bouton épingle les fige à l’endroit voulu et les garde ouvertes quand vous utilisez les autres boutons. Elles sont aussi un peu transparentes pour voir le terrain derrière.</li><li><b>« Continuer » jour par jour</b> : le bouton fait maintenant passer un seul jour par clic, jusqu’au jour du match (où il devient « Jouer le match »). Les mails à réponse obligatoire bloquent toujours la suite.</li><li><b>Listes qui gardent leur place</b> : quand vous fermez la fiche d’un joueur, la liste (Recherche des transferts, historique…) reste exactement où vous l’aviez laissée, au lieu de remonter tout en haut.</li><li><b>Potentiel atteint</b> : la fiche d’un joueur qui a atteint son potentiel affiche une courbe plate, « Au sommet » et « Potentiel : 70 (atteint) » au lieu d’une courbe de progression.</li><li><b>Roadmap</b> : ajout de l’onglet Entraînement, prévu prochainement.</li><li><b>Correction</b> : la fenêtre Statistiques de fin de match ne déborde plus : les notes des joueurs s’affichent l’une sous l’autre, sans barre de défilement horizontale.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
     : '';
   const ins = V.ins
     ? `<div class="mo" onclick="V.ins=0;render()"><div class="card" style="max-width:460px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">📥 Télécharger et installer sur PC</b><p class="mu">Deux façons de jouer hors du navigateur par défaut :</p><p><b>1. Télécharger</b> : un dossier à extraire, avec un lanceur Windows.</p><div class="ctl"><button class="p" onclick="pcDl()">⬇ Télécharger pour PC (.zip)</button>${PWA ? '<button onclick="pwaI();V.ins=0;render()">Installer maintenant</button>' : ''}</div><p class="mu">${V.pcm || 'Le dossier contient le jeu et un lanceur Windows qui l’ouvre dans sa propre fenêtre (Edge ou Chrome), sans toucher à votre navigateur par défaut.'}</p><p><b>2. Installer comme application</b> :</p><ol style="line-height:1.5;padding-left:20px"><li>Ouvrez le jeu dans <b>Chrome</b> ou <b>Edge</b>, directement depuis son lien.</li><li>Cliquez sur l’icône d’installation à droite de la barre d’adresse, ou sur le menu ⋮ puis <b>« Installer Galactik Manager »</b>.</li></ol><p class="mu">Si l’option n’apparaît pas, le navigateur ne la propose pas pour cette page. Firefox et Safari ne permettent pas cette installation sur PC.</p><button onclick="V.ins=0;V.pcm='';render()">Fermer</button></div></div>`

@@ -4847,12 +4847,12 @@ body:has(.mxf) { overflow: hidden; }
 .mxk { display: inline-block; width: 22px; height: 22px; border-radius: 6px; border: 2px solid #0a0c22; flex: none; }
 .mxsc { background: #0a0c22; color: #fff; padding: 6px 14px; font-size: 24px; letter-spacing: 0.03em; align-self: stretch; display: flex; align-items: center; }
 .mxc { background: var(--onac, #0a0c22); color: var(--ac); padding: 6px 12px; font-size: 22px; align-self: stretch; display: flex; align-items: center; min-width: 58px; justify-content: center; }
-.mxp { position: absolute; z-index: 8; right: 10px; top: 62px; width: min(440px, calc(100vw - 20px)); max-height: calc(100vh - 150px); max-height: calc(100dvh - 150px); display: flex; flex-direction: column; background: color-mix(in srgb, var(--card) 96%, transparent); border: 1px solid var(--bd); border-radius: 12px; box-shadow: 0 10px 40px #000a; color: var(--tx); }
+.mxp { position: absolute; z-index: 8; right: 10px; top: 62px; width: min(440px, calc(100vw - 20px)); max-height: calc(100vh - 150px); max-height: calc(100dvh - 150px); display: flex; flex-direction: column; background: color-mix(in srgb, var(--card) 74%, transparent); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); border: 1px solid var(--bd); border-radius: 12px; color: var(--tx); }
 .mxph { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--bd); }
 .mxph button { background: none; border: 0; color: var(--tx); font-size: 18px; cursor: pointer; min-height: 0; }
 .mxpb { overflow: auto; padding: 10px; }
 .mxpb { padding: 12px; }
-.mxpb .card { background: var(--bg); border: 1px solid var(--bd); border-radius: 10px; box-shadow: none; padding: 12px 14px; margin: 0 0 10px; }
+.mxpb .card { background: color-mix(in srgb, var(--bg) 55%, transparent); border: 1px solid var(--bd); border-radius: 10px; box-shadow: none; padding: 12px 14px; margin: 0 0 10px; }
 .mxpb .card > .ctl, .mxpb .ctl { margin-top: 8px; gap: 8px; }
 .mxpb .card h3, .mxpb .card > b:first-child { display: inline-block; margin-bottom: 4px; }
 .mxpb .log { max-height: none; }
@@ -5150,3 +5150,18 @@ body:has(.sh) { background: var(--bgg, var(--bg)) fixed; }
 .gsr { display: grid; grid-template-columns: 38px 1fr; column-gap: 12px; align-items: center; }
 .gsr .spl { grid-row: 1 / 3; margin: 0; }
 .gsr b, .gsr .mu { grid-column: 2; }
+
+/* Panneaux de match : déplaçables, épinglables, semi-transparents */
+.mxph { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
+.mxph:active { cursor: grabbing; }
+.mxp.pinned .mxph { cursor: default; }
+.mxp.pinned { border-color: var(--ac2, var(--ac)); }
+.mxhb { display: flex; align-items: center; gap: 4px; }
+.mxhb button { display: grid; place-items: center; min-width: 30px; min-height: 30px; border-radius: 50%; line-height: 1; }
+.mxhb .mxpin { color: var(--mu); }
+.mxhb .mxpin.on { color: var(--ac2, var(--ac)); background: color-mix(in srgb, var(--ac2, var(--ac)) 18%, transparent); }
+.mxp { min-width: 0; }
+.mxpb { overflow-x: hidden; min-width: 0; }
+.mxpb .rbg { grid-template-columns: minmax(0, 1fr); }
+.mxpb .rbc { min-width: 0; }
+.mxpb .mxbar2, .mxpb .card { max-width: 100%; box-sizing: border-box; }
