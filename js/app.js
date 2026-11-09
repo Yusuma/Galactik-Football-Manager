@@ -74,6 +74,8 @@ let A = {};
 try {
   A = JSON.parse(localStorage.getItem('gm_a') || '{}');
 } catch (e) {}
+// Contraste élevé : activé par défaut (tant que le joueur n'a pas fait son choix).
+if (A.hc === undefined) A.hc = 1;
 // Active ou désactive une astuce, puis la sauvegarde dans le navigateur.
 const setA = (k) => {
   A[k] = !A[k];
@@ -103,7 +105,7 @@ const STD = {
   mdis: [],
   mord: [],
   zoom: 0,
-  hc: 0,
+  hc: 1,
   rm: 0,
   snd: 1,
   vol: 50,
@@ -134,6 +136,13 @@ try {
   else {
     ST.zoom = A.big ? 1 : 0;
     ST.hc = A.hc ? 1 : 0;
+  }
+  // Une seule fois : le contraste élevé passe à « activé » pour tous (le joueur peut ensuite le couper).
+  if (!A.hcm) {
+    A.hcm = 1;
+    A.hc = 1;
+    ST.hc = 1;
+    localStorage.setItem('gm_a', JSON.stringify(A));
   }
 } catch (e) {}
 // Enregistre les paramètres dans le navigateur.
@@ -174,7 +183,7 @@ function setS(k, v) {
 function stReset() {
   ST = { ...STD };
   A.big = 0;
-  A.hc = 0;
+  A.hc = 1;
   V.sp = 1;
   try {
     localStorage.setItem('gm_a', JSON.stringify(A));
@@ -1560,7 +1569,7 @@ const BCOL = {
   wam: ['#5fd16a', '#1d7a34'],
   ryk: ['#ffe14a', '#d9a400'],
   sh2: ['#3fcf6a', '#12683a'],
-  nb: ['#7a5cff', '#0f0828'],
+  nb: ['#b4ecff', '#3fa9e6'],
   nbw: ['#ffe28a', '#2a0f4a'],
   lw: ['#7ab0ff', '#1a3a9a'],
   cw: ['#ffe58a', '#d18a10'],
@@ -1701,8 +1710,7 @@ function ballSvg(id, s) {
       d1: `<polygon points="0,64 64,0 100,0 100,14 14,100 0,100" fill="${c}" opacity=".95"/>`,
     })[m] || '';
   const D = {
-    nb: `<ellipse cx="50" cy="50" rx="44" ry="14" fill="none" stroke="#38e8ff" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="14" ry="44" fill="none" stroke="#ff4fd8" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="44" ry="14" fill="none" stroke="#9a7bff" stroke-width="2" transform="rotate(60 50 50)"/><circle cx="50" cy="50" r="6" fill="#fff"/>`,
-    nbw: `<ellipse cx="50" cy="50" rx="44" ry="14" fill="none" stroke="#ffd23f" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="14" ry="44" fill="none" stroke="#ffd23f" stroke-width="2.6"/><polygon points="30,60 34,38 42,50 50,34 58,50 66,38 70,60" fill="#ffd23f" stroke="#7a4a0a" stroke-width="2" stroke-linejoin="round"/>`,
+    nb: `<g stroke="#b85a00" stroke-width="1.2" stroke-linejoin="round"><path d="M6 66C0 50 10 44 12 30C20 38 24 46 22 56C28 50 30 44 30 36C38 46 40 62 32 74Z" fill="#ff7a12"/><path d="M94 66C100 50 90 44 88 30C80 38 76 46 78 56C72 50 70 44 70 36C62 46 60 62 68 74Z" fill="#ff7a12"/><path d="M26 98C14 84 20 70 30 60C30 68 36 70 38 62C42 52 40 42 36 34C50 40 58 54 56 66C60 62 62 58 62 52C72 62 76 80 66 98Z" fill="#ff8a1f"/></g><path d="M36 98C32 88 40 80 44 72C46 78 50 78 52 72C58 80 62 90 58 98Z" fill="#ffc83d"/><path d="M12 62C10 54 14 50 16 46C20 52 22 56 20 62Z" fill="#ffc83d"/><path d="M88 62C90 54 86 50 84 46C80 52 78 56 80 62Z" fill="#ffc83d"/>`,    nbw: `<ellipse cx="50" cy="50" rx="44" ry="14" fill="none" stroke="#ffd23f" stroke-width="2.6"/><ellipse cx="50" cy="50" rx="14" ry="44" fill="none" stroke="#ffd23f" stroke-width="2.6"/><polygon points="30,60 34,38 42,50 50,34 58,50 66,38 70,60" fill="#ffd23f" stroke="#7a4a0a" stroke-width="2" stroke-linejoin="round"/>`,
     lw: `<path d="M30 76C16 62 14 38 26 22M70 76C84 62 86 38 74 22" fill="none" stroke="#ffd23f" stroke-width="4" stroke-linecap="round"/>${[[20,60],[17,48],[19,36],[25,26],[80,60],[83,48],[81,36],[75,26]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="2.6" fill="#ffd23f" transform="rotate(${x < 50 ? -40 : 40} ${x} ${y})"/>`).join('')}${star(50, 50, 15, '#ffd23f')}`,
     cw: `<path d="M34 28H66V44C66 55 59 60 50 60C41 60 34 55 34 44Z" fill="#fff6c2" stroke="#8a5a0a" stroke-width="2.4"/><path d="M34 33H26C26 44 30 48 36 49M66 33H74C74 44 70 48 64 49" fill="none" stroke="#8a5a0a" stroke-width="2.4"/><rect x="46" y="60" width="8" height="10" fill="#fff6c2" stroke="#8a5a0a" stroke-width="2"/><rect x="36" y="70" width="28" height="7" rx="2" fill="#fff6c2" stroke="#8a5a0a" stroke-width="2"/>${star(50, 42, 6, '#d18a10')}`,
     cl: `<circle cx="50" cy="50" r="30" fill="none" stroke="#aab4c8" stroke-width="3"/><polygon points="61.3,56.5 50.0,63.0 38.7,56.5 38.7,43.5 50.0,37.0 61.3,43.5" fill="#e4e9f3" stroke="#aab4c8" stroke-width="2.4"/><circle cx="88.0" cy="50.0" r="3.2" fill="#aab4c8"/><circle cx="69.0" cy="82.9" r="3.2" fill="#aab4c8"/><circle cx="31.0" cy="82.9" r="3.2" fill="#aab4c8"/><circle cx="12.0" cy="50.0" r="3.2" fill="#aab4c8"/><circle cx="31.0" cy="17.1" r="3.2" fill="#aab4c8"/><circle cx="69.0" cy="17.1" r="3.2" fill="#aab4c8"/>`,
@@ -2017,7 +2025,7 @@ const recoT = () => {
 // Bibliothèque d'icônes dessinées en SVG. Pour ajouter une icône : ajouter un <symbol> ici et son
 // emoji dans la table EMJ.
 const SPR =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute"><defs><linearGradient id="gy" gradientUnits="userSpaceOnUse" x1="2" y1="1" x2="22" y2="23"><stop offset="0" style="stop-color:var(--ac,#7c5cff)"/><stop offset="1" style="stop-color:var(--ac2,#e4338f)"/></linearGradient></defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M12 2.5 1.5 12H5v9h5.5v-6h3v6H19v-9h3.5z"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5"/><path d="M3 7.5l9 6.5 9-6.5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-clip" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="18" rx="3.5"/><rect x="8" y="1.5" width="8" height="4.5" rx="2"/><path d="M8 12h8M8 16h5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4.2"/><path d="M1 21.5c0-5 3.2-8 8-8s8 3 8 8z"/><circle cx="18" cy="9" r="3" opacity=".7"/><path d="M18.5 14c3 .3 4.8 2.600 4.800 7.500H19c0-3-.4-5.500-1.600-7.200z" opacity=".7"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="17.500" rx="3.5"/><rect x="6.500" y="1.500" width="3" height="5.500" rx="1.500"/><rect x="14.500" y="1.500" width="3" height="5.500" rx="1.500"/><path d="M2.500 10h19" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/><rect x="12.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M2 7.500 7.500 2v3.500H21v4H7.500V13z"/><path d="M22 16.500 16.500 22v-3.500H3v-4h13.500V11z" opacity=".75"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.800"/><path d="M2.500 22c0-6 4-9.500 9.500-9.500S21.500 16 21.500 22z"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 2.500h10v6.500a5 5 0 0 1-10 0z"/><path d="M2.500 4h4v2.200h-1.800c.2 1.800 1 2.800 2.300 3.300V12C4.200 11.400 2.500 8.800 2.500 4zM21.500 4h-4v2.200h1.800c-.2 1.800-1 2.800-2.300 3.300V12c2.800-.6 4.500-3.200 4.500-8z"/><rect x="10.500" y="14" width="3" height="4.500"/><rect x="6.500" y="18" width="11" height="3.500" rx="1.700"/></symbol><symbol id="i-stadium" viewBox="0 0 24 24"><path d="M1.500 10c0-3 4.500-5 10.500-5s10.500 2 10.500 5v8c0 1.500-4.500 3.500-10.500 3.500S1.500 19.500 1.500 18z"/><ellipse cx="12" cy="10.500" rx="6.500" ry="2.600" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M14.800 8.800c-.4-1.200-1.500-1.800-2.800-1.800-1.600 0-2.800.8-2.800 2.100 0 3 5.800 1.500 5.800 4.600 0 1.400-1.300 2.300-3 2.300-1.400 0-2.600-.7-3-2M12 5.500V7M12 17v1.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500" style="fill:#f2f5fa"/><path d="M12 7.200l4 2.900-1.500 4.700h-5L8 10.100z" fill="rgba(0,0,0,.42)"/><path d="M12 7.200V2M16 10.100l5-1.600M14.500 14.800l3 4.200M9.500 14.800l-3 4.200M8 10.100 3 8.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M9 9.500a3 3 0 1 1 4.600 2.500c-1 .7-1.600 1.200-1.600 2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.700" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M3.500 2.500h13l4 4v15h-17z"/><rect x="7" y="2.500" width="9" height="6" fill="rgba(0,0,0,.42)"/><rect x="7" y="13" width="10" height="8.500" rx="1.200" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.800l8.500 3.200v6.200c0 5.200-3.600 9.200-8.500 11-4.900-1.800-8.500-5.800-8.500-11V5z"/><path d="M8 11.800l2.800 2.800L16 9.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bank" viewBox="0 0 24 24"><path d="M12 1.500 1.500 7.500v2.500h21V7.500z"/><rect x="3.500" y="11.500" width="3.500" height="7"/><rect x="10.250" y="11.500" width="3.500" height="7"/><rect x="17" y="11.500" width="3.500" height="7"/><rect x="1.500" y="19.800" width="21" height="3" rx="1.200"/></symbol><symbol id="i-textsz" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 21 9 3h2.200l7 18h-2.600l-1.500-4H6.100L4.600 21zM7 15h5.600L9.800 7.500z"/><path d="M19 8h3M20.500 6.500v3" stroke="rgba(0,0,0,.42)" stroke-width="0" /></symbol><symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M12 1.500a10.500 10.500 0 0 0 0 21z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2.500a7.500 7.500 0 1 0 4.500 13.500l5.200 5.200 2-2-5.200-5.200A7.500 7.500 0 0 0 10 2.500zm0 2.600a4.900 4.900 0 1 1 0 9.800 4.900 4.900 0 0 1 0-9.800z"/></symbol><symbol id="i-import" viewBox="0 0 24 24"><path d="M9.800 2h4.400v7.200h4L12 16 5.800 9.200h4z"/><path d="M2.500 14.500h3.200v4.800h12.600v-4.800h3.200v8H2.500z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M9.800 2.500h4.400v7.300h7.300v4.400h-7.300v7.300H9.800v-7.300H2.500V9.800h7.300z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M5.500 2.500 21 12 5.500 21.500z"/></symbol><symbol id="i-ff" viewBox="0 0 24 24"><path d="M1.500 4 11.500 12 1.500 20zM12 4 22.500 12 12 20z"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="4.500" y="3" width="5.500" height="18" rx="1.800"/><rect x="14" y="3" width="5.500" height="18" rx="1.800"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 1.500c4.200 2.200 6.300 6.200 6.300 11.500l-3 3.200H8.700L5.700 13C5.700 7.700 7.800 3.700 12 1.500z"/><circle cx="12" cy="9.500" r="2.200" fill="rgba(0,0,0,.42)"/><path d="M5.700 13.500 2 18l4.500-1zM18.300 13.500 22 18l-4.500-1zM9.800 18h4.400L12 22.500z" opacity=".8"/></symbol><symbol id="i-fluid" viewBox="0 0 24 24"><path d="M12 2.500a9.500 9.500 0 1 0 9.500 9.500h-3.200A6.300 6.300 0 1 1 12 5.700z"/><path d="M12 8a4 4 0 1 0 4 4h-2.300A1.700 1.700 0 1 1 12 10.300z" opacity=".7"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.800l3.100 6.600 7.200.9-5.300 4.900 1.400 7.100L12 17.800l-6.400 3.500 1.400-7.100L1.700 9.300l7.200-.9z"/></symbol><symbol id="i-band" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="0.500" y="7.500" width="23" height="9" rx="4.500"/><rect x="8" y="7.500" width="8" height="9" fill="rgba(255,255,255,.45)"/><circle cx="11" cy="10.500" r=".9" fill="rgba(0,0,0,.42)"/><circle cx="13" cy="13.500" r=".9" fill="rgba(0,0,0,.42)"/></g></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 1.500c1 4.200 6.500 6.300 6.500 12.300a6.500 6.500 0 0 1-13 0c0-3.200 1.800-4.500 3.300-7.300 1 1 1.400 2.200 1.200 3.600 2-1.800 2.200-5.200 2-8.600z"/></symbol><symbol id="i-footr" viewBox="0 0 24 24"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></symbol><symbol id="i-footl" viewBox="0 0 24 24"><g transform="translate(24 0) scale(-1 1)"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></g></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 3v12.500A3.500 3.500 0 1 0 11 18.500V8l8-2v7.500A3.500 3.500 0 1 0 21 16.500V2z"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="2.500" y="9" width="19" height="12.500" rx="2.500"/><path d="M2.500 4.500 19 2l1.300 4.200L3.800 8.800z"/></symbol><symbol id="i-loan" viewBox="0 0 24 24"><path d="M3.500 12A8.500 8.500 0 0 1 18 6l2.500-2.500v7.500h-7.500l2.700-2.700A5.300 5.300 0 0 0 6.700 12z"/><path d="M20.500 12A8.500 8.500 0 0 1 6 18l-2.500 2.500V13H11l-2.700 2.700A5.300 5.300 0 0 0 17.300 12z" opacity=".75"/></symbol><symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 2h3c0 5 9 6 9 11.500V22h-3c0-5.500-9-6-9-11.500zM18 2h-3c0 5-9 6-9 11.500V22h3c0-5.500 9-6 9-11.500z" fill-rule="evenodd" opacity=".95"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(0 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(135 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(180 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(225 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(270 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.500 1.500 4 14h6.200l-1.200 8.500L20 10h-6.200z"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 1.500c.8 5.500 3.800 8.500 10.500 10.500-6.700 2-9.700 5-10.500 10.500C11.200 17 8.200 14 1.500 12 8.200 10 11.200 7 12 1.500z"/></symbol><symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.800"/><path class="s" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20.500 6.500C23 9 20 15.500 12 19.500 5 23 0.800 21 3.500 17.500"/><ellipse cx="12" cy="12" rx="11" ry="4.200" transform="rotate(-28 12 12)" class="s" stroke-width="1.700"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M7 12.500l3.500 3.500 6.500-7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-cross" viewBox="0 0 24 24"><path d="M4.500 2.500 12 10l7.500-7.500 2 2L14 12l7.500 7.500-2 2L12 14l-7.500 7.500-2-2L10 12 2.500 4.500z"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 2h6l1 2h5v2.500H3V4h5z"/><path d="M4.800 8h14.400l-1 13.500H5.800z"/><path d="M10 11.500v7M14 11.500v7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M2 5.500A2.500 2.500 0 0 1 4.500 3h5l2.500 3h7.500A2.500 2.500 0 0 1 22 8.500v10a2.500 2.500 0 0 1-2.500 2.500h-15A2.500 2.500 0 0 1 2 18.500z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.500" width="16" height="11.500" rx="3"/><path d="M7.500 10.500V7.500a4.500 4.500 0 0 1 9 0v3" class="s" stroke-width="2.600" stroke-linecap="round"/><circle cx="12" cy="16" r="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.200 22.800 21H1.200z" stroke-linejoin="round"/><path d="M12 9v5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.600" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4.500"/><path d="M6 8l4.500 4.500 3-3 4.500 5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-build" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20.500" rx="2.500"/><rect x="7.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M2.500 9.500v5.500h4l9 5.500V4L6.500 9.500z"/><path class="s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" d="M18.500 8.500c2.200 2.200 2.200 5.800 0 8"/></symbol><symbol id="i-case" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14.500" rx="3"/><path d="M8.500 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" class="s" stroke-width="2"/><path d="M2 13h20" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-siren" viewBox="0 0 24 24"><path d="M5.500 18A6.500 6.500 0 0 1 18.500 18z"/><rect x="3.500" y="18" width="17" height="3.500" rx="1.400"/><path class="s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.500v3M3.800 5.200l2 2M20.200 5.200l-2 2"/></symbol><symbol id="i-cross2" viewBox="0 0 24 24"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><rect x="2.500" y="3.500" width="19" height="17" rx="3"/><path d="M6.500 8.500h11M6.500 12.500h11M6.500 16.500h6.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9.500 4.500 2.500 11l7 6.500v-4c5.500 0 9 1.300 11.500 6 0-7-3.800-12.500-11.500-12.500z"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M7.500 14.500c1 2.800 3 4 4.500 4s3.500-1.200 4.500-4" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 15.500c1.200 1.600 2.600 2.200 4 2.200s2.800-.6 4-2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-meh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 16.200h8" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-angry" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.500 7.200l4 2M17.500 7.200l-4 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.600" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="15.400" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><path d="M8 17c1-1.500 2.300-2.200 4-2.200s3 .7 4 2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-sick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.800 9.500l3 1.200-3 1.200M17.200 9.500l-3 1.200 3 1.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.500 16.200c1-1 1.800-1 2.800 0s1.800 1 2.800 0 1.800-1 2.800 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-snow" viewBox="0 0 24 24"><path class="s" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.800v20.400M3.200 6.900l17.600 10.200M3.200 17.100 20.800 6.900M8.800 3.800 12 6l3.200-2.200M8.800 20.200 12 18l3.200 2.200"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.500 14.800A9.500 9.500 0 0 1 9.200 3.500 9.500 9.500 0 1 0 20.500 14.800z"/></symbol><symbol id="i-robot" viewBox="0 0 24 24"><rect x="3.500" y="7.500" width="17" height="13.500" rx="4.500"/><rect x="11" y="3" width="2" height="4.500"/><circle cx="12" cy="2.800" r="1.700"/><circle cx="8.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><path d="M9 18h6" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-palm" viewBox="0 0 24 24"><path d="M11 22.500c0-6.500 1-10 2.200-13.500h1.200c-1.100 3.500-1.800 7-1.800 13.500z"/><path d="M12.800 9C8.800 4.500 4.500 5 2 8.500c3-1 6 0 10.800.5zM12.800 9c0-5.500 4-7.700 8.500-6.500-3.200 1-5.500 3.200-6.500 7zM12.800 9c4-3 8.500-1.500 10 3-3-1.500-6-1.300-9.500.2zM12.800 9c-3.500 1.500-5 5-4 8.500 1.200-3.500 2.700-5.800 5-7.300z"/></symbol><symbol id="i-rock" viewBox="0 0 24 24"><path d="M2.500 18.500 6.800 8l5.200-4.500 6.500 3 3 8.500-4.300 5.500H6.500z"/><path d="M7 9.500l5 3 6-5M12 12.500v7.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-alien" viewBox="0 0 24 24"><path d="M12 2c5.500 0 9.500 4.200 9.500 9.500 0 5.500-4.200 10.500-9.500 10.500S2.500 17 2.500 11.500C2.500 6.200 6.500 2 12 2z"/><ellipse cx="8" cy="11" rx="2.600" ry="1.500" transform="rotate(20 8 11)" fill="rgba(0,0,0,.42)"/><ellipse cx="16" cy="11" rx="2.600" ry="1.500" transform="rotate(-20 16 11)" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-tiger" viewBox="0 0 24 24"><path d="M2.500 3 8 6.200h8L21.500 3v9.500c0 5.500-4 9.500-9.500 9.500S2.500 18 2.500 12.500z"/><path d="M12 7v3M7 8.500l1.500 2M17 8.500l-1.500 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.300" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><circle cx="15.700" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><path d="M10 17.500c1 .8 3 .8 4 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 1.800a9.500 9.500 0 0 0-5.500 17.200v2.700h11V19A9.500 9.500 0 0 0 12 1.800z"/><circle cx="8.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><path d="M10 17.500v2.500M14 17.500v2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-battery" viewBox="0 0 24 24"><rect x="1.500" y="6.500" width="18.500" height="11" rx="3"/><rect x="20.800" y="9.800" width="2" height="4.400" rx="1"/><path d="M12 8.200 8.300 12.500h3l-.8 3.500 3.700-4.500h-3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M0.800 12C3.800 6 7.800 3.800 12 3.800s8.200 2.200 11.200 8.200c-3 6-7 8.200-11.200 8.200S3.800 18 0.800 12z"/><circle cx="12" cy="12" r="4.400" fill="rgba(0,0,0,.42)"/><circle cx="13.200" cy="10.800" r="1.400" fill="#fff"/></symbol><symbol id="i-comet" viewBox="0 0 24 24"><circle cx="16.500" cy="7.500" r="5.500"/><path d="M12.500 10.500 1.800 17.800l4-.8-.9 4.300z" opacity=".85"/><path d="M11.200 12.500 5 22l1-5z" opacity=".5"/></symbol><symbol id="i-cap" viewBox="0 0 24 24"><path d="M12 3 1 9l11 6 9-4.900V17h2V9z"/><path d="M5.500 13v4c0 2 3 4 6.500 4s6.500-2 6.500-4v-4l-6.500 3.500z" opacity=".8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M3 3.500h18V16H10.500L5.500 20.500V16H3z"/><circle cx="8" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="16" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-medal" viewBox="0 0 24 24"><path d="M6.500 1.500h4l1.500 6-3.500 1.500zM17.500 1.500h-4L12 7.500l3.500 1.500z" opacity=".75"/><circle cx="12" cy="15" r="6.500"/><path d="m12 11.300 1.100 2.300 2.500.3-1.800 1.700.5 2.500-2.300-1.300-2.300 1.300.5-2.500-1.800-1.700 2.500-.3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="12" r="7" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="3.800"/><circle cx="12" cy="12" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-glove" viewBox="0 0 24 24"><path d="M6 22v-7.500L3.500 10a1.700 1.700 0 0 1 3-1.600L8 10.500V4.500a1.500 1.500 0 0 1 3 0V3.500a1.500 1.500 0 0 1 3 0V4.500a1.500 1.500 0 0 1 3 0V12l1.200-1.800a1.700 1.700 0 0 1 2.800 1.900L19 17.500V22z"/><path d="M6 19h13" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.600" stroke-linecap="round"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.500 3.500 4.800v6.500c0 5.200 3.600 9.600 8.500 11.200 4.900-1.600 8.500-6 8.500-11.200V4.800z"/><path d="m8.200 12 2.800 2.800 4.800-5.300" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><rect x="2.500" y="12" width="5" height="9.500" rx="1.200"/><rect x="9.500" y="2.500" width="5" height="19" rx="1.200"/><rect x="16.500" y="7.500" width="5" height="14" rx="1.200"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 1.800 2.800 12H8v10h8V12h5.200z"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="8" y="1.500" width="8" height="13" rx="4"/><path d="M4.500 11a7.500 7.500 0 0 0 15 0M12 18.500v3.500M8 22h8" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.500 5.500h11a5 5 0 0 1 5 4.500l.9 5.500a3.300 3.300 0 0 1-5.800 2.600L16.200 16H7.800l-1.400 2.100A3.300 3.300 0 0 1 .6 15.500L1.500 10a5 5 0 0 1 5-4.500z"/><path d="M7.500 8.800v4.400M5.300 11h4.400" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.800" stroke-linecap="round"/><circle cx="16" cy="10" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="18.700" cy="12.300" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dice" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="7.800" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="7.800" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.800 3 12.800A5.800 5.800 0 0 1 12 5.800a5.800 5.800 0 0 1 9 7z"/></symbol><symbol id="i-speaker" viewBox="0 0 24 24"><path d="M2 8.800h4.800L13 3.500v17l-6.200-5.300H2z"/><path d="M16.500 8.300a5 5 0 0 1 0 7.400M19.800 5a9.500 9.500 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="1.500" y="3" width="21" height="14" rx="2.800"/><path d="M8 21h8M12 17.500V21" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bed" viewBox="0 0 24 24"><path d="M1.500 4h2.500v8h16.500a2.500 2.500 0 0 1 2.500 2.500V19h-2.500v-2.500H4V19H1.500z"/><rect x="5.500" y="6.500" width="5.500" height="3.800" rx="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 22.200 2.800 12H8V2h8v10h5.200z"/></symbol></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute"><defs><linearGradient id="gy" gradientUnits="userSpaceOnUse" x1="2" y1="1" x2="22" y2="23"><stop offset="0" style="stop-color:var(--ac,#7c5cff)"/><stop offset="1" style="stop-color:var(--ac2,#e4338f)"/></linearGradient></defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M12 2.5 1.5 12H5v9h5.5v-6h3v6H19v-9h3.5z"/></symbol><symbol id="i-dash" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="8.5" height="10.5" rx="2"/><rect x="13" y="2.5" width="8.5" height="6" rx="2"/><rect x="13" y="10.5" width="8.5" height="11" rx="2"/><rect x="2.5" y="15" width="8.5" height="6.5" rx="2"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5"/><path d="M3 7.5l9 6.5 9-6.5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-clip" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="18" rx="3.5"/><rect x="8" y="1.5" width="8" height="4.5" rx="2"/><path d="M8 12h8M8 16h5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4.2"/><path d="M1 21.5c0-5 3.2-8 8-8s8 3 8 8z"/><circle cx="18" cy="9" r="3" opacity=".7"/><path d="M18.5 14c3 .3 4.8 2.600 4.800 7.500H19c0-3-.4-5.500-1.600-7.200z" opacity=".7"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="17.500" rx="3.5"/><rect x="6.500" y="1.500" width="3" height="5.500" rx="1.500"/><rect x="14.500" y="1.500" width="3" height="5.500" rx="1.500"/><path d="M2.500 10h19" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/><rect x="12.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M2 7.500 7.500 2v3.500H21v4H7.500V13z"/><path d="M22 16.500 16.500 22v-3.500H3v-4h13.500V11z" opacity=".75"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.800"/><path d="M2.500 22c0-6 4-9.500 9.500-9.500S21.500 16 21.500 22z"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 2.500h10v6.500a5 5 0 0 1-10 0z"/><path d="M2.500 4h4v2.200h-1.800c.2 1.800 1 2.800 2.300 3.300V12C4.200 11.400 2.500 8.800 2.500 4zM21.500 4h-4v2.200h1.800c-.2 1.800-1 2.800-2.300 3.300V12c2.800-.6 4.500-3.200 4.500-8z"/><rect x="10.500" y="14" width="3" height="4.500"/><rect x="6.500" y="18" width="11" height="3.500" rx="1.700"/></symbol><symbol id="i-stadium" viewBox="0 0 24 24"><path d="M1.500 10c0-3 4.500-5 10.500-5s10.500 2 10.500 5v8c0 1.500-4.500 3.500-10.500 3.500S1.500 19.500 1.500 18z"/><ellipse cx="12" cy="10.500" rx="6.500" ry="2.600" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M14.800 8.800c-.4-1.200-1.500-1.800-2.800-1.800-1.600 0-2.800.8-2.800 2.100 0 3 5.800 1.500 5.800 4.600 0 1.400-1.300 2.300-3 2.300-1.400 0-2.600-.7-3-2M12 5.500V7M12 17v1.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500" style="fill:#f2f5fa"/><path d="M12 7.200l4 2.900-1.500 4.700h-5L8 10.100z" fill="rgba(0,0,0,.42)"/><path d="M12 7.200V2M16 10.100l5-1.600M14.500 14.800l3 4.200M9.500 14.800l-3 4.200M8 10.100 3 8.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M9 9.500a3 3 0 1 1 4.600 2.500c-1 .7-1.600 1.200-1.600 2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.700" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M3.500 2.500h13l4 4v15h-17z"/><rect x="7" y="2.500" width="9" height="6" fill="rgba(0,0,0,.42)"/><rect x="7" y="13" width="10" height="8.500" rx="1.200" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.800l8.500 3.200v6.200c0 5.200-3.600 9.200-8.500 11-4.900-1.800-8.500-5.800-8.500-11V5z"/><path d="M8 11.800l2.800 2.800L16 9.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bank" viewBox="0 0 24 24"><path d="M12 1.500 1.500 7.500v2.500h21V7.500z"/><rect x="3.500" y="11.500" width="3.500" height="7"/><rect x="10.250" y="11.500" width="3.500" height="7"/><rect x="17" y="11.500" width="3.500" height="7"/><rect x="1.500" y="19.800" width="21" height="3" rx="1.200"/></symbol><symbol id="i-textsz" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 21 9 3h2.200l7 18h-2.600l-1.500-4H6.100L4.600 21zM7 15h5.600L9.800 7.500z"/><path d="M19 8h3M20.500 6.500v3" stroke="rgba(0,0,0,.42)" stroke-width="0" /></symbol><symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M12 1.500a10.500 10.500 0 0 0 0 21z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2.500a7.500 7.500 0 1 0 4.500 13.500l5.200 5.200 2-2-5.200-5.200A7.500 7.500 0 0 0 10 2.500zm0 2.600a4.900 4.900 0 1 1 0 9.800 4.900 4.900 0 0 1 0-9.800z"/></symbol><symbol id="i-import" viewBox="0 0 24 24"><path d="M9.800 2h4.400v7.200h4L12 16 5.800 9.200h4z"/><path d="M2.500 14.500h3.200v4.800h12.600v-4.800h3.200v8H2.500z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M9.800 2.500h4.400v7.300h7.300v4.400h-7.300v7.300H9.800v-7.300H2.500V9.800h7.300z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M5.500 2.500 21 12 5.500 21.500z"/></symbol><symbol id="i-ff" viewBox="0 0 24 24"><path d="M1.500 4 11.500 12 1.500 20zM12 4 22.500 12 12 20z"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="4.500" y="3" width="5.500" height="18" rx="1.800"/><rect x="14" y="3" width="5.500" height="18" rx="1.800"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 1.500c4.200 2.200 6.300 6.200 6.300 11.500l-3 3.200H8.700L5.700 13C5.700 7.700 7.800 3.700 12 1.500z"/><circle cx="12" cy="9.500" r="2.200" fill="rgba(0,0,0,.42)"/><path d="M5.700 13.500 2 18l4.500-1zM18.300 13.500 22 18l-4.500-1zM9.800 18h4.400L12 22.500z" opacity=".8"/></symbol><symbol id="i-fluid" viewBox="0 0 24 24"><path d="M12 2.500a9.500 9.500 0 1 0 9.500 9.500h-3.200A6.300 6.300 0 1 1 12 5.700z"/><path d="M12 8a4 4 0 1 0 4 4h-2.300A1.700 1.700 0 1 1 12 10.300z" opacity=".7"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.800l3.100 6.600 7.200.9-5.300 4.900 1.400 7.100L12 17.800l-6.400 3.500 1.400-7.100L1.700 9.300l7.200-.9z"/></symbol><symbol id="i-band" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="0.500" y="7.500" width="23" height="9" rx="4.500"/><rect x="8" y="7.500" width="8" height="9" fill="rgba(255,255,255,.45)"/><circle cx="11" cy="10.500" r=".9" fill="rgba(0,0,0,.42)"/><circle cx="13" cy="13.500" r=".9" fill="rgba(0,0,0,.42)"/></g></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 1.500c1 4.200 6.500 6.300 6.500 12.300a6.500 6.500 0 0 1-13 0c0-3.200 1.800-4.500 3.300-7.300 1 1 1.400 2.200 1.200 3.600 2-1.800 2.200-5.200 2-8.600z"/></symbol><symbol id="i-footr" viewBox="0 0 24 24"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></symbol><symbol id="i-footl" viewBox="0 0 24 24"><g transform="translate(24 0) scale(-1 1)"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></g></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 3v12.500A3.500 3.500 0 1 0 11 18.500V8l8-2v7.500A3.500 3.500 0 1 0 21 16.500V2z"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="2.500" y="9" width="19" height="12.500" rx="2.500"/><path d="M2.500 4.500 19 2l1.300 4.200L3.800 8.800z"/></symbol><symbol id="i-loan" viewBox="0 0 24 24"><path d="M3.500 12A8.500 8.500 0 0 1 18 6l2.500-2.500v7.500h-7.500l2.700-2.700A5.300 5.300 0 0 0 6.700 12z"/><path d="M20.500 12A8.500 8.500 0 0 1 6 18l-2.500 2.500V13H11l-2.700 2.700A5.300 5.300 0 0 0 17.300 12z" opacity=".75"/></symbol><symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 2h3c0 5 9 6 9 11.500V22h-3c0-5.500-9-6-9-11.500zM18 2h-3c0 5-9 6-9 11.500V22h3c0-5.500 9-6 9-11.500z" fill-rule="evenodd" opacity=".95"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(0 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(135 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(180 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(225 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(270 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.500 1.500 4 14h6.200l-1.200 8.500L20 10h-6.200z"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 1.500c.8 5.500 3.800 8.500 10.500 10.500-6.700 2-9.700 5-10.500 10.500C11.200 17 8.200 14 1.500 12 8.200 10 11.200 7 12 1.500z"/></symbol><symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.800"/><path class="s" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20.500 6.500C23 9 20 15.500 12 19.500 5 23 0.800 21 3.500 17.500"/><ellipse cx="12" cy="12" rx="11" ry="4.200" transform="rotate(-28 12 12)" class="s" stroke-width="1.700"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M7 12.500l3.500 3.500 6.500-7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-cross" viewBox="0 0 24 24"><path d="M4.500 2.500 12 10l7.500-7.500 2 2L14 12l7.500 7.500-2 2L12 14l-7.500 7.500-2-2L10 12 2.500 4.500z"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 2h6l1 2h5v2.500H3V4h5z"/><path d="M4.800 8h14.400l-1 13.500H5.800z"/><path d="M10 11.500v7M14 11.500v7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M2 5.500A2.500 2.500 0 0 1 4.500 3h5l2.500 3h7.500A2.500 2.500 0 0 1 22 8.500v10a2.500 2.500 0 0 1-2.500 2.500h-15A2.500 2.500 0 0 1 2 18.500z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.500" width="16" height="11.500" rx="3"/><path d="M7.500 10.500V7.500a4.500 4.500 0 0 1 9 0v3" class="s" stroke-width="2.600" stroke-linecap="round"/><circle cx="12" cy="16" r="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.200 22.800 21H1.200z" stroke-linejoin="round"/><path d="M12 9v5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.600" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4.500"/><path d="M6 8l4.500 4.500 3-3 4.500 5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-build" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20.500" rx="2.500"/><rect x="7.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M2.500 9.500v5.500h4l9 5.500V4L6.500 9.500z"/><path class="s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" d="M18.500 8.500c2.200 2.200 2.200 5.800 0 8"/></symbol><symbol id="i-case" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14.500" rx="3"/><path d="M8.500 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" class="s" stroke-width="2"/><path d="M2 13h20" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-siren" viewBox="0 0 24 24"><path d="M5.500 18A6.500 6.500 0 0 1 18.500 18z"/><rect x="3.500" y="18" width="17" height="3.500" rx="1.400"/><path class="s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.500v3M3.800 5.200l2 2M20.200 5.200l-2 2"/></symbol><symbol id="i-cross2" viewBox="0 0 24 24"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><rect x="2.500" y="3.500" width="19" height="17" rx="3"/><path d="M6.500 8.500h11M6.500 12.500h11M6.500 16.500h6.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9.500 4.500 2.500 11l7 6.500v-4c5.500 0 9 1.300 11.500 6 0-7-3.800-12.500-11.500-12.500z"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M7.500 14.500c1 2.800 3 4 4.500 4s3.500-1.200 4.500-4" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 15.500c1.200 1.600 2.600 2.200 4 2.200s2.800-.6 4-2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-meh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 16.200h8" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-angry" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.500 7.200l4 2M17.500 7.200l-4 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.600" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="15.400" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><path d="M8 17c1-1.500 2.300-2.200 4-2.200s3 .7 4 2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-sick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.800 9.500l3 1.200-3 1.200M17.200 9.500l-3 1.200 3 1.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.500 16.200c1-1 1.800-1 2.800 0s1.800 1 2.800 0 1.800-1 2.800 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-snow" viewBox="0 0 24 24"><path class="s" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.800v20.400M3.200 6.900l17.600 10.200M3.200 17.100 20.800 6.900M8.800 3.800 12 6l3.200-2.200M8.800 20.200 12 18l3.200 2.200"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.500 14.800A9.500 9.500 0 0 1 9.200 3.500 9.500 9.500 0 1 0 20.500 14.800z"/></symbol><symbol id="i-robot" viewBox="0 0 24 24"><rect x="3.500" y="7.500" width="17" height="13.500" rx="4.500"/><rect x="11" y="3" width="2" height="4.500"/><circle cx="12" cy="2.800" r="1.700"/><circle cx="8.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><path d="M9 18h6" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-palm" viewBox="0 0 24 24"><path d="M11 22.500c0-6.500 1-10 2.200-13.500h1.200c-1.100 3.500-1.800 7-1.800 13.500z"/><path d="M12.800 9C8.800 4.500 4.500 5 2 8.500c3-1 6 0 10.800.5zM12.800 9c0-5.500 4-7.700 8.500-6.500-3.200 1-5.500 3.200-6.500 7zM12.800 9c4-3 8.500-1.500 10 3-3-1.500-6-1.300-9.500.2zM12.800 9c-3.500 1.500-5 5-4 8.500 1.200-3.500 2.700-5.800 5-7.300z"/></symbol><symbol id="i-rock" viewBox="0 0 24 24"><path d="M2.500 18.500 6.800 8l5.200-4.500 6.500 3 3 8.500-4.300 5.500H6.500z"/><path d="M7 9.500l5 3 6-5M12 12.500v7.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-alien" viewBox="0 0 24 24"><path d="M12 2c5.500 0 9.500 4.200 9.500 9.500 0 5.500-4.200 10.500-9.500 10.500S2.500 17 2.500 11.500C2.500 6.200 6.500 2 12 2z"/><ellipse cx="8" cy="11" rx="2.600" ry="1.500" transform="rotate(20 8 11)" fill="rgba(0,0,0,.42)"/><ellipse cx="16" cy="11" rx="2.600" ry="1.500" transform="rotate(-20 16 11)" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-tiger" viewBox="0 0 24 24"><path d="M2.500 3 8 6.200h8L21.500 3v9.500c0 5.500-4 9.500-9.500 9.500S2.500 18 2.500 12.500z"/><path d="M12 7v3M7 8.500l1.500 2M17 8.500l-1.500 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.300" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><circle cx="15.700" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><path d="M10 17.500c1 .8 3 .8 4 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 1.800a9.500 9.500 0 0 0-5.500 17.200v2.700h11V19A9.500 9.500 0 0 0 12 1.800z"/><circle cx="8.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><path d="M10 17.500v2.500M14 17.500v2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-battery" viewBox="0 0 24 24"><rect x="1.500" y="6.500" width="18.500" height="11" rx="3"/><rect x="20.800" y="9.800" width="2" height="4.400" rx="1"/><path d="M12 8.200 8.300 12.500h3l-.8 3.500 3.700-4.500h-3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M0.800 12C3.800 6 7.800 3.800 12 3.800s8.200 2.200 11.200 8.200c-3 6-7 8.200-11.200 8.200S3.800 18 0.800 12z"/><circle cx="12" cy="12" r="4.400" fill="rgba(0,0,0,.42)"/><circle cx="13.200" cy="10.800" r="1.400" fill="#fff"/></symbol><symbol id="i-comet" viewBox="0 0 24 24"><circle cx="16.500" cy="7.500" r="5.500"/><path d="M12.500 10.500 1.800 17.800l4-.8-.9 4.300z" opacity=".85"/><path d="M11.200 12.500 5 22l1-5z" opacity=".5"/></symbol><symbol id="i-cap" viewBox="0 0 24 24"><path d="M12 3 1 9l11 6 9-4.900V17h2V9z"/><path d="M5.500 13v4c0 2 3 4 6.500 4s6.500-2 6.500-4v-4l-6.500 3.500z" opacity=".8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M3 3.500h18V16H10.500L5.500 20.500V16H3z"/><circle cx="8" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="16" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-medal" viewBox="0 0 24 24"><path d="M6.500 1.500h4l1.500 6-3.500 1.500zM17.500 1.500h-4L12 7.500l3.500 1.500z" opacity=".75"/><circle cx="12" cy="15" r="6.500"/><path d="m12 11.300 1.100 2.300 2.500.3-1.800 1.700.5 2.500-2.300-1.300-2.300 1.300.5-2.500-1.800-1.700 2.500-.3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="12" r="7" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="3.800"/><circle cx="12" cy="12" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-glove" viewBox="0 0 24 24"><path d="M6 22v-7.500L3.500 10a1.700 1.700 0 0 1 3-1.600L8 10.500V4.500a1.500 1.500 0 0 1 3 0V3.500a1.500 1.500 0 0 1 3 0V4.500a1.500 1.500 0 0 1 3 0V12l1.200-1.800a1.700 1.700 0 0 1 2.800 1.900L19 17.500V22z"/><path d="M6 19h13" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.600" stroke-linecap="round"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.500 3.500 4.800v6.500c0 5.200 3.600 9.600 8.500 11.200 4.900-1.600 8.500-6 8.500-11.200V4.800z"/><path d="m8.200 12 2.800 2.800 4.800-5.300" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><rect x="2.500" y="12" width="5" height="9.500" rx="1.200"/><rect x="9.500" y="2.500" width="5" height="19" rx="1.200"/><rect x="16.500" y="7.500" width="5" height="14" rx="1.200"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 1.800 2.800 12H8v10h8V12h5.200z"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="8" y="1.500" width="8" height="13" rx="4"/><path d="M4.500 11a7.500 7.500 0 0 0 15 0M12 18.500v3.500M8 22h8" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.500 5.500h11a5 5 0 0 1 5 4.500l.9 5.500a3.300 3.300 0 0 1-5.800 2.600L16.200 16H7.800l-1.400 2.100A3.300 3.300 0 0 1 .6 15.500L1.500 10a5 5 0 0 1 5-4.500z"/><path d="M7.500 8.800v4.400M5.300 11h4.400" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.800" stroke-linecap="round"/><circle cx="16" cy="10" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="18.700" cy="12.300" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dice" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="7.800" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="7.800" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.800 3 12.800A5.800 5.800 0 0 1 12 5.800a5.800 5.800 0 0 1 9 7z"/></symbol><symbol id="i-speaker" viewBox="0 0 24 24"><path d="M2 8.800h4.800L13 3.500v17l-6.200-5.300H2z"/><path d="M16.500 8.300a5 5 0 0 1 0 7.400M19.800 5a9.500 9.500 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="1.500" y="3" width="21" height="14" rx="2.800"/><path d="M8 21h8M12 17.500V21" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bed" viewBox="0 0 24 24"><path d="M1.500 4h2.500v8h16.500a2.500 2.500 0 0 1 2.500 2.500V19h-2.500v-2.500H4V19H1.500z"/><rect x="5.500" y="6.500" width="5.500" height="3.800" rx="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 22.200 2.800 12H8V2h8v10h5.200z"/></symbol></svg>',
   EMJ = {
     '🏆': 'trophy',
     '⚽': 'ball',
@@ -2041,6 +2049,7 @@ const SPR =
     '💰': 'coin',
     '💾': 'save',
     '🏠': 'home',
+    '🧭': 'dash',
     '🔄': 'swap',
     '⚙': 'gear',
     '⏸': 'pause',
@@ -2175,11 +2184,11 @@ const TN0 = [
   ['Paradisia', 15, '⟦pa⟧', 'Team Paradisia'],
   ['Xzion', 16, '⟦lt⟧', 'Lightnings'],
   ['Wamba Prime', 10, '⟦wa⟧', 'Wambas'],
-  ['Rykhar', 12, '⟦ry⟧', 'Rykers'],
-  ['Xéna', 14, '⟦xe⟧', 'Xenons'],
+  ['Unadar', 12, '⟦ry⟧', 'Rykers'],
+  ['Archipel Xenon', 14, '⟦xe⟧', 'Xenons'],
   ['Pirates', 9, '⟦pi⟧', 'Pirates'],
-  ['Électra', 11, '⟦el⟧', 'Elektras'],
-  ['Cyclos', 10, '⟦cy⟧', 'Cyclopes'],
+  ['Hektonïa', 11, '⟦el⟧', 'Elektras'],
+  ['Cyclopia', 10, '⟦cy⟧', 'Cyclopes'],
   ['Technoïd', 14, '⟦te⟧', 'Technodroids'],
   ['Vega', 11, '⟦vg⟧', 'Comet'],
   ['Kaldor', 14, '⟦kd⟧', 'Vortex'],
@@ -2212,7 +2221,12 @@ const useT = () => {
 const CF = ['t', 'md', 'fx', 'teams', 'res', 'hist', 'cup', 'obj', 'pal', 'mkt', 'form'];
 // CALENDRIER : renvoie le jour de l'année du match numéro d (League : tous les 7 jours, Cup : tous
 // les 14 jours).
-const dOf = (c, d) => (c == 'C' ? 11 + 14 * d : 8 + 7 * d + (d >= 13 ? 14 : 0));
+// Jour du match n° d : la pause de mi-saison tombe à la moitié du calendrier (13 matchs sur 26, 17 sur 34...).
+const lgHalf = () => {
+  const f = S && (S.ctx == 'L' ? S.fx : S.alt && S.alt.fx);
+  return f && f.length ? f.length / 2 : 13;
+};
+const dOf = (c, d) => (c == 'C' ? 11 + 14 * d : 8 + 7 * d + (d >= lgHalf() ? 14 : 0));
 // Répartit les sélections de la Cup en 4 groupes équilibrés.
 function assignG(tm) {
   const o = tm.map((t, i) => i).sort((a, b) => TN[b][1] - TN[a][1]),
@@ -2440,7 +2454,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.42.0.10';
+  GV = '1.45.0.0';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -2452,8 +2466,64 @@ const ser = () => {
 };
 // Reconstruit la partie depuis un texte enregistré, en adaptant les anciennes sauvegardes
 // (migration).
+// Réparation d'un classement faussé : si un même match apparaît plusieurs fois dans une journée de l'historique,
+// on garde un seul résultat par match et on recalcule le classement (points, buts, forme) à partir de l'historique.
+function lgRepair(o, cx) {
+  try {
+    if (!o || !Array.isArray(o.teams) || !Array.isArray(o.hist)) return false;
+    let dup = false;
+    const H = o.hist.map((L) => {
+      if (!Array.isArray(L)) return L;
+      const m = new Map();
+      L.forEach((z) => {
+        const k = z[0] + '-' + z[1];
+        if (m.has(k)) dup = true;
+        m.set(k, z);
+      });
+      return [...m.values()];
+    });
+    if (!dup) return false;
+    o.teams.forEach((t) => {
+      t.pts = t.pl = t.gf = t.ga = t.w = t.d = t.l = 0;
+      if (t.fm) t.fm = [];
+    });
+    H.forEach((L) =>
+      (L || []).forEach(([h, a, x, y]) => {
+        [[h, x, y], [a, y, x]].forEach(([i, g, c]) => {
+          const t = o.teams[i];
+          if (!t) return;
+          t.pl++;
+          t.gf += g;
+          t.ga += c;
+          if (g > c) (t.w++, (t.pts += 3));
+          else if (g == c) (t.d++, t.pts++);
+          else t.l++;
+          if ((cx || o.ctx) != 'C' && (t.fm = t.fm || [])) (t.fm.push(g > c ? 'V' : g == c ? 'N' : 'D'), t.fm.length > 5 && t.fm.shift());
+        });
+      }),
+    );
+    o.hist = H;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
 const hyd = (s) => {
   MG = null;
+  // Les interviews ne passent plus par la messagerie (fenêtre de conférence de presse) : on retire les anciens mails d'interview.
+  if (s && Array.isArray(s.mail)) s.mail = s.mail.filter((m) => !/^Interview/.test(m.t || ''));
+  // Planètes renommées pour coller à la série (Rykhar, Électra, Cyclos, Xéna) : remplacées partout dans la sauvegarde.
+  if (s && /Rykhar|\u00c9lectra|Cyclos|X\u00e9na/.test(JSON.stringify(s))) {
+    const q = JSON.parse(
+      JSON.stringify(s)
+        .split('Rykhar').join('Unadar')
+        .split('\u00c9lectra').join('Hekton\u00efa')
+        .split('Cyclos').join('Cyclopia')
+        .split('X\u00e9na').join('Archipel Xenon'),
+    );
+    Object.keys(s).forEach((k) => delete s[k]);
+    Object.assign(s, q);
+  }
   // Anciens noms d'équipes (renommées « Comet » et « Vortex ») : on les remplace partout dans la sauvegarde.
   if (s && /Comet(?:es|ès)? de Vega|Comètes|Vortex de Kaldor/.test(JSON.stringify(s))) {
     const q = JSON.parse(JSON.stringify(s).split('Comètes de Vega').join('Comet').split('Comètes').join('Comet').split('Vortex de Kaldor').join('Vortex'));
@@ -2466,6 +2536,10 @@ const hyd = (s) => {
     Object.assign(s, q);
   }
   if (s) {
+    // Classement faussé par des matchs simulés plusieurs fois : réparé automatiquement au chargement.
+    if (lgRepair(s)) s.rpd = 1;
+    if (s.alt) lgRepair(s.alt, s.ctx == 'C' ? 'L' : 'C');
+    if (s.hist && s.hist[s.md] && s.hist[s.md].length && s.simd == null) s.simd = s.season + ':' + s.ctx + ':' + s.md;
     s.mode = s.mode || 'L';
     s.ctx = s.ctx || 'L';
     (s.teams || []).forEach((t) => {
@@ -2543,7 +2617,8 @@ function natMkt() {
       )
       .join('') +
     `</div>` +
-    coachCard()
+    coachCard() +
+    nnModal()
   );
 }
 // Mémoire de la navigation dans le marché.
@@ -2556,6 +2631,13 @@ function nk(a, i) {
     return render();
   }
   V.mk = null;
+  if (a == 'rc' || a == 'cv') {
+    // Choix du numéro de maillot avant de recruter ou de convoquer.
+    const p0 = a == 'rc' ? S.mkt[i] : NAV[i];
+    if (!p0) return render();
+    V.nn = { a, i, n: p0.n, num: numFree(p0.nc || 0, p0.n) };
+    return render();
+  }
   const t = me(),
     pl = t.name;
   if (a == 'rl') {
@@ -2581,6 +2663,50 @@ function nk(a, i) {
       natSync(t);
     }
   }
+  save();
+  render();
+}
+// Fenêtre de choix du numéro (marché de la Cup).
+function nnSet(v) {
+  if (!V.nn) return;
+  V.nn.num = Math.max(1, Math.min(99, Math.round(+v) || 1));
+  render();
+}
+function nnModal() {
+  const o = V.nn;
+  if (!o) return '';
+  const p = o.a == 'rc' ? S.mkt.find((q) => q.n == o.n) : NAV.find((q) => q.n == o.n);
+  if (!p) return '';
+  const u = numUser(o.num, p.n),
+    cost = o.a == 'rc' ? price(p) >> 1 : 0;
+  return `<div class="mo" onclick="V.nn=null;render()"><div class="card ofm" style="max-width:420px" onclick="event.stopPropagation()"><div class="ofh"><b>${o.a == 'rc' ? 'Recruter' : 'Convoquer'} ${p.n}</b><button class="pfx" onclick="V.nn=null;render()" aria-label="Fermer">✕</button></div><div class="mu" style="margin:6px 0">${p.p} · note ${p.o}${cost ? ' · coût ' + cost + ' cr.' : ''}</div><div class="ofg"><span>Numéro de maillot (Cup)</span><div class="ofa2"><button onclick="nnSet(${o.num - 1})">−1</button><input type="number" min="1" max="99" value="${o.num}" onchange="nnSet(+this.value)"><button onclick="nnSet(${o.num + 1})">+1</button></div><em>1 à 99</em></div>${u ? `<div class="oft" style="color:#e5484d">Le n°${o.num} est déjà porté par ${u.n} : choisissez un autre numéro.</div>` : `<div class="oft" style="color:#2fb36b">Le n°${o.num} est libre.</div>`}<div class="ctl" style="justify-content:center;margin-top:8px"><button class="p" onclick="nnGo()" ${u || (cost && S.cash < cost) ? 'disabled' : ''}>Confirmer</button><button onclick="V.nn=null;render()">Annuler</button></div></div></div>`;
+}
+function nnGo() {
+  const o = V.nn;
+  if (!o) return;
+  const t = me(),
+    pl = t.name;
+  if (o.a == 'cv') {
+    const p = NAV.find((q) => q.n == o.n);
+    if (p && t.ros.length < 16 && !numUser(o.num, p.n)) {
+      p.nc = o.num;
+      t.ros.push(p.n);
+      natSync(t);
+    }
+  } else {
+    const i = S.mkt.findIndex((q) => q.n == o.n),
+      p = S.mkt[i];
+    if (p && S.cash >= price(p) >> 1 && t.ros.length < 16 && !numUser(o.num, p.n)) {
+      tx('Recrutement', -(price(p) >> 1));
+      S.mkt.splice(i, 1);
+      S.free = S.free || {};
+      (S.free[pl] = S.free[pl] || []).push(p);
+      p.nc = o.num;
+      t.ros.push(p.n);
+      natSync(t);
+    }
+  }
+  V.nn = null;
   save();
   render();
 }
@@ -2611,9 +2737,130 @@ function newSeason() {
   }
   load('Nouvelle saison…', newSeason0);
 }
+// ÉQUIPES QUI REJOIGNENT LA LIGUE À PARTIR DE LA SAISON 2 : [nom, niveau, écusson, formation, effectif
+// (nom, poste, note)]. 12 joueurs chacune : 2 gardiens, 3 défenseurs, 4 milieux, 3 attaquants.
+const NEWT = [
+  {
+    n: 'Quasars',
+    l: 14,
+    em: '⟦~1.1.0.0b0b1e.ffc83d.ffffff⟧',
+    f: '3-1-2',
+    r: [
+      ['Orion Valk', 'GK', 73], ['Pax Lumen', 'GK', 60],
+      ['Vesper Nox', 'DEF', 71], ['Kael Aphélie', 'DEF', 67], ['Tamsin Corona', 'DEF', 64],
+      ['Solène Zénith', 'MID', 76], ['Rigel Orbis', 'MID', 70], ['Lyra Fusion', 'MID', 62], ['Eclipse Doran', 'MID', 60],
+      ['Altaïr Brandt', 'ATT', 80], ['Nova Tessel', 'ATT', 74], ['Pollux Ardent', 'ATT', 58],
+    ],
+  },
+  {
+    n: 'Echoes',
+    l: 14,
+    em: '⟦~5.2.13.6a45c8.ff8fd0.ffffff⟧',
+    f: '1-3-2',
+    r: [
+      ['Sélène Aurelle', 'GK', 70], ['Aldo Chorale', 'GK', 58],
+      ['Ambre Tessiture', 'DEF', 68], ['Corvin Aigu', 'DEF', 66], ['Ludo Refrain', 'DEF', 58],
+      ['Liora Cantabile', 'MID', 76], ['Thaddée Coda', 'MID', 73], ['Noé Sonore', 'MID', 71], ['Elsa Timbre', 'MID', 69],
+      ['Mathis Vibrato', 'ATT', 72], ['Iris Fugue', 'ATT', 68], ['Basile Octave', 'ATT', 62],
+    ],
+  },
+  {
+    n: 'Titans',
+    l: 14,
+    em: '⟦~7.0.12.5a5f6b.c97a3a.e8e8e8⟧',
+    f: '3-2-1',
+    r: [
+      ['Brann Ossak', 'GK', 74], ['Gus Tellur', 'GK', 58],
+      ['Durgan Pilastre', 'DEF', 78], ['Hela Mont', 'DEF', 71], ['Rogh Strate', 'DEF', 69],
+      ['Torvald Basalte', 'MID', 66], ['Ilka Sédim', 'MID', 64], ['Vessa Cairn', 'MID', 62], ['Pavel Moraine', 'MID', 59],
+      ['Gorm Brisecœur', 'ATT', 73], ['Aldra Silex', 'ATT', 68], ['Sita Gneiss', 'ATT', 57],
+    ],
+  },
+  {
+    n: 'Mirage',
+    l: 14,
+    em: '⟦~4.3.7.d9a441.7a3b1d.f4d08a⟧',
+    f: '2-2-2',
+    r: [
+      ['Idris Nafar', 'GK', 72], ['Omar Hadj', 'GK', 57],
+      ['Samir Dune', 'DEF', 70], ['Tahar Oasis', 'DEF', 66], ['Rhaïs Tamarin', 'DEF', 63],
+      ['Zahra Cimeterre', 'MID', 76], ['Naël Sirocco', 'MID', 68], ['Yanis Ergan', 'MID', 61], ['Amal Saline', 'MID', 59],
+      ['Kenzo Mirabel', 'ATT', 79], ['Loubna Scarab', 'ATT', 73], ['Joran Sabel', 'ATT', 58],
+    ],
+  },
+  {
+    n: 'Nocturnes',
+    l: 13,
+    em: '⟦~2.1.6.2a1b4a.c9ccd8.ffffff⟧',
+    f: '3-2-1',
+    r: [
+      ['Vael Sombrelune', 'GK', 72, 'Shadows'], ['Orsk Pénombre', 'GK', 58, 'Wambas'],
+      ['Mirel Crépuscule', 'DEF', 70, 'Shadows'], ['Tarn Obscure', 'DEF', 66, 'Rykers'], ['Dessa Nuit-Claire', 'DEF', 62, 'Xenons'],
+      ['Ilyan Veilleuse', 'MID', 73, 'Shadows'], ['Noct Aurelin', 'MID', 69, 'Shadows'], ['Sora Lueur', 'MID', 63, 'Snow Kids'], ['Brume Halden', 'MID', 59, 'Wambas'],
+      ['Kyr Ténébrion', 'ATT', 77, 'Shadows'], ['Livia Étiole', 'ATT', 66, 'Xenons'], ['Zeph Mistral', 'ATT', 57, 'Comet'],
+    ],
+  },
+  {
+    n: 'Cumulus',
+    l: 14,
+    em: '⟦~3.0.0.5f6b82.ffd23f.ffffff⟧',
+    f: '2-1-3',
+    r: [
+      ['Aron Nimbus', 'GK', 71, 'Rykers'], ['Pell Cirrus', 'GK', 57, 'Snow Kids'],
+      ['Ezra Stratos', 'DEF', 69, 'Lightnings'], ['Maëla Grésil', 'DEF', 65, 'Wambas'], ['Bram Alto', 'DEF', 60, 'Xenons'],
+      ['Ondine Voltaire', 'MID', 75, 'Lightnings'], ['Rafe Éther', 'MID', 70, 'Lightnings'], ['Jun Tonnerre', 'MID', 62, 'Shadows'],
+      ['Ciel Arcane', 'ATT', 78, 'Lightnings'], ['Dario Orage', 'ATT', 72, 'Snow Kids'], ['Eliot Zénon', 'ATT', 63, 'Comet'], ['Faye Éclair', 'ATT', 58, 'Xenons'],
+    ],
+  },
+  {
+    n: 'Magmas',
+    l: 12,
+    em: '⟦~6.0.12.1c1612.ff7a1f.ffd08a⟧',
+    f: '3-1-2',
+    r: [
+      ['Korg Basaltin', 'GK', 73, 'Rykers'], ['Thel Cendre', 'GK', 56, 'Shadows'],
+      ['Draz Obsidien', 'DEF', 72, 'Rykers'], ['Hadra Fumerolle', 'DEF', 68, 'Rykers'], ['Varn Scorie', 'DEF', 61, 'Lightnings'],
+      ['Ignis Kalder', 'MID', 70, 'Rykers'], ['Pyra Caldera', 'MID', 66, 'Rykers'], ['Orlan Tuf', 'MID', 59, 'Wambas'], ['Cinder Vorn', 'MID', 57, 'Comet'],
+      ['Rhok Éruptis', 'ATT', 74, 'Rykers'], ['Sabe Lapilli', 'ATT', 65, 'Xenons'], ['Mako Pyrite', 'ATT', 58, 'Snow Kids'],
+    ],
+  },
+];
+// Cases de choix des nouvelles équipes sur l'écran de création de partie.
+function newTiles() {
+  return NEWT.map(
+    (x, j) =>
+      `<button onclick="load('Création du club…',()=>{init(${100 + j},'${V.nm || 'L'}');render()})">${x.em} ${x.n}${ft(x.n)}${bioBtn(x.n)}<br><span class="mu">Niveau ${x.l}/20 · nouvelle équipe fictive</span><br><span class="mu"><b>Prise en main équilibrée</b></span></button>`,
+  ).join('');
+}
+// Fait entrer les trois nouvelles équipes dans la Ligue (à partir de la saison 2). Les effectifs sont créés
+// une fois pour toutes ; le calendrier est ensuite refait avec toutes les équipes.
+// Crée l'équipe (effectif de 12 joueurs, formation de départ) ; d = ajustement de difficulté des notes.
+function mkNewTeam(x, d) {
+  const sq = x.r.map(([n, p, o, g]) => ({
+    n,
+    p,
+    o: Math.max(35, Math.min(95, o + d)),
+    e: 100,
+    f: 55 + ((n.length * 7) % 35),
+    g: 0,
+    og: g || x.n,
+  }));
+  const t = { name: x.n, em: x.em, sq, form: x.f, m: 1, lu: [], pts: 0, pl: 0, gf: 0, ga: 0, w: 0, d: 0, l: 0, fr: 1 };
+  autoLU(t);
+  return t;
+}
+function newTeams() {
+  if (S.ctx == 'C') return false;
+  const miss = NEWT.filter((x) => !S.teams.some((t) => t.name == x.n)),
+    d = [-2, 0, 2][S.df ?? 1];
+  if (!miss.length) return false;
+  miss.forEach((x) => S.teams.push(mkNewTeam(x, d)));
+  return miss.map((x) => x.n);
+}
 // Remet à zéro les compétitions pour une nouvelle saison.
 function resetC() {
   mkJoin();
+  const nw = newTeams();
   const r = rng(S.season * 31 + (S.ctx == 'C' ? 7 : 0));
   S.teams.forEach((t) => {
     t.pts = t.pl = t.gf = t.ga = t.w = t.d = t.l = 0;
@@ -2624,7 +2871,7 @@ function resetC() {
         p.g = 0;
       });
       // Les équipes IA changent de formation d'une saison à l'autre.
-      if (t !== me()) {
+      if (t !== me() && !t.fr) {
         const ks = Object.keys(FORM);
         t.form = ks[(Math.random() * ks.length) | 0];
         delete t.fs;
@@ -2638,6 +2885,15 @@ function resetC() {
       natSync(t, t != me());
     }
   });
+  S.teams.forEach((t) => delete t.fr);
+  if (nw && S.ctx == 'L') {
+    const NP = { Quasars: 'les Quasars (Hélion)', Titans: 'les Titans (Kéthros)', Mirage: 'le Mirage (Sahélis)', Echoes: 'les Echoes (Lyrrhia)', Nocturnes: 'les Nocturnes (Ombra)', Cumulus: 'les Cumulus (Xzion)', Magmas: 'les Magmas (Unadar)' },
+      L = nw.map((n) => NP[n]);
+    mail(
+      nw.length > 1 ? nw.length + ' nouvelles équipes rejoignent la Ligue' : 'Une nouvelle équipe rejoint la Ligue',
+      'Manager,\n\nÀ partir de cette saison, ' + (L.length > 1 ? L.slice(0, -1).join(', ') + ' et ' + L[L.length - 1] : L[0]) + ' ' + (L.length > 1 ? 'rejoignent' : 'rejoint') + ' la Ligue Galactique. La saison compte désormais ' + (S.teams.length * 2 - 2) + ' journées' + (S.teams.length % 2 ? ' (chaque club se repose une journée par tour : nombre impair d’équipes)' : '') + '.\n\nLe secrétariat',
+    );
+  }
   if (S.ctx != 'C') {
     contracts();
     youth();
@@ -2677,6 +2933,11 @@ function newSeason0() {
   }
   S.day = 0;
   S.season++;
+  if (S.season == 2 && S.ctx != 'C' && S.teams.some((t) => t.name == 'Tigres Rouges'))
+    mail(
+      'Le Souffle d’Akillian s’éveille chez les Tigres Rouges',
+      'Manager,\n\nÀ partir de cette saison, les Tigres Rouges manifestent enfin le Souffle d’Akillian : leurs joueurs deviennent compatibles avec celui des Snow Kids et leurs bottes cybernétiques ne sont plus nécessaires.',
+    );
   if (S.nb) {
     S.nb.k = 0;
     S.nb.nx = null;
@@ -2749,7 +3010,7 @@ function qText(i) {
   return [
     [
       'Un petit service',
-      'Vous ne me connaissez pas. Moi, je vous connais. Je veux simplement que votre équipe perde son prochain match en championnat. Ne posez pas de questions.',
+      'Vous ne me connaissez pas. Moi, je vous connais. Je suis les clubs de la galaxie depuis longtemps, et le vôtre me fascine : il cache bien plus que ce que dit le classement.\n\nJe vous propose un marché étrange. Perdez votre prochain match de championnat. Une seule défaite, rien de plus. En échange, je vous montrerai ce que personne ne voit dans cette galaxie : ce qui dort derrière le ballon.\n\nVous hésitez ? C’est normal. Mais ceux qui refusent ne reçoivent jamais de second message, et ils ne sauront jamais ce qu’ils ont laissé passer. Un match perdu pour une porte qui s’ouvre... À vous de voir.\n\n— M. Nether',
     ],
     [
       'Un nom',
@@ -3093,28 +3354,28 @@ const BIO = {
     'Les Wambas viennent d’une planète tropicale où le football est une fête. Joueurs imprévisibles et généreux, ils veulent surprendre la galaxie et prouver qu’on peut gagner en souriant.',
   ],
   Rykers: [
-    'Rykhar',
-    'Forgés sur Rykhar, un monde de roche et de volcans, les Rykers sont durs au mal et redoutables dans les duels. Leur ambition : bâtir une muraille que personne ne franchira.',
+    'Unadar',
+    'Forgés sur Unadar, un monde de roche et de volcans, les Rykers sont durs au mal et redoutables dans les duels. Leur ambition : bâtir une muraille que personne ne franchira.',
   ],
   Xenons: [
-    'Xéna',
-    'Les Xenons sont les enfants d’une planète sauvage et mystérieuse. Agiles et insaisissables, ils déroutent leurs adversaires et rêvent de s’imposer parmi les grandes équipes de la ligue.',
+    'Archipel Xenon',
+    'Les Xenons sont les enfants d’un archipel sauvage et mystérieux. Agiles et insaisissables, ils déroutent leurs adversaires et rêvent de s’imposer parmi les grandes équipes de la ligue.',
   ],
   'Tigres Rouges': [
     'Akillian',
-    'Rivaux historiques des Snow Kids sur la même planète, les Tigres Rouges incarnent la fougue et l’orgueil. Ils jouent chaque match comme une revanche et veulent enfin dominer leur monde.',
+    'Les Tigres Rouges voulaient fonder un nouveau règne du football sur Akillian, en changeant entièrement son style et ses couleurs. Artegor Nexus a accepté de les accompagner, y voyant une occasion de gagner beaucoup d’argent et de créer quelque chose de nouveau. Battus par les Snow Kids, ils n’ont plus le droit de représenter Akillian : ce n’est plus qu’une équipe privée. Privés du Souffle d’Akillian, ils compensent par des bottes cybernétiques qui boostent par moments leur vitesse, leur agilité et leurs frappes. On ignore pourquoi ils portent des casques. À partir de la saison 2, le Souffle d’Akillian s’éveille enfin chez eux.',
   ],
   Pirates: [
     'Pirates',
     'Équipe de flibustiers de l’espace sans planète fixe, les Pirates jouent sans règles apparentes. Rusés et opportunistes, ils cherchent la gloire, et le butin qui va avec.',
   ],
   Elektras: [
-    'Électra',
-    'Sur Électra, tout fonctionne à l’énergie pure, et les Elektras n’en manquent jamais. Équipe moderne et vive, elle veut s’imposer par la vitesse, la précision et un pressing incessant.',
+    'Hektonïa',
+    'Sur Hektonïa, tout fonctionne à l’énergie pure, et les Elektras n’en manquent jamais. Équipe moderne et vive, elle veut s’imposer par la vitesse, la précision et un pressing incessant.',
   ],
   Cyclopes: [
-    'Cyclos',
-    'Les Cyclopes viennent de Cyclos, un monde où l’on ne quitte jamais l’objectif des yeux. Disciplinés et patients, ils attendent la faille pour frapper et rêvent d’un premier grand titre.',
+    'Cyclopia',
+    'Les Cyclopes viennent de Cyclopia, un monde où l’on ne quitte jamais l’objectif des yeux. Disciplinés et patients, ils attendent la faille pour frapper et rêvent d’un premier grand titre.',
   ],
   Technodroids: [
     'Technoïd',
@@ -3127,6 +3388,34 @@ const BIO = {
   'Comet': [
     'Vega',
     'Créées pour ce jeu, les Comet viennent d’une planète qui tourne autour d’un couple d’étoiles sur une orbite très étirée : quelques mois de lumière aveuglante, puis une très longue nuit de poussière. Les Vegiens, grands et minces, ont la peau translucide, lilas à bleu nuit, parsemée de points lumineux dorés comme des constellations, et de fins cheveux-filaments qui brillent aux pointes, la « queue de comète ». Ils stockent la lumière le jour et la libèrent la nuit : lents à démarrer, fulgurants en fin de match (Dernier souffle). Chaque enfant porte le nom de la comète qui passait le jour de sa naissance.',
+  ],
+  Quasars: [
+    'Hélion',
+    'Créés pour ce jeu, les Quasars viennent d’Hélion, les restes tièdes d’une étoile effondrée, traversés de veines d’énergie qui brillent la nuit. Peau sombre striée de lignes lumineuses, yeux sans pupille : ils jouent sobrement, accumulent l’énergie, puis la libèrent d’un coup en fin de match.',
+  ],
+  Titans: [
+    'Kéthros',
+    'Créés pour ce jeu, les Titans viennent de Kéthros, une planète trois fois plus lourde que la normale. Trapus, denses et presque infatigables, ils verrouillent le jeu avec un bloc défensif écrasant et ralentissent tout ce qui s’approche de leur but.',
+  ],
+  Echoes: [
+    'Lyrrhia',
+    'Créés pour ce jeu, les Echoes viennent de Lyrrhia, une planète de cristaux sonores où chaque cité est un instrument géant. Grands, fins et à l’ouïe exceptionnelle, ils sentent leurs coéquipiers sans les regarder : pas de star, mais personne ne joue aussi bien ensemble.',
+  ],
+  Mirage: [
+    'Sahélis',
+    'Créés pour ce jeu, les Mirage viennent de Sahélis, un monde désertique où l’air brûlant déforme tout. Longs, secs et agiles, ils gagnent en trompant l’adversaire : leurs feintes et leurs doubles illusoires affolent les défenses.',
+  ],
+  Nocturnes: [
+    'Ombra',
+    'Créés pour ce jeu, les Nocturnes viennent d’Ombra, comme les Shadows, mais des cités souterraines qu’ils n’ont jamais quittées. Peau pâle, grands yeux faits pour la pénombre, ils partagent le Smog des Ombres de leurs voisins et reprochent aux Shadows d’avoir vendu leur monde à la lumière des stades.',
+  ],
+  Cumulus: [
+    'Xzion',
+    'Créés pour ce jeu, les Cumulus viennent des plateaux nuageux de Xzion, là où naissent les orages. Grands, aux yeux gris-bleu qui crépitent d’étincelles, ils partagent la Foudre des Lightnings mais jouent l’orage patient : ils accumulent, puis éclatent.',
+  ],
+  Magmas: [
+    'Unadar',
+    'Créés pour ce jeu, les Magmas viennent des volcans actifs de Unadar, sous la muraille des Rykers dont ils partagent le Mur de roche. Trapus, la peau striée de veines orangées, ils jouent à l’usure, et une vieille querelle de familles les oppose aux Rykers pour l’héritage du grand cratère.',
   ],
 };
 // Ouvre la fenêtre de présentation d'un club.
@@ -3143,7 +3432,7 @@ function bioShow(n) {
     document.body.appendChild(o);
   }
   const i = T.findIndex((x) => x[0] == n),
-    t = T[i];
+    t = T[i] || (NEWT.find((x) => x.n == n) ? [n, NEWT.find((x) => x.n == n).l, NEWT.find((x) => x.n == n).em] : null);
   o.innerHTML = lgR(
     `<div class="bioc"><button class="x" onclick="document.getElementById('biom').remove()">✕</button><h3>${t ? t[2] + ' ' : ''}${n}</h3><div class="mu">Planète : <b>${b[0]}</b>${t ? ' · Niveau ' + t[1] + '/20 · ' + (FICT.includes(n) ? 'équipe fictive' : 'équipe de la série') : ''}</div><p>${b[1]}</p><div class="ctl"><button class="p" onclick="document.getElementById('biom').remove();load('Création du club…',()=>{init(${i},'${V.nm || 'L'}');render()})">Choisir ce club</button></div></div>`,
   );
@@ -3167,15 +3456,15 @@ const PBIO = {
     'Terre d’orages et d’énergie, Xzion compte parmi les grandes nations de la Cup. Sa sélection, électrique et offensive, joue chaque édition pour le titre et ne se contente jamais d’une place d’honneur.',
   'Wamba Prime':
     'Planète tropicale où le football est une fête, Wamba Prime envoie une sélection joyeuse et imprévisible. Outsider assumé, elle rêve de créer la surprise et de faire danser tout le tournoi.',
-  Rykhar:
-    'Monde de roche et de volcans, Rykhar bâtit une sélection robuste, taillée pour les duels. Peu spectaculaire mais difficile à battre, elle veut s’imposer par la rigueur et l’endurance.',
-  Xéna: 'Planète sauvage et mystérieuse, Xéna aligne des joueurs agiles et insaisissables. Sa sélection aime surprendre en contre et ambitionne de s’installer durablement parmi les nations qui comptent.',
+  Unadar:
+    'Monde de roche et de volcans, Unadar bâtit une sélection robuste, taillée pour les duels. Peu spectaculaire mais difficile à battre, elle veut s’imposer par la rigueur et l’endurance.',
+  'Archipel Xenon': 'Archipel sauvage et mystérieux, l’Archipel Xenon aligne des joueurs agiles et insaisissables. Sa sélection aime surprendre en contre et ambitionne de s’installer durablement parmi les nations qui comptent.',
   Pirates:
     'Sans véritable terre d’attache, la sélection des Pirates réunit des aventuriers de tous horizons. Imprévisible et opportuniste, elle joue la Cup comme une expédition : chercher la gloire et ne rien laisser derrière.',
-  Électra:
-    'Planète d’énergie pure, Électra présente une sélection rapide et intense. Son pressing incessant fatigue les adversaires, et elle espère transformer cette vitesse en première grande performance.',
-  Cyclos:
-    'Monde où l’on garde toujours l’objectif en ligne de mire, Cyclos aligne une sélection patiente et disciplinée. Elle attend la faille pour frapper et rêve d’un premier grand résultat en Cup.',
+  Hektonïa:
+    'Planète d’énergie pure, Hektonïa présente une sélection rapide et intense. Son pressing incessant fatigue les adversaires, et elle espère transformer cette vitesse en première grande performance.',
+  Cyclopia:
+    'Monde où l’on garde toujours l’objectif en ligne de mire, Cyclopia aligne une sélection patiente et disciplinée. Elle attend la faille pour frapper et rêve d’un premier grand résultat en Cup.',
   Technoïd:
     'Planète de science et de mécanique, Technoïd envoie une sélection réglée comme une horloge. Son ambition : démontrer que la préparation et la rigueur peuvent faire plier les plus grandes nations.',
   Vega: 'Planète fictive en orbite étirée autour de deux étoiles, Vega alterne mois de lumière aveuglante et longue nuit de poussière. Son peuple, translucide et parsemé de points lumineux, stocke la lumière le jour et la dépense la nuit : sa sélection est fulgurante en fin de match mais irrégulière. Nation montante, elle veut laisser une traînée brillante dans la Cup.',
@@ -3232,10 +3521,10 @@ const CANON = [
     'Paradisia',
     'Xzion',
     'Wamba Prime',
-    'Rykhar',
-    'Xéna',
-    'Électra',
-    'Cyclos',
+    'Unadar',
+    'Archipel Xenon',
+    'Hektonïa',
+    'Cyclopia',
     'Technoïd',
   ],
   FICT = { includes: (n) => !CANON.includes(n) },
@@ -3257,48 +3546,39 @@ const POS = ['GK', 'DEF', 'MID', 'ATT'],
 const NM = { 'Pirates (équipe)': 'Pirates', 'Technoid / Technodroids': 'Technodroids' };
 // POUVOIRS SPÉCIAUX DE CHAQUE ÉQUIPE (Fluide) : nom, description et effet. Modifier ici pour
 // changer un pouvoir.
+// Part des actions où le fluide contourne la construction du jeu (téléportation, paralysie, bulles...) et mène droit à la frappe.
+// Couleur de l'aura de chaque fluide (traînées bleues du Souffle, boue du Smog, éclairs blancs, bulles bleues...).
+const FXV = { breath: '#4fb8ff', multi: '#b78bff', smog: '#16101e', ionic: '#ffffff', metalcry: '#ffe14d', furnace: '#3cff6a', agile: '#ff9a2e', bubble: '#59c8ff', confuse: '#4dff9a' };
+const FXB = { chance: 1, mirage: 0.85, smog: 0.5, ionic: 0.7, metalcry: 0.6, furnace: 0.35, agile: 0.45, confuse: 0.45, bubble: 0.5, breath: 0.2, multi: 0.3 };
 let FX = {
-  'Snow Kids': {
-    t: 'a',
-    k: 'comeback',
-    n: 'Souffle d’Akillian',
-    d: 'Quand l’équipe est menée, la cohésion décuple les chances de but.',
-  },
-  Shadows: {
-    t: 'a',
-    k: 'smog',
-    n: 'Smog des Ombres',
-    d: 'Le brouillard gêne le gardien adverse (arrêts moins efficaces).',
-  },
+  'Snow Kids': { t: 'a', k: 'breath', n: 'Souffle d’Akillian', d: 'Fluide de première catégorie : frappes bien plus puissantes et énergie démesurée, la fatigue de l’équipe se dissipe.' },
+  Shadows: { t: 'a', k: 'smog', n: 'Smog', d: 'Fluide de troisième catégorie : force accrue et téléportation qui contourne la défense.' },
   'Team Paradisia': {
     t: 'a',
-    k: 'chance',
-    n: 'Précision cybernétique',
-    d: 'Crée une occasion nette à coup sûr.',
+    k: 'multi',
+    n: 'Multifluide',
+    d: 'Fluide de synthèse réservé aux cyborgs : il possède les pouvoirs du Souffle (frappes bien plus puissantes, énergie qui se régénère), avec en plus des actions menées plus souvent droit au tir.',
   },
-  Lightnings: { t: 'a', k: 'double', n: 'Foudre', d: 'Deux frappes enchaînées sur la même action.' },
-  Wambas: {
-    t: 'a',
-    k: 'wild',
-    n: 'Instinct sauvage',
-    d: 'Très risqué : soit un coup de génie, soit un raté.',
-  },
-  Rykers: { t: 'd', k: 'block', n: 'Mur de roche', d: 'En défense, bloque complètement certaines attaques.' },
-  Xenons: {
-    t: 'a',
-    k: 'furnace',
-    n: 'La Fournaise',
-    d: 'Frappe brûlante, encore plus forte après la 60e minute.',
-  },
+  Lightnings: { t: 'a', k: 'ionic', n: 'Vague Ionique', d: 'Fluide de troisième catégorie : téléportation dans des éclairs blancs, la défense est déjouée.' },
+  Wambas: { t: 'a', k: 'agile', n: 'Esprit d’Ibo', d: 'Fluide de première catégorie : agilité hors du commun, dribbles et frappes qui surprennent.' },
+  Rykers: { t: 'a', k: 'metalcry', n: 'Cri de Métal', d: 'Fluide de seconde catégorie : des ondes électriques paralysent l’adversaire, défense et gardien figés.' },
+  Xenons: { t: 'a', k: 'furnace', n: 'La Fournaise', d: 'Fluide de troisième catégorie : vitesse inouïe, force physique et substance visqueuse qui bloque les défenseurs.' },
   'Tigres Rouges': {
     t: 'a',
-    k: 'derby',
-    n: 'Rage du derby',
-    d: 'Énorme bonus contre les Snow Kids, bonus modéré sinon.',
+    k: 'boots',
+    n: 'Bottes cybernétiques',
+    d: 'Pas de Fluide : de temps à autre, vitesse et agilité accrues, avec des frappes plus précises et plus puissantes. À partir de la saison 2, ils maîtrisent le Souffle d’Akillian.',
   },
   Pirates: { t: 'd', k: 'steal', n: 'Vol de flux', d: 'En défense, vole le ballon et contre-attaque.' },
-  Elektras: { t: 'a', k: 'stun', n: 'Décharge électrique', d: 'Paralyse le gardien adverse un instant.' },
-  Cyclopes: { t: 'a', k: 'eye', n: 'Œil unique', d: 'Tir d’une précision qui dépend du talent du tireur.' },
+  Elektras: { t: 'a', k: 'bubble', n: 'Vague d’Hektonïa', d: 'Fluide de seconde catégorie : bulles qui permettent de glisser, de sauter très haut et d’enfermer le ballon.' },
+  Cyclopes: { t: 'a', k: 'confuse', n: 'Onde cérébrale', d: 'Fluide de seconde catégorie : des cercles verts sèment la confusion chez la personne visée.' },
+  Nocturnes: { t: 'a', k: 'smog', n: 'Smog', d: 'Fluide de troisième catégorie : force accrue et téléportation qui contourne la défense.' },
+  Cumulus: { t: 'a', k: 'ionic', n: 'Vague Ionique', d: 'Fluide de troisième catégorie : téléportation dans des éclairs blancs, la défense est déjouée.' },
+  Magmas: { t: 'a', k: 'metalcry', n: 'Cri de Métal', d: 'Fluide de seconde catégorie : des ondes électriques paralysent l’adversaire, défense et gardien figés.' },
+  Quasars: { t: 'a', k: 'surge', n: 'Éruption stellaire', d: 'Plus le match avance, plus la frappe est dévastatrice : l’énergie accumulée se libère surtout en fin de partie.' },
+  Titans: { t: 'd', k: 'weight', n: 'Poids du monde', d: 'En défense, alourdit l’action adverse : l’attaque s’enlise et ne peut pas aboutir.' },
+  Echoes: { t: 's', k: 'harmony', n: 'Harmonie', d: 'Après un but, tout le chœur monte d’un ton : toute l’équipe joue mieux pendant plusieurs minutes.' },
+  Mirage: { t: 'a', k: 'mirage', n: 'Mirage', d: 'Un double illusoire trompe la défense : l’occasion est créée presque à coup sûr.' },
   'Vortex': {
     t: 'a',
     k: 'sync',
@@ -3389,6 +3669,9 @@ function sched(n) {
 }
 // CRÉE UNE NOUVELLE PARTIE : équipes, joueurs, calendrier, argent de départ, mails de bienvenue.
 function init(ti, mode, ni) {
+  // Les nouvelles équipes jouables sont choisies avec un numéro à partir de 100 : elles rejoignent alors la Ligue dès la saison 1.
+  const NJ = ti >= 100 ? ti - 100 : -1;
+  if (NJ >= 0) ti = T.length;
   const r = rng(7),
     used = new Set([
       ...Object.values(C)
@@ -3487,6 +3770,12 @@ function init(ti, mode, ni) {
       autoLU(t);
     });
   }
+  if (NJ >= 0) {
+    const t = mkNewTeam(NEWT[NJ], 0);
+    t.fr = 0;
+    S.teams.push(t);
+    S.fx = sched(S.teams.length);
+  }
   S.teams.forEach((t) =>
     t.sq.forEach((p) => {
       if (!p.og) {
@@ -3518,7 +3807,7 @@ function init(ti, mode, ni) {
           ? ni
           : Math.max(
               0,
-              TN.findIndex((x) => x[0] == planet(T[ti][0])),
+              TN.findIndex((x) => x[0] == planet((T[ti] || [S.teams[ti].name])[0])),
             ),
       NC = buildNat(n2);
     if (S.mode == 'D') {
@@ -3671,7 +3960,7 @@ const eff = (t, i, pos, k) => {
   const x = t.sq[i];
   return (
     x.o *
-    (x.p == pos ? 1 : 0.75) *
+    (x.p == pos ? (x.rc ? 0.95 : 1) : x.rc && x.rc.to == pos ? 0.75 + 0.25 * (1 - Math.max(0, x.rc.left) / x.rc.tot) : 0.75) *
     footF(x, pos, t, k) *
     (0.7 + (0.3 * x.e) / 100) *
     (x.inj || x.sus ? 0.3 : 1) *
@@ -3737,18 +4026,95 @@ const mk = (h, a) => ({
   sc: [0, 0],
   min: 0,
   lg: [],
-  dby: isDerby(S.teams[h].name, S.teams[a].name),
+  dby: rivK(S.teams[h].name, S.teams[a].name),
   st: { poss: [0, 0], pas: [0, 0], tir: [0, 0], cad: [0, 0], fau: [0, 0] },
 });
 // MOTEUR DE MATCH : simule une tranche de 3 minutes (occasions, tirs, buts, cartons, blessures,
 // pouvoirs spéciaux).
+// État des effets de fluide en cours dans le match (paralysie, glu, agilité, bulle, bouclier, confusion).
+const fzS = (M) => (M.fz2 = M.fz2 || { frz: [-1, -1], stk: [-1, -1], agl: [-1, -1], bub: [-1, -1], shd: [0, 0], cf: null });
+// Effets durables des fluides, appliqués à la force des équipes à chaque tour.
+function fxTick(M, sh) {
+  const z = fzS(M),
+    m = M.min;
+  [0, 1].forEach((i) => {
+    if (z.frz[i] >= m) {
+      sh[i].d *= 0.55;
+      sh[i].mid *= 0.75;
+    }
+    if (z.stk[i] >= m) {
+      sh[i].mid *= 0.8;
+      sh[i].a *= 0.75;
+    }
+  });
+  if (z.cf && z.cf.until >= m && !z.cf.gk) sh[z.cf.t].d *= 0.88;
+}
+// Déclenchement d'un fluide d'attaque : effet propre à chaque fluide.
+function fxOn(M, at, fx) {
+  const z = fzS(M),
+    D = 1 - at,
+    m = M.min,
+    T = M.t[at],
+    O = M.t[D];
+  if (fx.k == 'metalcry') {
+    z.frz[D] = m + 6;
+    M.lg.push(`${m}’ ⚡ Cri de Métal : la défense de ${O.name} est paralysée`);
+  } else if (fx.k == 'furnace') {
+    z.stk[D] = m + 6;
+    M.lg.push(`${m}’ 🔥 Une substance visqueuse colle les joueurs de ${O.name}`);
+  } else if (fx.k == 'agile') {
+    z.agl[at] = m + 6;
+    M.lg.push(`${m}’ 🦁 L’Esprit d’Ibo rend ${T.name} insaisissable`);
+  } else if (fx.k == 'bubble') {
+    z.bub[at] = m + 6;
+    M.lg.push(`${m}’ 🫧 Le ballon est enfermé dans une bulle : ${T.name} le garde`);
+  } else if (fx.k == 'confuse') {
+    const sl = slots(O.form),
+      c = O.lu.map((li, k) => [k, O.sq[li]]).filter(([k]) => (sl[k] == 'DEF' || sl[k] == 'GK') && !(M.rd && M.rd[D + '_' + k] > M.min));
+    if (c.length) {
+      c.sort((x, y) => y[1].o - x[1].o);
+      const [k, p] = c[0];
+      z.cf = { t: D, until: m + 9, gk: sl[k] == 'GK', nm: p.n };
+      M.lg.push(`${m}’ 😵 L’onde cérébrale sème la confusion chez ${p.n} (${O.name})`);
+    }
+  } else if (fx.k == 'smog') {
+    let n = 0;
+    T.lu.forEach((li) => {
+      const p = T.sq[li];
+      if (planet(p.og || '') != 'Ombra') {
+        p.e = Math.max(30, p.e - 4);
+        n++;
+      }
+    });
+    if (n) M.lg.push(`${m}’ ☠️ Le Smog éprouve les joueurs qui ne sont pas des Shadows`);
+  } else if (fx.k == 'multi' && Math.random() < 0.06) {
+    const q = T.lu.filter((li) => T.sq[li].p != 'GK').sort(() => Math.random() - 0.5).slice(0, 2);
+    q.forEach((li) => (T.sq[li].e = Math.max(30, T.sq[li].e - 15)));
+    M.lg.push(`${m}’ ⚠️ Résonance dangereuse du Multifluide : ${q.map((li) => T.sq[li].n).join(' et ')} sont épuisés`);
+  }
+}
 function tick(M) {
   M.sx = null;
   const sh = M.t.map(str);
   capTick(M, sh);
+  (M.hm || []).forEach((u, i) => {
+    if (u && M.min <= u) {
+      sh[i].mid *= 1.06;
+      sh[i].a *= 1.06;
+      sh[i].d *= 1.06;
+    }
+  });
   shoutFx(M, sh);
   advTick(M);
-  (M.rc || [0, 0]).forEach((n, i) => {
+  fxTick(M, sh);
+  [0, 1].forEach((i) => {
+    const n = Object.keys(M.rd || {}).filter((kk) => kk[0] == i && M.rd[kk] > M.min).length;
+    Object.keys(M.rd || {}).forEach((kk) => {
+      if (kk[0] == i && M.rd[kk] <= M.min && !(M.rb = M.rb || {})[kk]) {
+        M.rb[kk] = 1;
+        M.lg.push(`${M.min}’ ↩ ${M.t[i].sq[M.t[i].lu[+kk.slice(2)]].n} revient sur le terrain (${M.t[i].name})`);
+      }
+    });
     if (n) {
       const f = 1 - 0.12 * n;
       sh[i].mid *= f;
@@ -3764,9 +4130,21 @@ function tick(M) {
     });
   const ph = (sh[0].mid * 1.08) / (sh[0].mid * 1.08 + sh[1].mid);
   let at = Math.random() < ph ? 0 : 1;
-  const dx = FX[M.t[1 - at].name];
-  if (dx.t == 'd' && fz(M, 1 - at, sh[1 - at].f)) {
+  [0, 1].forEach((i) => {
+    if (fzS(M).bub[i] >= M.min) at = i;
+  });
+  const dx = fxOf(M.t[1 - at].name);
+  if ((dx.t == 'd' || dx.k == 'furnace') && fz(M, 1 - at, sh[1 - at].f)) {
     M.lg.push(`${M.min}’ 🌀 ${dx.n} (${M.t[1 - at].name})`);
+    if (dx.k == 'furnace') {
+      M.lg.push(`${M.min}’ 🔥 La substance visqueuse de ${M.t[1 - at].name} stoppe l’attaque`);
+      M.sx = { k: 'build', at, bn: 'FOURNAISE', sub: M.t[1 - at].name, bc: FXV.furnace };
+      return;
+    }
+    if (dx.k == 'weight') {
+      M.sx = { k: 'build', at };
+      return;
+    }
     if (dx.k == 'block') {
       M.sx = { k: 'block', at, fn: dx.n };
       return;
@@ -3776,10 +4154,11 @@ function tick(M) {
   const a = sh[at],
     d = sh[1 - at],
     t = M.t[at],
-    fx = FX[t.name],
+    fx = fxOf(t.name),
     fl = fx.t == 'a' && fz(M, at, a.f),
     pb = Math.max(0.45, Math.min(0.85, 0.62 + (a.mid - d.mid) / 200)),
     au = (M.au = M.au || [-1, -1]);
+  if (fl) fxOn(M, at, fx);
   if (fl && fx.k == 'aura') {
     au[at] = M.min + 8;
     M.lg.push(`${M.min}’ 🌀 ${fx.n} (${t.name}) : les passes deviennent presque parfaites`);
@@ -3796,24 +4175,25 @@ function tick(M) {
   anaTick(M, at, false);
   M.st.poss[at]++;
   M.st.pas[at] += 3 + Math.round(a.mid / 12 + Math.random() * 3);
-  if (Math.random() < (M.dby ? 0.35 : 0.2)) {
+  if (Math.random() < (M.dby == 'C' ? 0.4 : M.dby ? 0.35 : 0.2)) {
     M.st.fau[1 - at]++;
     if (foulEv(M, at)) return;
   }
   if (
-    !(fl && fx.k == 'chance') &&
+    !(fl && Math.random() < (FXB[fx.k] || 0)) &&
     Math.random() >
-      Math.min(0.5, 0.22 * Math.pow(a.a / d.d, 1.5)) *
+      Math.min(0.58, 0.27 * Math.pow(a.a / d.d, 1.5)) *
         (pc / pb) *
         (1 + (a.c || 0)) *
         (M.ev && M.ev.k == 'met' ? 0.5 : 1) *
         [1.2, 1, 0.85][t.ln?.a ?? 1] *
-        (M.dby ? 1.15 : 1)
+        (M.dby == 'C' ? 1.2 : M.dby ? 1.15 : 1) *
+        (fl && fx.k == 'boots' ? 1.2 : 1) *
+        (fzS(M).agl[at] >= M.min ? 1.3 : 1)
   ) {
     M.sx = { k: 'build', at };
     return;
   }
-  if (Math.random() < 0.11 && offEv(M, at)) return;
   const s = slots(t.form),
     w = t.lu.map(
       (li, k) =>
@@ -3831,15 +4211,46 @@ function tick(M) {
   const gp = M.t[1 - at].sq[M.t[1 - at].lu[0]],
     dp = atDev(pl);
   if (gp) gk *= 1 + 0.012 * atCl(atDev(gp)[1], 4);
-  if (kk == 'smog') gk *= 0.65;
+  // FLUIDE DU GARDIEN : un gardien doté de Fluide peut l'utiliser pour stopper une frappe (+25 % à son niveau).
+  // La fréquence dépend de l'usage du Fluide de son équipe, de son taux de Fluide et du score en fin de match.
+  let gfl = false;
+  if (gp && fluK(gp) != 'none' && (gp.f || 0) > 0 && !((M.rd || {})[1 - at + '_0'] > M.min)) {
+    const tg = M.t[1 - at],
+      pgf = Math.max(
+        0.1,
+        Math.min(0.55, [0.16, 0.28, 0.4][tg.fo ?? 1] + ((gp.f || 0) - 60) / 600 + (M.sc[1 - at] < M.sc[at] && M.min >= 60 ? 0.08 : 0)),
+      );
+    if (Math.random() < pgf) {
+      gfl = true;
+      gk *= 1.25;
+      (M.fu = M.fu || [0, 0])[1 - at]++;
+      gp.e = Math.max(40, gp.e - [0.15, 0.3, 0.6][tg.fo ?? 1]);
+    }
+  }
+  if (kk == 'smog') b = 0.12;
+  if (kk == 'ionic') b = 0.08;
+  if (kk == 'metalcry') {
+    gk *= 0.8;
+    b = 0.08;
+  }
+  if (kk == 'confuse') b = 0.06;
+  if (fzS(M).cf && fzS(M).cf.gk && fzS(M).cf.t == 1 - at && fzS(M).cf.until >= m) gk *= 0.85;
+  if (kk == 'agile') b = 0.06;
+  if (kk == 'bubble') b = 0.05;
+  if (kk == 'breath' || kk == 'multi') {
+    b = 0.22;
+    t.lu.forEach((j) => (t.sq[j].e = Math.min(100, t.sq[j].e + 2)));
+  }
   if (kk == 'stun') {
     gk *= 0.7;
     b = 0.1;
   }
   if (kk == 'comeback') b = M.sc[at] < M.sc[1 - at] ? 0.4 : 0.15;
   if (kk == 'chance') b = 0.1;
-  if (kk == 'furnace') b = 0.25 + (m > 60 ? 0.15 : 0);
-  if (kk == 'derby') b = M.t[1 - at].name == 'Snow Kids' ? 0.4 : 0.15;
+  if (kk == 'surge') b = 0.05 + 0.4 * Math.min(1, m / 90);
+  if (kk == 'mirage') b = 0.06;
+  if (kk == 'furnace') b = 0.12 + (m > 60 ? 0.1 : 0);
+  if (kk == 'boots') b = 0.14;
   if (kk == 'wild') b = Math.random() < 0.5 ? 0.45 : -0.1;
   if (kk == 'eye') b = 0.1 + (pl.o - 60) / 120;
   if (kk == 'sync') b = Math.max(0, Math.min(0.35, (a.mid - d.mid) / 60 + 0.1));
@@ -3848,37 +4259,58 @@ function tick(M) {
   M.st.tir[at]++;
   if (M.mm && M.mm.length) M.mm[M.mm.length - 1][1] = 1.5;
   let pg = Math.min(0.75, Math.max(0.06, 0.32 * Math.pow(pl.o / gk, 1.4))) + b;
-  pg *= [0.85, 1, 1.2][t.ln?.a ?? 1];
+  pg *= [0.85, 1, 1.2][t.ln?.a ?? 1] * 0.88; // plus de tirs, mais un peu moins de réussite : le nombre de buts reste raisonnable
   pg += (a.g || 0) + (a.pgb || 0) + 0.007 * atCl(dp[1], 4) + (m > 70 ? 0.004 * atCl(dp[7], 4) : 0);
   if (kk == 'double') pg = 1 - (1 - pg) * (1 - pg);
   if (kk == 'calc') pg = 0.45;
   if (fl) M.lg.push(`${m}’ ✨ ${fx.n} !`);
+  let goal = u < pg;
+  const Dd = 1 - at,
+    dfx = fxOf(M.t[Dd].name),
+    zs = fzS(M);
+  // Bouclier du Souffle : une fois par match, repousse un but encaissé.
+  if (goal && (dfx.k == 'breath' || dfx.k == 'multi') && !zs.shd[Dd] && Math.random() < 0.6) {
+    zs.shd[Dd] = 1;
+    goal = false;
+    (M.fu = M.fu || [0, 0])[Dd]++;
+    M.lg.push(`${m}’ 🛡️ Bouclier du Souffle (${M.t[Dd].name}) : le but est repoussé`);
+  }
   M.sx = {
     k: 'shot',
     at,
     pl: k,
     fl: !!fl,
     fn: fl ? fx.n : '',
-    o: u < pg ? 'goal' : u < pg + 0.3 ? 'save' : 'miss',
+    fk: fl ? fx.k : '',
+    gf: gfl ? 1 : 0,
+    gn: gfl ? gp.n : '',
+    o: goal ? 'goal' : u < pg + 0.3 || u < pg ? 'save' : 'miss',
   };
   if (u < pg + 0.3) M.st.cad[at]++;
-  if (u < pg) {
+  if (goal) {
     M.bx = at ? 0.01 : 0.99;
     M.sc[at]++;
-    pl.g++;
+    if (!M.cup && !M.ab) pl.g++;
     M.lg.push(`${m}’ ⚽ <b>BUT ! ${pl.n}</b> (${t.name}) ${M.sc[0]}-${M.sc[1]}`);
-  } else M.lg.push(u < pg + 0.3 ? `${m}’ 🧤 Arrêt du gardien devant ${pl.n}` : `${m}’ ${pl.n} tire à côté`);
+    if (fx.k == 'harmony') {
+      (M.hm = M.hm || [0, 0])[at] = m + 12;
+      M.lg.push(`${m}’ 🎶 ${fx.n} (${t.name}) : tout le chœur monte d’un ton`);
+    }
+  } else if (gfl && u < pg + 0.3) M.lg.push(`${m}’ 🧤✨ ${gp.n} utilise le Fluide : arrêt devant ${pl.n} !`);
+  else M.lg.push(u < pg + 0.3 ? `${m}’ 🧤 Arrêt du gardien devant ${pl.n}` : `${m}’ ${pl.n} tire à côté`);
+  if (gfl && goal) M.lg.push(`${m}’ 🧤 ${gp.n} a utilisé le Fluide, mais ne peut rien faire`);
 }
-// Gère une faute : carton jaune ou rouge, coup franc, penalty.
+// Gère une faute : exclusion de 5 minutes, coup franc, penalty (pas de cartons dans Galactik Football).
 function foulEv(M, at) {
   const D = 1 - at,
     T = M.t[D],
     A = M.t[at],
     sl = slots(T.form),
     out = (M.rd = M.rd || {}),
-    yc = (M.yc = M.yc || {}),
-    m = M.min;
-  let w = T.lu.map((li, k) => (k == 0 || out[D + '_' + k] ? 0 : sl[k] == 'ATT' ? 1 : 2)),
+    m = M.min,
+    isOut = (d, k) => (M.rd[d + '_' + k] || 0) > m,
+    nOut = T.lu.filter((x, k) => isOut(D, k)).length;
+  let w = T.lu.map((li, k) => (k == 0 || isOut(D, k) ? 0 : sl[k] == 'ATT' ? 1 : 2)),
     r = Math.random() * w.reduce((x, y) => x + y, 0),
     k = 0;
   while (k < w.length - 1 && (r -= w[k]) > 0) k++;
@@ -3886,35 +4318,22 @@ function foulEv(M, at) {
   if (!p) return false;
   const key = D + '_' + k,
     u = Math.random(),
-    pm = (M.dby ? 1.3 : 1) * (1 + (T.pr ?? 1) * 0.12) * foulMul(M, D, T);
+    pm = (M.dby == 'C' ? 1.4 : M.dby ? 1.3 : 1) * (1 + (T.pr ?? 1) * 0.12) * foulMul(M, D, T);
   let card = null;
-  if (u < 0.012 * pm) card = 'r';
-  else if (u < 0.17 * pm) card = yc[key] ? 'r2' : 'y';
+  if (u < 0.14 * pm && nOut < 2) card = 'x';
   M.lg.push(`${m}’ Faute de ${p.n} (${T.name})`);
-  if (card == 'y') {
-    yc[key] = 1;
-    stP(p).yc = (stP(p).yc || 0) + 1;
-    p.yt = (p.yt || 0) + 1;
-    if (p.yt >= 3) {
-      p.yt = 0;
-      p.ns = Math.max(p.ns || 0, 1);
-      M.lg.push(`${m}’ ${p.n} sera suspendu un match (cumul de cartons jaunes)`);
-    }
-    M.lg.push(`${m}’ <b style="color:#e6b800">Carton jaune</b> pour ${p.n}`);
-  }
-  if (card == 'r' || card == 'r2') {
-    out[key] = 1;
-    stP(p).rc = (stP(p).rc || 0) + 1;
-    p.ns = card == 'r' ? (Math.random() < 0.3 ? 3 : 2) : 1;
-    (M.rc = M.rc || [0, 0])[D]++;
+  if (card) {
+    // Exclusion : le joueur quitte le terrain 5 minutes puis revient.
+    out[key] = m + 5;
+    stP(p).ex = (stP(p).ex || 0) + 1;
     M.lg.push(
-      `${m}’ <b style="color:#e5484d">Carton rouge</b> pour ${p.n}${card == 'r2' ? ' (second jaune)' : ''} : ${T.name} joue à ${7 - M.rc[D]}. ${p.n} est suspendu ${p.ns} match${p.ns > 1 ? 's' : ''}`,
+      `${m}’ <b style="color:#ff8a3b">Exclusion de 5 minutes</b> pour ${p.n} : ${T.name} joue à ${6 - nOut}, retour à la ${m + 5}e minute`,
     );
   }
   if (Math.random() < 0.045) {
     const sa = slots(A.form),
       wa = A.lu.map((li, j) =>
-        M.rd && M.rd[at + '_' + j] ? 0 : (sa[j] == 'ATT' ? 3 : sa[j] == 'MID' ? 1.5 : 0.2) * A.sq[li].o,
+        (M.rd && M.rd[at + '_' + j] > M.min) ? 0 : (sa[j] == 'ATT' ? 3 : sa[j] == 'MID' ? 1.5 : 0.2) * A.sq[li].o,
       );
     let r2 = Math.random() * wa.reduce((x, y) => x + y, 0),
       j = 0;
@@ -3929,7 +4348,7 @@ function foulEv(M, at) {
     if (u2 < pg) {
       o = 'goal';
       M.sc[at]++;
-      pl.g++;
+      if (!M.cup && !M.ab) pl.g++;
       M.st.cad[at]++;
       M.lg.push(`${m}’ ⚽ <b>BUT sur penalty ! ${pl.n}</b> (${A.name}) ${M.sc[0]}-${M.sc[1]}`);
     } else if (u2 < pg + (1 - pg) * 0.6) {
@@ -3943,7 +4362,7 @@ function foulEv(M, at) {
   if (Math.random() < 0.22) {
     const sa = slots(A.form),
       wa = A.lu.map((li, j) =>
-        M.rd && M.rd[at + '_' + j] ? 0 : (sa[j] == 'ATT' ? 2 : sa[j] == 'MID' ? 2 : 0.2) * A.sq[li].o,
+        (M.rd && M.rd[at + '_' + j] > M.min) ? 0 : (sa[j] == 'ATT' ? 2 : sa[j] == 'MID' ? 2 : 0.2) * A.sq[li].o,
       );
     let r2 = Math.random() * wa.reduce((x, y) => x + y, 0),
       j = 0;
@@ -3958,7 +4377,7 @@ function foulEv(M, at) {
     if (u2 < pg) {
       o = 'goal';
       M.sc[at]++;
-      pl.g++;
+      if (!M.cup && !M.ab) pl.g++;
       M.st.cad[at]++;
       M.lg.push(`${m}’ ⚽ <b>BUT sur coup franc ! ${pl.n}</b> (${A.name}) ${M.sc[0]}-${M.sc[1]}`);
     } else if (u2 < pg + 0.45) {
@@ -3973,9 +4392,9 @@ function foulEv(M, at) {
     M.sx = {
       k: 'foul',
       at,
-      bn: card == 'y' ? 'CARTON JAUNE' : 'CARTON ROUGE',
+      bn: 'EXCLUSION 5 MIN',
       sub: p.n + ' (' + T.name + ')',
-      bc: card == 'y' ? '#ffd23f' : '#ff3b4e',
+      bc: '#ff8a3b',
       card,
       tm: D,
       kk: k,
@@ -3983,21 +4402,6 @@ function foulEv(M, at) {
     return true;
   }
   return false;
-}
-// Gère un hors-jeu.
-function offEv(M, at) {
-  const A = M.t[at],
-    sl = slots(A.form),
-    w = A.lu.map((li, j) => (M.rd && M.rd[at + '_' + j] ? 0 : sl[j] == 'ATT' ? 3 : sl[j] == 'MID' ? 1 : 0));
-  if (!w.some((x) => x > 0)) return false;
-  let r = Math.random() * w.reduce((x, y) => x + y, 0),
-    j = 0;
-  while (j < w.length - 1 && (r -= w[j]) > 0) j++;
-  const p = A.sq[A.lu[j]];
-  if (!p) return false;
-  M.lg.push(`${M.min}’ Hors-jeu : ${p.n} (${A.name}) était devant la défense`);
-  M.sx = { k: 'build', at, bn: 'HORS-JEU', sub: p.n, bc: '#ffffff' };
-  return true;
 }
 // FIN DE MATCH : points, buts, argent gagné (billetterie, primes…), fatigue, blessures et
 // statistiques.
@@ -4039,7 +4443,7 @@ function fin(M) {
         if (S.coaches && S.coaches.length) tx('Salaires des coachs', -12 * S.coaches.length);
       } catch (e) {}
       tx('Droits TV', 80);
-      tx('Billetterie', i == 0 ? Math.round(gate() * (M.dby ? 1.4 : 1)) : 0);
+      tx('Billetterie', i == 0 ? Math.round(gate() * (M.dby == 'C' ? 1.4 : M.dby ? 1.2 : 1)) : 0);
       tx('Primes de victoire', g > c ? 150 : 0);
       tx('Sponsors', spons());
       tx('Boutique', shop());
@@ -4059,7 +4463,7 @@ function fin(M) {
     // Risque de blessure par titulaire et par match (réglage : plus la valeur est basse, moins il y a de blessés).
     t.lu.forEach((k) => {
       const p = t.sq[k];
-      if (!p.inj && Math.random() < (t == me() ? Math.max(0.003, 0.016 - 0.002 * stL('k')) : 0.011) * (1 - 0.05 * atCl(atDev(p)[6], 4))) {
+      if (!p.inj && Math.random() < (t == me() ? Math.max(0.003, 0.016 - 0.002 * stL('k')) : 0.011) * (1 - 0.05 * atCl(atDev(p)[6], 4)) * (p.nz ? 2.2 : 1)) {
         p.inj = 2 + ((Math.random() * 4) | 0);
         if (t == me())
           mail(
@@ -4070,7 +4474,7 @@ function fin(M) {
     });
     t.sq.forEach((p, k) => {
       if (p.nz) {
-        p.nz.l -= t.lu.includes(k) ? 1 : 0.5;
+        p.nz.l -= t.lu.includes(k) ? 1.6 : 0.5; // jouer avec la nausée accélère l’adaptation (mais double presque le risque de blessure)
         if (p.nz.l <= 0) {
           p.cp = p.cp || {};
           p.cp[t.name] = 95;
@@ -4100,6 +4504,10 @@ function startMD() {
 // résultats dans S.lr), puis prépare le match du joueur.
 function startMD0() {
   if (S.md >= S.fx.length) return;
+  // Les autres matchs de la journée ne sont simulés qu'une seule fois, même si on relance la journée (match interrompu, rechargement…).
+  const sk = S.season + ':' + S.ctx + ':' + S.md,
+    again = S.simd == sk;
+  if (!again) {
   S.res = [];
   S.teams.concat(S.ctx == 'C' && S.mode == 'C' && S.alt ? S.alt.teams : []).forEach((t) =>
     t.sq.forEach((p) => {
@@ -4124,14 +4532,15 @@ function startMD0() {
           : 'De nouveaux joueurs sont disponibles dans l’onglet Marché.',
     );
   }
-  if (S.md == 3 || S.md == 14) sponsor();
+  if (S.md == 3 || S.md == Math.ceil(lgHalf()) + 1) sponsor();
+  }
   S.teams.forEach((t, i) => {
     if (i != S.t) autoLU(t);
   });
   let um = null;
   S.fx[S.md].forEach(([h, a]) => {
     if (h == S.t || a == S.t) um = [h, a];
-    else {
+    else if (!again) {
       const M = mk(h, a);
       evRoll(M);
       for (let i = 1; i <= 30 && !M.ab; i++) {
@@ -4152,8 +4561,12 @@ function startMD0() {
       ]);
     }
   });
+  S.simd = sk;
   if (um) {
     V.m = mk(...um);
+    V.lnx = 0;
+    V.mxp = null;
+    V.mxd = 0;
     evRoll(V.m);
     V.sub = 3;
     V.tab = 'match';
@@ -4183,13 +4596,56 @@ function stop() {
   clearInterval(V.iv);
   V.iv = null;
 }
+// Photographie des réglages tactiques au coup d'envoi, pour les remettre tels quels à la fin du match.
+function tacSnap(M) {
+  const t = me();
+  if (M.snap || !M.t.includes(t)) return;
+  M.snap = {
+    m: t.m,
+    pr: t.pr,
+    sty: t.sty,
+    fo: t.fo,
+    fs: t.fs,
+    form: t.form,
+    lu: t.lu.slice(),
+    ti: t.ti ? { ...t.ti } : t.ti,
+    ln: t.ln ? { ...t.ln } : t.ln,
+    rl: t.sq.map((p) => [p.re, p.or, p.dp]),
+  };
+}
+// Fin de match : les réglages tactiques reviennent à leur valeur d'avant le coup d'envoi.
+function tacRestore(M) {
+  const t = me(),
+    z = M.snap;
+  if (!z || !M.t.includes(t)) return;
+  ['m', 'pr', 'sty', 'fo', 'fs', 'form', 'ti', 'ln'].forEach((k) => {
+    if (z[k] === undefined) delete t[k];
+    else t[k] = z[k];
+  });
+  t.sq.forEach((p, i) => {
+    const r = z.rl[i] || [];
+    ['re', 'or', 'dp'].forEach((k, j) => {
+      if (r[j] === undefined) delete p[k];
+      else p[k] = r[j];
+    });
+  });
+  t.lu = z.lu.slice();
+  // Si un titulaire d'avant-match est blessé ou suspendu, la composition est refaite.
+  if (t.lu.some((i) => !t.sq[i] || t.sq[i].inj || t.sq[i].ns || t.sq[i].sus)) autoLU(t);
+  M.snap = null;
+  delete V.swp;
+  delete V.sug;
+}
 // Fait avancer le match d'un pas (3 minutes) ; gère mi-temps, fin de match et interruptions.
 function step() {
   const M = V.m,
     AO = MAN.on();
   const g0 = M.sc[0] + M.sc[1],
     sc0 = M.sc.slice();
-  if (M.min == 0) sfx('whistle');
+  if (M.min == 0) {
+    sfx('whistle');
+    tacSnap(M);
+  }
   // Photo de l'affichage AVANT la tranche : tant que l'animation n'a pas joué la scène, le journal,
   // le score, la minute et les statistiques montrés au joueur restent ceux d'avant.
   const pre = { n: M.lg.length, st: JSON.parse(JSON.stringify(M.st)), min: M.min };
@@ -4206,6 +4662,7 @@ function step() {
     S.md++;
     report(M);
     M.done = 1;
+    tacRestore(M);
     mailFlush();
     save();
     if (AO) MAN.fin();
@@ -4226,6 +4683,7 @@ function step() {
       report(M);
     }
     M.done = 1;
+    tacRestore(M);
     mailFlush();
     save();
   }
@@ -4283,6 +4741,15 @@ function doSwap(a, b) {
     swMsg('Plus de remplacement disponible dans ce match.');
     V.sel = null;
     return render();
+  }
+  // Un joueur remplacé pendant le match ne peut plus y revenir.
+  if (cons && V.m && !V.m.done) {
+    const back = t.sq[ka < 0 ? a : b];
+    if (back && (V.m.xo || []).includes(back.n)) {
+      swMsg(back.n + ' a déjà été remplacé : il ne peut pas revenir dans ce match.');
+      V.sel = null;
+      return render();
+    }
   }
   const n0 = teamNote(t),
     h = swH();
@@ -4858,7 +5325,7 @@ function champView() {
   const rows = o
       .map(([t, i], k) => {
         const z = k == 0 ? 'ch1' : obj && k + 1 <= obj ? 'cho' : '';
-        return `<tr class="${i == S.t ? 'me' : ''}"><td><span class="chk ${z}" title="${k == 0 ? 'Leader' : z ? 'Dans l’objectif du conseil' : ''}">${k + 1}</span></td><td class="chc">${t.em} <b>${t.name}</b>${ft(t.name)}</td><td>${t.pl}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}</td><td>${t.ga}</td><td>${t.gf - t.ga > 0 ? '+' : ''}${t.gf - t.ga}</td><td class="chpt">${t.pts}</td><td class="chfc">${chForm(t)}</td></tr>`;
+        return `<tr class="${i == S.t ? 'me' : ''}"><td><span class="chk ${z}" title="${k == 0 ? 'Leader' : z ? 'Dans l’objectif du conseil' : ''}">${k + 1}</span></td><td class="chc"${i == S.t ? '' : ` data-n="${mkEsc(t.name)}" onclick="opOpen(this.dataset.n)" style="cursor:pointer" title="Voir la fiche du club"`}>${t.em} <b>${t.name}</b>${ft(t.name)}</td><td>${t.pl}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}</td><td>${t.ga}</td><td>${t.gf - t.ga > 0 ? '+' : ''}${t.gf - t.ga}</td><td class="chpt">${t.pts}</td><td class="chfc">${chForm(t)}</td></tr>`;
       })
       .join(''),
     cards = (k) => mine.reduce((a, [p]) => a + rkV(p, k), 0),
@@ -4868,7 +5335,7 @@ function champView() {
         ? `<div class="chnx"><span>Prochain match</span><b>${nx.opp.em} ${nx.opp.name}</b><span class="mu">${fmtDay(nx.day)} · ${nx.h ? 'Domicile' : 'Extérieur'}</span></div>`
         : ''
     }</div>`,
-    cl = `<div class="card chs"><b>Leaders de ${my.name}</b>${hp('chm2')}<div class="chlg2">${chLd('Buts', 'i-ball', mine, 'g')}${chLd('Passes décisives', 'i-footr', mine, 'a')}${chLd('Note moyenne', 'i-star', mine, 'rt')}${chLd('Hommes du match', 'i-medal', mine, 'mm')}</div><div class="chcd"><span><i class="cy"></i>Cartons jaunes <b>${cards('yc')}</b></span><span><i class="cr"></i>Cartons rouges <b>${cards('rc')}</b></span></div></div>`,
+    cl = `<div class="card chs"><b>Leaders de ${my.name}</b>${hp('chm2')}<div class="chlg2">${chLd('Buts', 'i-ball', mine, 'g')}${chLd('Passes décisives', 'i-footr', mine, 'a')}${chLd('Note moyenne', 'i-star', mine, 'rt')}${chLd('Hommes du match', 'i-medal', mine, 'mm')}</div><div class="chcd"><span><i class="cy" style="background:#ff8a3b"></i>Exclusions <b>${cards('ex') + cards('yc') + cards('rc')}</b></span></div></div>`,
     ll = `<div class="card chs"><b>Leaders de la ligue</b><div class="chlg2">${chLd('Buts', 'i-ball', all, 'g', 1)}${chLd('Passes décisives', 'i-footr', all, 'a', 1)}${chLd('Hommes du match', 'i-medal', all, 'mm', 1)}${chLd('Arrêts', 'i-glove', all.filter(([p]) => p.p == 'GK'), 'sv', 1)}</div></div>`,
     op = (() => {
       try {
@@ -5128,6 +5595,15 @@ const RMP = [
   ['Fluides propres à chaque origine', 'Multifluide pour Paradisia (compatible avec tout), aucun Fluide pour les Pirates (compensés par leurs attributs).', 'Disponible (bêta)'],
   ['Notifications en couleurs', 'Une couleur par type de notification : mails, musique, déblocages, manager, sauvegarde, système.', 'Disponible (bêta)'],
   ['Formations libres', '7 formations possibles (de 1 à 3 joueurs par poste) pour laisser chacun explorer son style de jeu.', 'Disponible (bêta)'],
+  ['Écran de match plein écran', 'Vue 3D en plein écran avec tableau des scores, panneaux Stats, Journal, Compo et Consignes et fenêtre de compositions avant le match.', 'Disponible (bêta)'],
+  ['Conférences de presse', 'Questions variées de Callie Mystic avant et après chaque match, dont des interviews sur les buteurs, dans une fenêtre dédiée.', 'Disponible (bêta)'],
+  ['Réponses aux mails obligatoires', 'Une réponse attendue bloque la suite de la partie : le bouton « Continuer » mène au mail concerné.', 'Disponible (bêta)'],
+  ['Scouting des adversaires', 'Onglet Adversaires : recherche de clubs et de joueurs, tactiques, composition et cartes de tous les clubs, à tout moment.', 'Disponible (bêta)'],
+  ['Nouveau menu principal et visite avec Clamp', 'Menu en tuiles illustrées et visite guidée racontée par Clamp.', 'Disponible (bêta)'],
+  ['Gestion du club façon site web', 'Stade, billet, sponsors et boutique présentés comme une page web aux couleurs du club, avec illustrations.', 'Disponible (bêta)'],
+  ['Boutique et sponsors illustrés', 'Produits dérivés aux couleurs et au logo du club, et un logo pour chacun des 8 sponsors.', 'Disponible (bêta)'],
+  ['Staff en encadrés', 'Entraîneur, kiné, analyste et centre de formation séparés, avec pictogrammes et jauges de niveau.', 'Disponible (bêta)'],
+  ['Marché façon Football Manager', 'Tableau triable, prix calculé, numéros de maillot et séparation Ligue/Coupe.', 'Disponible (bêta)'],
   ['Tactique en match', 'Terrain, instructions et rôles modifiables pendant la pause d’un match.', 'Disponible (bêta)'],
   ['Réserve et base de joueurs', 'Jusqu’à 15 joueurs de réserve utilisables hors match, et un moteur de recherche pour consulter tous les joueurs du jeu.', 'Disponible (bêta)'],
   ['Succès expliqués', 'Pop-ups au survol des balles, titres et décorations pour savoir comment les débloquer.', 'Disponible (bêta)'],
@@ -5827,7 +6303,8 @@ function stPost(M) {
       };
     M.lg.forEach((l) => {
       let m;
-      if ((m = l.match(/BUT ! (.+?)<\/b> \((.+?)\)/))) {
+      if ((m = l.match(/BUT (?:sur penalty |sur coup franc )?! (.+?)<\/b> \((.+?)\)/))) {
+        const op = /BUT !/.test(l);
         const s = T2.findIndex((t) => t.name == m[2]);
         if (s < 0) return;
         const p = T2[s].sq.find((q) => q && q.n == m[1]);
@@ -5836,7 +6313,7 @@ function stPost(M) {
         o.sh++;
         o.ot++;
         pt(p, 'g');
-        if (Math.random() < 0.78) {
+        if (op && Math.random() < 0.78) {
           const t = T2[s],
             sl = slots(t.form),
             w = t.lu.map((li, k) =>
@@ -5955,7 +6432,7 @@ function stPost(M) {
         const m = /^(\d+)’ (.*)$/.exec(String(l));
         if (!m) return;
         const x = m[2].replace(/<[^>]+>/g, '').replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu, '').trim();
-        const t = /BUT/.test(x) ? 'g' : /Carton jaune/.test(x) ? 'y' : /Carton rouge/.test(x) ? 'r' : /^Penalty pour|Penalty arrêté|rate son penalty/.test(x) ? 'p' : /[✨🌀]/u.test(m[2]) ? 'f' : 0;
+        const t = /BUT/.test(x) ? 'g' : /Exclusion de 5/.test(x) ? 'r' : /^Penalty pour|Penalty arrêté|rate son penalty/.test(x) ? 'p' : /[✨🌀]/u.test(m[2]) ? 'f' : 0;
         if (t) ev.push([+m[1], t, x]);
       });
       S.mrp = S.mrp || {};
@@ -6049,7 +6526,7 @@ const RKC = [
 // Valeur d'un joueur pour une catégorie de classement.
 const rkV = (p, k) => {
   const o = p.ss || {};
-  return k == 'g' ? p.g || 0 : k == 'ga' ? (p.g || 0) + (o.a || 0) : o[k] || 0;
+  return k == 'g' ? p.g || 0 : k == 'ga' ? (p.g || 0) + (o.a || 0) : k == 'ex' ? (o.ex || 0) + (o.yc || 0) + (o.rc || 0) : o[k] || 0;
 };
 // ===== ÉQUIPE : sous-onglets (effectif, rapports, stats, composition) =====
 const EQT = [
@@ -6076,15 +6553,16 @@ function eqInf(p) {
   if (p.sus) t.push(`<span class="eqtg bad">Susp. ${p.sus}</span>`);
   if (p.ln) t.push(`<span class="eqtg">Prêt ${p.ln.left}</span>`);
   if (p.nz) t.push(`<span class="eqtg warn">Nausées</span>`);
+  if (p.rc) t.push(`<span class="eqtg" title="Reconversion en cours">→ ${p.rc.to}</span>`);
   return t.join('') || '<span class="mu">—</span>';
 }
 // Colonnes des trois vues du tableau.
 function eqCols(v, t) {
   const st = (p) => p.ss || {},
-    bar = (x) => `<span class="eqb ${x < 30 ? 'lo' : ''}"><i style="width:${x}%"></i></span> ${x}%`,
+    bar = (x) => gg(x, { size: 42, fs: 34, c: '#2fd0c5', tt: 'Condition : ' + x + ' %' }),
     mo = (p) => {
       const m = eqMo(p);
-      return `<span class="eqm ${m >= 65 ? 'ok' : m >= 40 ? 'md' : 'lo'}">${m}</span>`;
+      return gg(m, { size: 42, fs: 34, tt: 'Moral à ' + m + ' %' });
     };
   if (v == 'att')
     return [
@@ -6109,8 +6587,7 @@ function eqCols(v, t) {
       ['a', 'Passes déc.', (p) => st(p).a || 0, (p) => st(p).a || 0],
       ['sv', 'Arrêts', (p) => st(p).sv || 0, (p) => (p.p == 'GK' ? st(p).sv || 0 : '—')],
       ['mm', 'Homme du match', (p) => st(p).mm || 0, (p) => st(p).mm || 0],
-      ['yc', 'Jaunes', (p) => st(p).yc || 0, (p) => st(p).yc || 0],
-      ['rc', 'Rouges', (p) => st(p).rc || 0, (p) => st(p).rc || 0],
+      ['ex', 'Exclusions', (p) => (st(p).ex || 0) + (st(p).yc || 0) + (st(p).rc || 0), (p) => (st(p).ex || 0) + (st(p).yc || 0) + (st(p).rc || 0)],
     ];
   return [
     ['p', 'Pos', (p) => EQPO[p.p], (p) => eqPos(p)],
@@ -6124,7 +6601,7 @@ function eqCols(v, t) {
     ['e', 'Condition', (p) => p.e ?? 100, (p) => bar(p.e ?? 100)],
     ['xp', 'Exp.', (p) => (p.o >= ptCap(p) ? 100 : p.xp || 0), (p) => xpB(p) || '<span class="mu">—</span>'],
     ['mo', 'Moral', (p) => eqMo(p), (p) => mo(p)],
-    ['f', 'Fluide', (p) => p.f || 0, (p) => (fluK(p) == 'none' ? '<span class="mu">—</span>' : (p.f || 0) + ' %')],
+    ['f', 'Fluide', (p) => p.f || 0, (p) => (fluK(p) == 'none' ? '<span class="mu" title="Aucun Fluide">—</span>' : `<span class="eqfg">${gg(p.f || 0, { size: 42, fs: 34, c: p.nz ? '#ff8a2b' : '#b78bff', tt: p.nz ? 'Nausées du Fluide : ' + (p.f || 0) + ' %' : 'Fluide : ' + (p.f || 0) + ' %' })}${p.nz ? '<i title="Nausées">🤢</i>' : ''}</span>`)],
   ];
 }
 // Sous-onglet « Équipe » : tableau de l'effectif + panneau d'informations.
@@ -6211,7 +6688,7 @@ function eqSide(t) {
 <div class="eqsec"><h4>Aperçu</h4><div class="eqk4">${cell('Note moyenne', nbg(eqAvg(S0.map((p) => p.o))))}${cell('Composition de départ', nbg(eqAvg(t.lu.map((i) => (S0[i] || {}).o || 0))))}${cell('Âge moyen', eqAvg(S0.map((p) => p.age || 0)))}${cell('Valeur', sm(price) + ' cr.')}</div></div>
 <div class="eqsec"><h4>Statut de l’équipe</h4><div class="eqk4">${cell('Blessés', S0.filter((p) => p.inj).length)}${cell('Suspendus', S0.filter((p) => p.sus).length)}${cell('Faible condition', S0.filter((p) => (p.e ?? 100) < 40).length)}${cell('Moral bas', S0.filter((p) => eqMo(p) < 40).length)}</div></div>
 <div class="eqsec"><h4>Profondeur de position</h4><div class="eqk4">${['GK', 'DEF', 'MID', 'ATT'].map((p) => `<div class="eqk"><span style="color:${EQPC[p]}">${p}</span><b>${cnt(p)}</b></div>`).join('')}</div></div>
-<div class="eqsec"><h4>Stats</h4><div class="eqst"><div><span>Buts</span>${top((p) => p.g || 0)}</div><div><span>Passes décisives</span>${top((p) => ss(p).a || 0)}</div><div><span>Homme du match</span>${top((p) => ss(p).mm || 0)}</div><div><span>Cartons jaunes</span><span class="mu"></span><b>${sm((p) => ss(p).yc || 0)}</b></div><div><span>Cartons rouges</span><span class="mu"></span><b>${sm((p) => ss(p).rc || 0)}</b></div></div></div></div>`;
+<div class="eqsec"><h4>Stats</h4><div class="eqst"><div><span>Buts</span>${top((p) => p.g || 0)}</div><div><span>Passes décisives</span>${top((p) => ss(p).a || 0)}</div><div><span>Homme du match</span>${top((p) => ss(p).mm || 0)}</div><div><span>Exclusions</span><span class="mu"></span><b>${sm((p) => (ss(p).ex || 0) + (ss(p).yc || 0) + (ss(p).rc || 0))}</b></div></div></div></div>`;
 }
 // ===== PRÉRÉGLAGES : jusqu'à 5 compositions enregistrées (formation, titulaires, consignes) =====
 const PRK = ['form', 'lu', 'm', 'pr', 'sty', 'ti', 'fo'],
@@ -6408,7 +6885,7 @@ function eqRap(t) {
 <div class="card"><b>Suspensions</b>${sus.map((p) => rw(p, `<span class="eqtg bad">${p.sus} match${p.sus > 1 ? 's' : ''}</span>`)).join('') || empty}</div>
 <div class="card"><b>Problèmes de moral</b>${mor.map((p) => rw(p, `<span class="eqm lo">${eqMo(p)}</span>`)).join('') || empty}</div>
 <div class="card"><b>Contrats</b>${ctr.map((p) => rw(p, `<span class="eqtg ${p.ct <= 1 ? 'warn' : ''}">${p.ct} an${p.ct > 1 ? 's' : ''}</span>`)).join('')}</div>
-<div class="card"><b>Développement</b>${dev.map((p) => rw(p, `${nbg(p.o)}<span class="eqb dv"><i style="width:${Math.round((p.o / Math.max(p.pt, 1)) * 100)}%"></i></span>${nbg(p.pt)}`)).join('') || empty}</div>
+<div class="card"><b>Développement</b>${dev.map((p) => rw(p, `${nbg(p.o)}${gg(Math.round((p.o / Math.max(p.pt, 1)) * 100), { size: 44, fs: 34, c: '#b78bff', tt: 'Part du potentiel atteinte' })}${nbg(p.pt)}`)).join('') || empty}</div>
 <div class="card"><b>Jeunes talents</b>${yg.map((p) => rw(p, `<span class="mu">${p.age} ans</span>${nbg(p.o)}${p.pt ? nbg(p.pt) : ''}`)).join('') || empty}</div>
 </div></div>`;
 }
@@ -6420,8 +6897,7 @@ const EQS = [
   ['sv', 'Arrêts'],
   ['cs', 'Clean sheets'],
   ['mm', 'Hommes du match'],
-  ['yc', 'Cartons jaunes'],
-  ['rc', 'Cartons rouges'],
+  ['ex', 'Exclusions'],
   ['mp', 'Matchs joués'],
 ];
 function eqStt(t) {
@@ -6887,7 +7363,7 @@ function acView() {
     .join('')}</svg>`;
   const mts = t.sq.map((p, i) => [p, i]).sort((a, b) => b[0].o - a[0].o);
   return (
-    `<div class="card wide"><div class="ctl" style="justify-content:space-between"><b>🎓 Académie</b>${hp('ac')}<span class="mu">Niveau du centre ${stL('y') || 0} · places ${A.y.length}/${cap}</span>${vwBtn()}</div>${field}<div class="mu" style="margin-top:6px">Les jeunes progressent chaque jour. À 20 ans, ils rejoignent automatiquement l’équipe première (si l’effectif n’est pas complet). Chaque fin de saison, de nouveaux talents arrivent.</div><div class="ctl" style="margin-top:6px"><button onclick="acScout()" ${(A.sc || 0) >= 2 || S.cash < 250 || A.y.length >= cap ? 'disabled' : ''}>🔎 Chercher un talent (250 cr.) ${A.sc || 0}/2</button><button onclick="V.tab='mkt';render()">⬆ Améliorer le centre</button></div>${A.note ? `<div style="margin-top:6px"><b>${A.note}</b></div>` : ''}</div>` +
+    `<div class="card wide"><div class="ctl" style="justify-content:space-between"><b>🎓 Académie</b>${hp('ac')}<span class="mu">Niveau du centre ${stL('y') || 0} · places ${A.y.length}/${cap}</span>${vwBtn()}</div>${field}<div class="mu" style="margin-top:6px">Les jeunes progressent chaque jour. À 20 ans, ils rejoignent automatiquement l’équipe première (si l’effectif n’est pas complet). Chaque fin de saison, de nouveaux talents arrivent.</div><div class="ctl" style="margin-top:6px"><button onclick="acScout()" ${(A.sc || 0) >= 2 || S.cash < 250 || A.y.length >= cap ? 'disabled' : ''}>🔎 Chercher un talent (250 cr.) ${A.sc || 0}/2</button><button onclick="V.tab='mkt';V.mt='st';render()">⬆ Améliorer le centre</button></div>${A.note ? `<div style="margin-top:6px"><b>${A.note}</b></div>` : ''}</div>` +
     (A.y.length
       ? `<div class="${V.vw == 'l' ? '' : 'acg '}wide">` +
         A.y
@@ -6979,7 +7455,7 @@ function pdFix() {
 }
 // Mémoire de vérification pour les genres.
 let GFK = '';
-// Applique les genres par planète (Cyclops masculins, Rykers et Électra féminines, Technoids sans
+// Applique les genres par planète (Cyclops masculins, Rykers et Hektonïa féminines, Technoids sans
 // genre).
 function gFix() {
   try {
@@ -6998,7 +7474,7 @@ function gFix() {
     const U = new Set(L.map((x) => x[0].n));
     L.forEach(([p, tn]) => {
       const pl = planet(p.og || tn),
-        w = pl == 'Cyclos' ? 'M' : pl == 'Électra' || pl == 'Rykhar' ? 'F' : '';
+        w = pl == 'Cyclopia' ? 'M' : pl == 'Hektonïa' || pl == 'Unadar' ? 'F' : '';
       if (!w || p.n.indexOf(' ') < 0) return;
       if (S.gdm[p.n]) {
         p.n = S.gdm[p.n];
@@ -7057,7 +7533,7 @@ function render() {
         wy = window.scrollY,
         sk = V.tab + '|' + (V.mo ?? '') + '|' + (V.menu ? 'M' : '');
       $('app').innerHTML = lgR(
-        addHelp(v) + svBox() + fwBox() + ttBox() + ldBox() + frBox() + mgBox() + fbBox() + legBox(),
+        addHelp(v) + svBox() + fwBox() + ttBox() + ldBox() + pcBox() + opBox() + frBox() + mgBox() + fbBox() + legBox(),
       );
       if (V._sk === sk) {
         const mn1 = document.querySelector('#app .mn');
@@ -7132,13 +7608,12 @@ function render() {
         : T.map(
             (t, i) =>
               `<button onclick="load('Création du club…',()=>{init(${i},'${V.nm || 'L'}');render()})">${t[2]} ${t[0]}${ft(t[0])}${bioBtn(t[0])}<br><span class="mu">Niveau ${t[1]}/20 · ${FICT.includes(t[0]) ? 'équipe fictive' : 'équipe de la série'}</span><br><span class="mu"><b>${t[1] >= 15 ? 'Prise en main facile' : t[1] >= 12 ? 'Prise en main équilibrée' : 'Prise en main exigeante'}</b>${i == recoT() ? ' · ⭐ Conseillé pour débuter' : ''}</span></button>`,
-          ).join('') + mkTile()) +
+          ).join('') + newTiles() + mkTile()) +
       `</div>`;
     return;
   }
   const t = me(),
-    end = S.md >= S.fx.length,
-    nx = !end && S.fx[S.md].find(([h, b]) => h == S.t || b == S.t);
+    end = S.md >= S.fx.length;
   let h = `<h1>${t.em} ${t.name}${ft(t.name)} <span class="mu">· Saison ${S.season} · Journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length} · ${fmtDay(S.day)}</span></h1><nav>${[['club', 'Club'], ['tac', 'Tactique'], ['match', 'Match'], ['cal', 'Cal.'], ['mail', '✉️' + (S.mail.filter((m) => m.u).length || '')], ['mkt', 'Marché'], ['gest', 'Gestion'], ...(S.mode == 'C' ? [] : [['form', 'Formation']]), ['fin', 'Finances'], ['car', 'Carrière'], ['table', 'Class.'], ['stat', 'Stats'], ['tuto', 'Aide ?']].map(([k, l]) => `<button class="${V.tab == k ? 'on' : ''}" onclick="V.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
   if (V.tab == 'club') {
     h += eqSub();
@@ -7174,6 +7649,8 @@ function render() {
     h += careerView();
   } else if (V.tab == 'form') {
     h += acView();
+  } else if (V.tab == 'adv') {
+    h += advView();
   } else if (V.tab == 'stat') {
     h += statView();
   } else if (V.tab == 'table') {
@@ -7194,7 +7671,7 @@ function render() {
       if (MAN.on()) {
         h += mxView(M, t);
       } else {
-        h += `<div class="card"><div class="mu" style="text-align:center">${M.dby ? '🔥 DERBY · ' : ''}${M.t[0].name} – ${M.t[1].name} · ${M.done ? 'Terminé' : M.min + '’'}</div><div class="score">${M.sc[0]} - ${M.sc[1]}</div>${pitch(M)}<div class="mu">Violet = votre équipe, orange = adversaire. Le ballon prend la couleur de l’équipe qui a la possession ${hp('pitch')}</div>${statsBox(M)}`;
+        h += `<div class="card">${M.dby ? `<div class="mu" style="text-align:center">${M.dby == 'C' ? '⚡ CLASSICO' : '🔥 DERBY'}</div>` : ''}<div class="scb"><span class="scn l">${M.t[0].name}</span><span class="score">${M.sc[0]} - ${M.sc[1]}</span><span class="scn r">${M.t[1].name}</span><span class="sct">${M.done ? 'Terminé' : M.min + '’'}</span></div>${pitch(M)}<div class="mu">Violet = votre équipe, orange = adversaire. Le ballon prend la couleur de l’équipe qui a la possession ${hp('pitch')}</div>${statsBox(M)}`;
         if (!M.done)
           h += `<div class="ctl" style="justify-content:center">${V.iv ? `<button onclick="stop();render()">⏸ Pause</button>` : `<button class="p" onclick="loop();render()">▶ ${M.min ? 'Reprendre' : 'Coup d’envoi'}</button>`}<select onchange="V.sp=+this.value;if(V.iv)loop()"><option value="0" ${V.sp == 0 ? 'selected' : ''}>Lent</option><option value="1" ${V.sp == 1 ? 'selected' : ''}>Normal</option><option value="2" ${V.sp == 2 ? 'selected' : ''}>Rapide</option></select><label>Mentalité <select onchange="me().m=+this.value">${MENT.map((m, i) => `<option value="${i}" ${i == t.m ? 'selected' : ''}>${m}</option>`).join('')}</select></label></div><div class="mu" style="text-align:center;margin-top:6px">Remplacements restants : ${V.sub}</div><div class="ctl" style="justify-content:center;margin-top:6px">${foSel()}</div>`;
         else h += `<button class="p" onclick="cont()">Continuer</button>`;
@@ -7218,16 +7695,45 @@ function render() {
 }
 // PRIX D'UN JOUEUR sur le marché (selon sa note et son potentiel). Modifier cette formule change
 // toute l'économie des transferts.
-const price = (p) => {
+const priceBase = (p) => {
     const pt = potOf(p);
-    return Math.round((p.o * p.o) / 8 + (pt > p.o ? Math.pow(pt - p.o, 2) * (p.pt != null && !p.pd ? 3 : 1) : 0));
+    return (p.o * p.o) / 8 + (pt > p.o ? Math.pow(pt - p.o, 2) * (p.pt != null && !p.pd ? 3 : 1) : 0);
   },
+  // Prix d'un joueur = valeur selon sa note et son potentiel, ajustée par ses performances de la saison
+  // (notes de match, buts, passes, homme du match, arrêts) et par ses statistiques (attributs au-dessus ou en dessous de ce que sa note laisse attendre).
+  priceInfo = (p) => {
+    const b = priceBase(p);
+    let fp = 0,
+      fs = 0;
+    try {
+      const ss = p.ss || {},
+        mp = Math.max(0, p.mp || 0),
+        rp = p.rp || [];
+      if (rp.length >= 3) fp += Math.max(-0.2, Math.min(0.2, (rp.reduce((a, c) => a + c, 0) / rp.length - 6.5) * 0.08));
+      if (mp >= 3) {
+        const act = p.p == 'GK' ? ((ss.sv || 0) * 0.15 + (ss.cs || 0) * 1 + (ss.mm || 0) * 0.8) / mp : ((p.g || 0) * (p.p == 'ATT' ? 1 : 1.3) + (ss.a || 0) * 0.7 + (ss.mm || 0) * 0.8) / mp;
+        fp += Math.max(0, Math.min(0.2, act * 0.25));
+      }
+      const dv = atDev(p);
+      fs = Math.max(-0.12, Math.min(0.12, (dv.reduce((a, c) => a + c, 0) / dv.length) * 0.04));
+    } catch (e) {}
+    const f = Math.max(0.75, Math.min(1.5, 1 + fp + fs));
+    return { b: Math.round(b), fp, fs, v: Math.max(1, Math.round(b * f)) };
+  },
+  price = (p) => priceInfo(p).v,
   NS = {
     c: ['Entraîneur', 'progression en fin de saison'],
     k: ['Kiné', 'récupération'],
     a: ['Analyste', 'force d’équipe'],
     y: ['Centre de formation', 'jeunes talents en fin de saison'],
   };
+// Pictogrammes du staff (entraîneur : sifflet ; kiné : croix médicale ; analyste : graphique ; centre de formation : toque).
+const STI = {
+  c: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="5"/><path d="M12.5 12.5L21 9v4l-6 .5M5 4l2.5 3M11 3l-1 3.5"/></svg>',
+  k: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 7.5v9M7.5 12h9"/></svg>',
+  a: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M6 17v-5M11 17V7M16 17v-8M21 17v-11"/><path d="M4 8l5-4 4 3 7-5"/></svg>',
+  y: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4L2 9l10 5 10-5z"/><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5M22 9v6"/></svg>',
+};
 // Joueurs rares de la série, proposés occasionnellement sur le marché.
 const RARE = [
   ['Yuki', 'GK', 74, 'Snow Kids'],
@@ -7613,20 +8119,29 @@ function mkt() {
 }
 // Page « Transferts » de la League : marché, staff, coachs, prêts.
 // Sous-onglet de la page Transferts.
+// Depuis l'aperçu : ouvre l'onglet Recherche déjà filtré sur ce joueur.
+function mkRcFresh() {
+  V.mkf = MKF0();
+  mtTab('rc');
+}
+function mtGoP(n) {
+  V.mkf = MKF0();
+  V.mkf.q = n;
+  mtTab('rc');
+}
 function mtTab(k) {
   V.mt = k;
   render();
 }
-// Ajoute / retire un joueur du marché de la liste des convoités.
-function wlT(i) {
-  const p = S.mkt[i];
-  if (!p) return;
+// Ajoute / retire un joueur de la liste des convoités (par nom).
+function wlN(n) {
   S.wl = S.wl || [];
-  const k = S.wl.indexOf(p.n);
+  const k = S.wl.indexOf(n);
   if (k >= 0) S.wl.splice(k, 1);
-  else S.wl.push(p.n);
+  else S.wl.push(n);
   save();
-  render();
+  if (V.mt == 'rc') mkRef(true);
+  else render();
 }
 // Retire un joueur de la liste des convoités (par position dans la liste).
 function wlD(j) {
@@ -7634,70 +8149,182 @@ function wlD(j) {
   save();
   render();
 }
-// ===== BASE DE JOUEURS : moteur de recherche en consultation seule (fiches de profil, aucun achat) =====
-// Tous les joueurs connus de la partie (clubs, marché), sans les personnages cachés.
-function dbPool() {
+// ===== MARCHÉ façon FOOTBALL MANAGER : tous les joueurs disponibles à cette saison =====
+// Équipe (hors la vôtre) qui possède ce joueur, ou null (agent libre / introuvable).
+function plOwner(n) {
+  return S.teams.find((t) => t !== me() && (t.sq || []).some((p) => p.n == n)) || null;
+}
+// Joueur offert à l'achat (club adverse ou agent libre), ou undefined.
+function plFindS(n) {
+  const t = plOwner(n);
+  return (t && t.sq.find((p) => p.n == n)) || (S.mkt || []).find((p) => p.n == n);
+}
+// Idem, avec repli sur le joueur d'une négociation (offres déjà déposées).
+const plFind = (n) => plFindS(n) || ((S.no || []).find((q) => q.n == n) || {}).p;
+const mkEsc = (v) => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+// Liste de tous les joueurs achetables : clubs de la Ligue (les équipes arrivées plus tard n'y sont qu'à partir de leur saison) et agents libres.
+function mkPool() {
   const out = [],
     seen = new Set(),
     mk = mkU(),
-    hid = new Set(MKD.ro.map((x) => x[0])),
-    ok = (p, t) => !p.mkb && (mk || ((!t || t.name != MKD.n) && !hid.has(p.n))),
-    add = (p, c, t) => {
-      if (!p || !p.n || seen.has(p.n) || !ok(p, t)) return;
-      seen.add(p.n);
-      out.push([p, c]);
-    };
+    hid = new Set(MKD.ro.map((x) => x[0]));
   try {
-    [...S.teams, ...(S.alt ? S.alt.teams : [])].forEach((t) => (t.sq || []).forEach((p) => add(p, t.name, t)));
-    (S.mkt || []).forEach((p) => add(p, 'Marché', null));
+    S.teams.forEach((t) => {
+      if (t === me() || (!mk && t.name == MKD.n)) return;
+      (t.sq || []).forEach((p) => {
+        if (!p || !p.n || seen.has(p.n) || (!mk && hid.has(p.n))) return;
+        seen.add(p.n);
+        try {
+          ensure(p);
+        } catch (e) {}
+        out.push([p, t.name]);
+      });
+    });
+    (S.mkt || []).forEach((p) => {
+      if (p && p.n && !seen.has(p.n)) {
+        seen.add(p.n);
+        try {
+          ensure(p);
+        } catch (e) {}
+        out.push([p, 'Agent libre']);
+      }
+    });
   } catch (e) {}
   return out;
 }
-const dbEsc = (v) => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-// Résultats filtrés de la base de joueurs.
-function dbRes() {
-  const f = V.dbf || (V.dbf = { q: '', p: '', o: '', c: '', m: 0, s: 'o' }),
-    q = f.q.trim().toLowerCase();
-  const A = dbPool().filter(
+// Nom du Fluide d'un joueur.
+function plFlu(p) {
+  const k = fluK(p);
+  if (k == 'multi') return 'Multifluide';
+  if (k == 'none') return 'Aucun';
+  const f = typeof fxOf == 'function' ? fxOf(p.og || '') : null;
+  return (f && f.n) || 'Aucun';
+}
+const MKF0 = () => ({ q: '', c: '', fl: '', pl: '', p: '', mn: 0, mx: 100, s: 'o', d: 1 });
+// Joueurs filtrés et triés.
+function mkRes() {
+  const f = V.mkf || (V.mkf = MKF0()),
+    q = f.q.trim().toLowerCase(),
+    me0 = me().name;
+  const A = mkPool().filter(
     ([p, c]) =>
       (!q || p.n.toLowerCase().includes(q)) &&
       (!f.p || p.p == f.p) &&
-      (!f.o || planet(p.og || c) == f.o) &&
       (!f.c || c == f.c) &&
-      p.o >= (f.m || 0),
+      (!f.pl || planet(p.og || c) == f.pl) &&
+      (!f.fl || plFlu(p) == f.fl) &&
+      p.o >= (f.mn || 0) &&
+      p.o <= (f.mx || 100),
   );
-  A.sort((a, b) =>
-    f.s == 'n'
-      ? a[0].n.localeCompare(b[0].n)
-      : f.s == 'a'
-        ? (a[0].age || 0) - (b[0].age || 0)
-        : f.s == 'p'
-          ? potOf(b[0]) - potOf(a[0]) || b[0].o - a[0].o
-          : b[0].o - a[0].o || a[0].n.localeCompare(b[0].n),
+  const PO = { GK: 0, DEF: 1, MID: 2, ATT: 3 },
+    key = {
+      po: ([p]) => PO[p.p],
+      n: ([p]) => p.n,
+      cl: ([, c]) => c,
+      pf: ([p, c]) => planet(p.og || c) + ' ' + plFlu(p),
+      cp: ([p]) => compat(p, me0),
+      o: ([p]) => p.o,
+      v: ([p]) => price(p),
+      a: ([p]) => p.age || 99,
+      p: ([p]) => potOf(p),
+    }[f.s] || (([p]) => p.o),
+    dir = f.d == -1 ? -1 : 1;
+  A.sort((a, b) => {
+    const x = key(a),
+      y = key(b),
+      r = typeof x == 'string' ? x.localeCompare(y) : x - y;
+    return (r || b[0].o - a[0].o || a[0].n.localeCompare(b[0].n)) * (r ? dir : 1);
+  });
+  return A;
+}
+// Lignes de la liste (par paquets de 60 au fil du défilement).
+function mkRows(A) {
+  const wl = S.wl || [],
+    lim = V.mlim || 60,
+    act = new Set((S.no || []).filter(NEGACT).map((x) => x.n)),
+    col = (x) => ({ GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' })[x] || '#888';
+  return (
+    A.slice(0, lim)
+      .map(([p, c]) => {
+        const cp = compat(p, me().name),
+          n = mkEsc(p.n).replace(/'/g, '&#39;');
+        return `<div class="mkr" data-n="${mkEsc(p.n)}" onclick="prof('nm',this.dataset.n)"><b class="mkp" style="color:${col(p.p)}">${p.p}</b><span class="mkn"><b>${p.c ? '★ ' : ''}${p.n}</b><small>${p.age || '—'} ans</small></span><span class="mkc">${c}</span><span class="mkl2">${planet(p.og || c)}<small>${plFlu(p)}</small></span><span class="mkx ${cp >= 70 ? 'g' : cp >= 40 ? 'o' : 'r'}">${cp} %</span><span class="fvr ${p.o >= 70 ? 'g' : p.o >= 50 ? 'o' : 'r'}">${p.o}</span><b class="mkv" title="${mkEsc(prTip(p))}">${price(p)}</b><span class="mka"><button class="mtw ${wl.includes(p.n) ? 'on' : ''}" title="Suivre" onclick="event.stopPropagation();wlN(this.closest('.mkr').dataset.n)"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button><button class="p" onclick="event.stopPropagation();ofOpenN(this.closest('.mkr').dataset.n)">${act.has(p.n) ? 'Offre en cours' : 'Offre'}</button></span></div>`;
+      })
+      .join('') || '<div class="mu" style="padding:10px">Aucun joueur ne correspond à cette recherche.</div>'
   );
-  const col = (x) => ({ GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' })[x] || '#888';
-  return `<div class="mu" style="margin:4px 0">${A.length} joueur${A.length > 1 ? 's' : ''} trouvé${A.length > 1 ? 's' : ''}${A.length > 80 ? ' · les 80 premiers sont affichés' : ''}</div>${
-    A.slice(0, 80)
-      .map(
-        ([p, c]) =>
-          `<div class="row dbr" data-n="${dbEsc(p.n)}" onclick="prof('db',this.dataset.n)" style="cursor:pointer"><span class="nm"><b style="color:${col(p.p)}">${p.p}</b> ${p.c ? '★ ' : ''}${p.n} <span class="mu">${c} · ${planet(p.og || c)} · ${p.age || '—'} ans</span></span><span><span class="fvr ${p.o >= 70 ? 'g' : p.o >= 50 ? 'o' : 'r'}">${p.o}</span></span></div>`,
-      )
-      .join('') || '<div class="mu">Aucun joueur ne correspond à cette recherche.</div>'
-  }`;
 }
-// Actualise seulement la liste (pour garder le champ de recherche actif pendant la frappe).
-function dbRef() {
-  const e = document.getElementById('dbres');
-  if (e) e.innerHTML = lgR(dbRes());
+// Détail du prix (infobulle) : valeur de base, performances et statistiques.
+function prTip(p) {
+  const i = priceInfo(p),
+    pc = (x) => (x >= 0 ? '+' : '') + Math.round(x * 100) + ' %';
+  return `Valeur de base ${i.b} · performances ${pc(i.fp)} · statistiques ${pc(i.fs)}`;
 }
-// Onglet « Base de joueurs » de la page Transferts.
-function dbView() {
-  const f = V.dbf || (V.dbf = { q: '', p: '', o: '', c: '', m: 0, s: 'o' }),
-    P = dbPool(),
-    orig = [...new Set(P.map(([p, c]) => planet(p.og || c)))].sort((a, b) => a.localeCompare(b)),
-    clubs = [...new Set(P.map(([, c]) => c))].sort((a, b) => a.localeCompare(b)),
-    sel = (k, L, v) => `<select onchange="V.dbf.${k}=${typeof v == 'number' ? '+' : ''}this.value;render()">${L.map(([x, l]) => `<option value="${dbEsc(x)}" ${v == x ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
-  return `<div class="card"><b>Base de joueurs</b>${hp('dbj')}<div class="mu" style="margin:4px 0 8px">Cherchez n’importe quel joueur de la partie et consultez sa fiche. Consultation seule : aucun achat possible ici.</div><div class="ctl"><input placeholder="🔍 Nom" value="${dbEsc(f.q)}" oninput="V.dbf.q=this.value;dbRef()" style="width:140px">${sel('p', [['', 'Tous postes'], ['GK', 'Gardiens'], ['DEF', 'Défenseurs'], ['MID', 'Milieux'], ['ATT', 'Attaquants']], f.p)}${sel('o', [['', 'Toutes origines'], ...orig.map((x) => [x, x])], f.o)}${sel('c', [['', 'Tous les clubs'], ...clubs.map((x) => [x, x])], f.c)}${sel('m', [[0, 'Note : toutes'], [60, 'Note ≥ 60'], [70, 'Note ≥ 70'], [80, 'Note ≥ 80']], f.m || 0)}${sel('s', [['o', 'Tri : Note'], ['p', 'Tri : Potentiel'], ['a', 'Tri : Âge'], ['n', 'Tri : Nom']], f.s)}</div><div id="dbres">${dbRes()}</div></div>`;
+// Texte du compteur de résultats.
+const mkCnt = (A) => `${A.length} joueur${A.length > 1 ? 's' : ''} · ${Math.min(A.length, V.mlim || 60)} affiché${Math.min(A.length, V.mlim || 60) > 1 ? 's' : ''}`;
+// Actualise la liste sans toucher aux filtres (le champ de recherche garde le focus).
+function mkRef(keepScroll) {
+  const e = document.getElementById('mkl'),
+    c = document.getElementById('mkc');
+  if (!e) return;
+  const A = mkRes(),
+    y = e.scrollTop;
+  e.innerHTML = mkRows(A);
+  if (c) c.textContent = mkCnt(A);
+  e.scrollTop = keepScroll ? y : 0;
+}
+// Modifie un filtre.
+function mkF(k, v) {
+  const f = V.mkf || (V.mkf = MKF0());
+  f[k] = typeof f[k] == 'number' ? +v : v;
+  if (k == 's') {
+    f.d = ['po', 'n', 'cl', 'pf', 'a'].includes(v) ? 1 : -1;
+    const e = document.getElementById('mkhd');
+    if (e) e.innerHTML = mkHd();
+  }
+  V.mlim = 60;
+  mkRef();
+}
+// Remet tous les filtres à zéro.
+function mkReset() {
+  V.mkf = MKF0();
+  V.mlim = 60;
+  render();
+}
+// Charge la suite de la liste quand on arrive en bas.
+function mkScroll(e) {
+  if (e.scrollTop + e.clientHeight >= e.scrollHeight - 80 && (V.mlim || 60) < mkRes().length) {
+    V.mlim = (V.mlim || 60) + 60;
+    mkRef(true);
+  }
+}
+// En-têtes cliquables : un clic trie, un second clic inverse l'ordre.
+function mkHd() {
+  const f = V.mkf || MKF0(),
+    h = (k, l, c) => `<span class="mks${f.s == k ? ' on' : ''}${c ? ' ' + c : ''}" role="button" tabindex="0" title="Trier par ${l.toLowerCase()}" onclick="mkSort('${k}')">${l}${f.s == k ? (f.d == -1 ? ' ▼' : ' ▲') : ''}</span>`;
+  return h('po', 'Poste') + h('n', 'Joueur') + h('cl', 'Équipe', 'mkc') + h('pf', 'Planète · Fluide', 'mkl2') + h('cp', 'Compat.') + h('o', 'Niv.') + h('v', 'Prix') + '<span></span>';
+}
+// Trie par une colonne : texte croissant (A→Z) d'abord, nombres décroissants (les plus forts d'abord) ; second clic = ordre inverse.
+function mkSort(k) {
+  const f = V.mkf || (V.mkf = MKF0());
+  if (f.s == k) f.d = f.d == -1 ? 1 : -1;
+  else {
+    f.s = k;
+    f.d = ['po', 'n', 'cl', 'pf'].includes(k) ? 1 : -1;
+  }
+  V.mlim = 60;
+  const e = document.getElementById('mkhd');
+  if (e) e.innerHTML = mkHd();
+  mkRef();
+}
+// Onglet « Recherche » : tous les joueurs disponibles, avec recherche et filtres.
+function mkSearch() {
+  const f = V.mkf || (V.mkf = MKF0()),
+    P = mkPool(),
+    A = mkRes(),
+    uniq = (fn) => [...new Set(P.map(fn))].sort((a, b) => a.localeCompare(b)),
+    sel = (k, L, v) => `<select onchange="mkF('${k}',this.value)">${L.map(([x, l]) => `<option value="${mkEsc(x)}" ${v == x ? 'selected' : ''}>${l}</option>`).join('')}</select>`,
+    lv = [0, 40, 50, 60, 70, 80, 90];
+  return `<div class="card"><b>Marché des transferts</b>${hp('mks')}<div class="mu" style="margin:4px 0 8px">Tous les joueurs disponibles à cette saison. Touchez un joueur pour voir sa fiche, ou « Offre » pour négocier avec son club.</div><div class="ctl mkfl"><input placeholder="🔍 Nom du joueur" value="${mkEsc(f.q)}" oninput="mkF('q',this.value)" style="width:150px">${sel('c', [['', 'Toutes les équipes'], ...uniq(([, c]) => c).map((x) => [x, x])], f.c)}${sel('fl', [['', 'Tous les Fluides'], ...uniq(([p]) => plFlu(p)).map((x) => [x, x])], f.fl)}${sel('pl', [['', 'Toutes les planètes'], ...uniq(([p, c]) => planet(p.og || c)).map((x) => [x, x])], f.pl)}${sel('p', [['', 'Tous postes'], ['GK', 'Gardiens'], ['DEF', 'Défenseurs'], ['MID', 'Milieux'], ['ATT', 'Attaquants']], f.p)}${sel('mn', lv.map((x) => [x, x ? 'Niveau min. ' + x : 'Niveau min.']), f.mn)}${sel('mx', lv.slice(1).concat([100]).map((x) => [x, x == 100 ? 'Niveau max.' : 'Niveau max. ' + x]), f.mx)}${sel('s', [['o', 'Tri : Niveau'], ['p', 'Tri : Potentiel'], ['v', 'Tri : Prix'], ['a', 'Tri : Âge'], ['cp', 'Tri : Compatibilité'], ['n', 'Tri : Nom'], ['po', 'Tri : Poste'], ['cl', 'Tri : Équipe'], ['pf', 'Tri : Planète']], f.s)}<button onclick="mkReset()">Réinitialiser</button></div><div class="mu" id="mkc" style="margin:6px 0">${mkCnt(A)}</div><div class="mkh" id="mkhd">${mkHd()}</div><div id="mkl" class="mkl" onscroll="mkScroll(this)">${mkRows(A)}</div></div>`;
 }
 // Page Transferts : aperçu, recherche, prêts, convoités, staff.
 function mktViewL() {
@@ -7715,10 +8342,11 @@ function mktViewL() {
     spent = sm(kk('in')) + sm(kk('lin')),
     gain = sm(kk('out')) + sm(kk('lout')),
     top = L.slice().sort((a, b) => b.a - a.a)[0],
-    star = (i) => {
-      const on = wl.includes(S.mkt[i].n);
-      return `<button class="mtw ${on ? 'on' : ''}" title="${on ? 'Retirer des convoités' : 'Ajouter aux convoités'}" onclick="event.stopPropagation();wlT(${i})"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>`;
+    star = (n) => {
+      const on = wl.includes(n);
+      return `<button class="mtw ${on ? 'on' : ''}" data-n="${mkEsc(n)}" title="${on ? 'Retirer des convoités' : 'Ajouter aux convoités'}" onclick="event.stopPropagation();wlN(this.dataset.n)"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg></button>`;
     },
+    PO = mkPool(),
     log = (A, ti, tag, hk) =>
       `<div class="card fvc"><div class="fvh"><b>${ti}</b>${hk ? hp(hk) : ''}<span class="mu">${A.length}</span></div><div class="fvth"><span>Joueur</span><span>Note</span><span>Club</span><span>Montant</span><span>Date</span></div><div class="fvtb">${
         A.map(
@@ -7727,28 +8355,26 @@ function mktViewL() {
         ).join('') || '<div class="mu" style="padding:8px 2px">Aucun mouvement cette saison.</div>'
       }</div><div class="fvft"><span>Total</span><b>${sm(A)}</b></div></div>`,
     kpi = (l, v) => `<div class="fvk"><small>${l}</small><b>${v}</b></div>`,
-    tb = [['ap', 'Aperçu'], ['rc', 'Recherche'], ['of', 'Offres (' + (S.no || []).filter(NEGACT).length + ')'], ['pr', 'Prêts'], ['cv', 'Convoités (' + wl.length + ')'], ['db', 'Base de joueurs'], ['st', 'Staff']],
-    head = `<div class="fvw"><div class="fvk6 mtk">${kpi('Crédits', S.cash)}${kpi('Effectif', sqN(t) + '/15' + (rvN(t) ? ' +' + rvN(t) + ' rés.' : ''))}${kpi('Joueurs sur le marché', S.mkt.length)}${kpi('Actualisations', Math.max(0, MKRC.length - mkRN()) + ' restante(s)')}</div><div class="tvt mtt">${tb.map(([q, l]) => `<button class="${k == q ? 'on' : ''}" onclick="mtTab('${q}')">${l}</button>`).join('')}</div>`;
+    tb = [['ap', 'Aperçu'], ['rc', 'Recherche'], ['of', 'Offres (' + (S.no || []).filter(NEGACT).length + ')'], ['pr', 'Prêts'], ['cv', 'Convoités (' + wl.length + ')'], ['st', 'Staff']],
+    head = `<div class="fvw"><div class="fvk6 mtk">${kpi('Crédits', S.cash)}${kpi('Effectif', sqN(t) + '/15' + (rvN(t) ? ' +' + rvN(t) + ' rés.' : ''))}${kpi('Joueurs disponibles', PO.length)}${kpi('Offres en cours', (S.no || []).filter(NEGACT).length)}</div><div class="tvt mtt">${tb.map(([q, l]) => `<button class="${k == q ? 'on' : ''}" onclick="mtTab('${q}')">${l}</button>`).join('')}</div>`;
   let body = '';
   if (k == 'ap') {
-    const best = S.mkt
-        .map((p, i) => [p, i])
+    const best = PO.slice()
         .sort((a, b) => b[0].o - a[0].o)
         .slice(0, 8),
       wr = wl
         .map((n, j) => {
-          const i = S.mkt.findIndex((p) => p.n == n),
-            p = S.mkt[i];
-          return `<div class="mtr"><b class="mtp" style="color:${p ? col(p.p) : '#888'}">${p ? p.p : '—'}</b><span class="fvj">${n}</span>${p ? chip(p.o) : '<span class="mu">—</span>'}<span class="mu">${p ? price(p) : 'Indisponible'}</span></div>`;
+          const p = plFindS(n);
+          return `<div class="mtr mtb" onclick="mtTab('cv')"><b class="mtp" style="color:${p ? col(p.p) : '#888'}">${p ? p.p : '—'}</b><span class="fvj">${n}</span>${p ? chip(p.o) : '<span class="mu">—</span>'}<span class="mu">${p ? price(p) : 'Indisponible'}</span></div>`;
         })
         .join('');
-    body = `<div class="fvg2c"><div class="card fvc"><div class="fvh"><b>Meilleures occasions du marché</b>${hp('mt1')}<span class="mu">${S.mkt.length} joueurs</span></div><div class="mth"><span>Poste</span><span>Joueur</span><span>Note</span><span>Origine</span><span>Prix</span><span></span></div><div class="fvtb" style="max-height:340px">${best
+    body = `<div class="fvg2c"><div class="card fvc fvgo" onclick="if(!event.target.closest('.hp'))mkRcFresh()"><div class="fvh"><b>Meilleurs joueurs disponibles</b>${hp('mt1')}<span class="mu">${PO.length} joueurs</span></div><div class="mth"><span>Poste</span><span>Joueur</span><span>Note</span><span>Origine</span><span>Prix</span><span></span></div><div class="fvtb" style="max-height:340px">${best
       .map(
-        ([p, i]) =>
-          `<div class="mtr mtb" onclick="V.mt='rc';V.mk='b${i}';render()"><b class="mtp" style="color:${col(p.p)}">${p.p}</b><span class="fvj">${p.n}</span>${chip(p.o)}<span class="fvcl">${orig(p)}</span><b>${price(p)}</b>${star(i)}</div>`,
+        ([p, c]) =>
+          `<div class="mtr mtb" data-n="${mkEsc(p.n)}" onclick="mtGoP(this.dataset.n)"><b class="mtp" style="color:${col(p.p)}">${p.p}</b><span class="fvj">${p.n}</span>${chip(p.o)}<span class="fvcl">${c}</span><b>${price(p)}</b>${star(p.n)}</div>`,
       )
       .join('')}</div><div class="ctl" style="margin-top:8px"><button class="p" onclick="mtTab('rc')">Ouvrir la recherche</button></div></div>
-    <div class="card fvc"><div class="fvh"><b>Joueurs convoités</b><span class="mu">${wl.length}</span></div><div class="fvtb" style="max-height:300px">${wr || '<div class="mu" style="padding:8px 2px">Touchez l’étoile d’un joueur pour le suivre ici.</div>'}</div><div class="ctl" style="margin-top:8px"><button class="p" onclick="mtTab('cv')">Liste des joueurs convoités</button></div></div></div>
+    <div class="card fvc fvgo" onclick="if(!event.target.closest('.hp'))mtTab('cv')"><div class="fvh"><b>Joueurs convoités</b><span class="mu">${wl.length}</span></div><div class="fvtb" style="max-height:300px">${wr || '<div class="mu" style="padding:8px 2px">Touchez l’étoile d’un joueur pour le suivre ici.</div>'}</div><div class="ctl" style="margin-top:8px"><button class="p" onclick="mtTab('cv')">Liste des joueurs convoités</button></div></div></div>
     <div class="card fvc" style="margin-top:10px"><div class="fvh"><b>Transferts de la Ligue</b>${hp('mt2')}<span class="mu">${LT.length}</span></div><div class="mth mtl"><span>Poste</span><span>Joueur</span><span>Note</span><span>Départ</span><span>Arrivée</span><span>Montant</span><span>Date</span></div><div class="fvtb" style="max-height:260px">${
       LT.slice(0, 12)
         .map(
@@ -7760,43 +8386,36 @@ function mktViewL() {
     <div class="fv3" style="margin-top:10px">${log(kk('in'), 'Arrivées', 0, 'fin2')}${log(kk('out'), 'Départs', 0)}${log(lns, 'Prêts', 1)}</div>
     <div class="card fvsum" style="margin-top:10px">${[['Mouvements', L.length], ['Total dépensé', spent], ['Total encaissé', gain], ['Solde', (gain - spent > 0 ? '+' : '') + (gain - spent)], ['Le plus cher', top ? top.n + ' (' + top.a + ')' : '—'], ['Prochaine actualisation', MKRC[mkRN()] != null ? MKRC[mkRN()] + ' cr.' : 'Aucune']].map(([l, v]) => `<div><small>${l}</small><b>${v}</b></div>`).join('')}</div>`;
   } else if (k == 'rc') {
-    body = `<h2>Marché des transferts</h2>${vwBtn()}${mkRf()}${fbar()}<div class="card"><div class="pg">${fl(S.mkt.map((p, i) => [p, i]))
-      .map(([p, i]) =>
-        pc(p, V.mk == 'b' + i ? 'sel' : '', `mk2('b',${i})`, `${cmp(p)}<div><b>${price(p)}</b> cr.${V.mk == 'b' + i ? ' · confirmer ?' : ''} ${star(i)}</div>`),
-      )
-      .join('')}</div></div><h2>Vendre (remplaçants)</h2><div class="card"><div class="pg">${fl(t.sq.map((p, i) => [p, i]).filter(([p, i]) => !t.lu.includes(i)))
-      .map(([p, i]) => pc(p, V.mk == 's' + i ? 'sel' : '', `mk2('s',${i})`, `<div><b>+${price(p) >> 1}</b>${V.mk == 's' + i ? ' · confirmer ?' : ''}</div>`))
-      .join('')}</div></div>`;
+    body = mkSearch();
   } else if (k == 'of') {
     body = ofView();
   } else if (k == 'pr') {
     body = loanView();
-  } else if (k == 'db') {
-    body = dbView();
   } else if (k == 'cv') {
-    const av = wl.map((n, j) => [S.mkt.findIndex((p) => p.n == n), j, n]),
-      on = av.filter(([i]) => i >= 0),
-      off = av.filter(([i]) => i < 0);
-    body = `<h2>Liste des joueurs convoités</h2>${vwBtn()}<div class="card">${
+    const av = wl.map((n, j) => [plFindS(n), j, n]),
+      on = av.filter(([p]) => p),
+      off = av.filter(([p]) => !p);
+    body = `<h2>Liste des joueurs convoités</h2><div class="card">${
       on.length
-        ? '<div class="pg">' +
+        ? '<div class="mkh"><span>Poste</span><span>Joueur</span><span class="mkc">Équipe</span><span class="mkl2">Planète · Fluide</span><span>Compat.</span><span>Niv.</span><span>Prix</span><span></span></div>' +
           on
-            .map(([i, j]) =>
-              pc(S.mkt[i], V.mk == 'b' + i ? 'sel' : '', `mk2('b',${i})`, `${cmp(S.mkt[i])}<div><b>${price(S.mkt[i])}</b> cr.${V.mk == 'b' + i ? ' · confirmer ?' : ''} ${star(i)}</div>`),
-            )
-            .join('') +
-          '</div>'
-        : '<div class="mu">Aucun joueur suivi sur le marché actuel. Dans Recherche, touchez l’étoile d’un joueur pour l’ajouter ici.</div>'
+            .map(([p]) => {
+              const c = plOwner(p.n) ? plOwner(p.n).name : 'Agent libre',
+                cp = compat(p, me().name);
+              return `<div class="mkr" data-n="${mkEsc(p.n)}" onclick="prof('nm',this.dataset.n)"><b class="mkp" style="color:${col(p.p)}">${p.p}</b><span class="mkn"><b>${p.n}</b><small>${p.age || '—'} ans</small></span><span class="mkc">${c}</span><span class="mkl2">${planet(p.og || c)}<small>${plFlu(p)}</small></span><span class="mkx ${cp >= 70 ? 'g' : cp >= 40 ? 'o' : 'r'}">${cp} %</span>${chip(p.o)}<b class="mkv">${price(p)}</b><span class="mka">${star(p.n)}<button class="p" onclick="event.stopPropagation();ofOpenN(this.closest('.mkr').dataset.n)">Offre</button></span></div>`;
+            })
+            .join('')
+        : '<div class="mu">Aucun joueur suivi. Dans Recherche, touchez l’étoile d’un joueur pour l’ajouter ici.</div>'
     }${off
-      .map(([i, j, n]) => `<div class="row"><span class="nm">${n} <span class="mu">n’est plus sur le marché</span></span><button onclick="wlD(${j})">Retirer</button></div>`)
+      .map(([p, j, n]) => `<div class="row"><span class="nm">${n} <span class="mu">n’est plus disponible</span></span><button onclick="wlD(${j})">Retirer</button></div>`)
       .join('')}</div>`;
   } else {
     body =
-`<div class="card"><b>💰 ${S.cash} crédits</b> <span class="mu">(+80 par match, +150 par victoire)</span></div><h2>Stade</h2><div class="card"><div class="row"><span class="nm">Stade niv. ${S.st} · ${2000 * S.st} places <span class="mu">recette estimée à domicile : ${gate()}</span></span><button onclick="upS()" ${S.st >= 5 || S.cash < S.st * 1000 + 500 ? 'disabled' : ''}>+ ${S.st * 1000 + 500}</button></div><div class="row"><span class="nm">Prix du billet : ${S.tk} <span class="mu">(plus cher = moins de monde)</span></span><button onclick="S.tk=Math.max(5,S.tk-1);save();render()">−</button><button onclick="S.tk=Math.min(25,S.tk+1);save();render()">+</button></div></div><h2>Staff</h2><div class="card">` +
+`<div class="card"><b>💰 ${S.cash} crédits</b> <span class="mu">(+80 par match, +150 par victoire)</span></div><h2>Stade</h2><div class="card"><div class="row"><span class="nm">Stade niv. ${S.st} · ${2000 * S.st} places <span class="mu">recette estimée à domicile : ${gate()}</span></span><button onclick="upS()" ${S.st >= 5 || S.cash < S.st * 1000 + 500 ? 'disabled' : ''}>+ ${S.st * 1000 + 500}</button></div><div class="row"><span class="nm">Prix du billet : ${S.tk} <span class="mu">(plus cher = moins de monde)</span></span><button onclick="S.tk=Math.max(5,S.tk-1);save();render()">−</button><button onclick="S.tk=Math.min(25,S.tk+1);save();render()">+</button></div></div><h2>Staff</h2><div class="stfg">` +
     Object.keys(NS)
       .map(
         (k) =>
-          `<div class="row"><span class="nm">${NS[k][0]} niv. ${S.staff[k]} <span class="mu">${NS[k][1]}</span></span><button onclick="up('${k}')" ${S.staff[k] >= 5 || S.cash < S.staff[k] * 800 ? 'disabled' : ''}>+ ${S.staff[k] * 800}</button></div>`,
+          `<div class="card stfc"><span class="stfi">${STI[k]}</span><div class="stft"><b>${NS[k][0]}</b><span class="mu">${NS[k][1]}</span><span class="stfl" title="Niveau ${S.staff[k]} sur 5">${[1, 2, 3, 4, 5].map((n) => `<i${n <= S.staff[k] ? ' class="on"' : ''}></i>`).join('')}<em>niv. ${S.staff[k]}/5</em></span></div><button onclick="up('${k}')" ${S.staff[k] >= 5 || S.cash < S.staff[k] * 800 ? 'disabled' : ''}>${S.staff[k] >= 5 ? 'Max' : '+ ' + S.staff[k] * 800}</button></div>`,
       )
       .join('') +
     `</div>` +
@@ -7810,25 +8429,8 @@ const MKRC = [50, 100];
 function mkRN() {
   return S.mkr && S.mkr.md == S.md ? S.mkr.n : 0;
 }
-// Bouton « Actualiser la liste » du marché.
-function mkRf() {
-  const n = mkRN(),
-    ok = n < MKRC.length,
-    c = MKRC[n] || 0,
-    no = !ok || S.cash < c;
-  return `<div class="ctl" style="margin:6px 0"><button onclick="mkRefresh()" ${no ? 'disabled' : ''}><svg class="ic" aria-hidden="true"><use href="#i-dice"/></svg> Actualiser la liste${ok ? ' (' + c + ' cr.)' : ''}</button><span class="mu">${ok ? MKRC.length - n + ' actualisation' + (MKRC.length - n > 1 ? 's' : '') + ' restante' + (MKRC.length - n > 1 ? 's' : '') + ' avant le prochain match' : 'Plus d’actualisation avant le prochain match'} ${hp('mkr')}</span></div>`;
-}
-// Actualise la liste du marché (paye le coût).
-function mkRefresh() {
-  const n = mkRN();
-  if (n >= MKRC.length || S.cash < MKRC[n]) return;
-  tx('Transferts', -MKRC[n]);
-  S.mkt = mkt();
-  S.mkr = { md: S.md, n: n + 1 };
-  V.mk = null;
-  save();
-  render();
-}
+
+
 // Améliore un poste du staff (entraîneur, kiné, analyste…) : coûte 800 crédits × niveau.
 function up(k) {
   const c = S.staff[k] * 800;
@@ -7850,9 +8452,15 @@ function buyAt(np, fee) {
   const t = me();
   if (S.cash < fee || sqN(t) >= 15) return false;
   tx('Transferts', -fee);
-  tlog('in', np, 'Marché', fee);
-  const i = S.mkt.findIndex((q) => q.n == np.n);
+  const ow = plOwner(np.n),
+    i = S.mkt.findIndex((q) => q.n == np.n);
+  tlog('in', np, ow ? ow.name : 'Marché', fee);
   if (i >= 0) S.mkt.splice(i, 1);
+  else if (ow) {
+    const j = ow.sq.findIndex((q) => q.n == np.n);
+    if (j >= 0) ow.sq.splice(j, 1);
+    autoLU(ow);
+  }
   if (np.mkb) {
     S.mk = { b: S.season, pp: price(np) };
     delete np.mkb;
@@ -7861,33 +8469,42 @@ function buyAt(np, fee) {
   join(np, t);
   return true;
 }
-// Ouvre la fenêtre d'offre pour un joueur du marché.
-function ofOpen(i) {
-  const p = S.mkt[i];
+// Ouvre la fenêtre d'offre pour un joueur (par nom).
+function ofOpenN(n) {
+  const p = plFindS(n);
   if (!p) return;
+  V.mt = 'rc';
   ofFrom(p, (S.no || []).find((q) => q.n == p.n && NEGACT(q)));
+}
+// Numéros de maillot : choisis par le manager à l'achat (de 1 à 99, un seul joueur par numéro).
+const numUser = (n, except) => me().sq.find((x) => x.n != except && pnum(me(), x) == n);
+function numFree(pref, except) {
+  let n = pref >= 1 && pref <= 99 ? pref : 2;
+  for (let i = 0; i < 99 && numUser(n, except); i++) n = (n % 99) + 1;
+  return n;
 }
 // Valeurs de départ d'une offre : transfert, prime de signature, salaire, prime de titre, durée.
 function ofDef(p) {
-  const d = { fee: price(p), sb: Math.max(1, Math.round(price(p) / 25)), sw: sal(p), tb: 0, ct: p.age >= 31 ? 2 : 3 };
+  const d = { fee: price(p), sb: Math.max(1, Math.round(price(p) / 25)), sw: sal(p), tb: 0, ct: p.age >= 31 ? 2 : 3, num: numFree(p[numKey()] || 0, p.n) };
   for (let i = 0; i < 200 && plRatio(p, d) < 1.03; i++) d.sw++;
   return d;
 }
 function ofFrom(p, x, over) {
   const d = ofDef(p);
-  V.of = Object.assign({ n: p.n }, d, x ? { fee: x.fee, sb: x.sb, sw: x.sw, tb: x.tb || 0, ct: x.ct } : {}, over || {});
+  V.of = Object.assign({ n: p.n }, d, x ? { fee: x.fee, sb: x.sb, sw: x.sw, tb: x.tb || 0, ct: x.ct, num: x.num || d.num } : {}, over || {});
   render();
 }
 // Règle une condition de l'offre (par pas, par pourcentage de la valeur ou valeur saisie).
 function ofSet(v, rel, k) {
   if (!V.of) return;
   k = k || 'fee';
-  const p = S.mkt.find((q) => q.n == V.of.n) || ((S.no || []).find((q) => q.n == V.of.n) || {}).p,
+  const p = plFind(V.of.n) || ((S.no || []).find((q) => q.n == V.of.n) || {}).p,
     pr = p ? price(p) : 100,
     mn = k == 'sb' || k == 'tb' ? 0 : 1;
+  if (k == 'num') v = Math.round(v);
   let n = rel == 'pct' ? (pr * v) / 100 : rel == 'add' ? V.of[k] + v : v;
   if (!(n >= mn)) n = mn;
-  V.of[k] = Math.round(k == 'ct' ? Math.min(4, n) : n);
+  V.of[k] = Math.round(k == 'ct' ? Math.min(4, n) : k == 'num' ? Math.min(99, n) : n);
   render();
 }
 // Rang de force de votre équipe (0 = la plus forte) et chance estimée de gagner le titre.
@@ -7919,7 +8536,9 @@ const plRatio = (p, o) => plVal(o) / plWant(p, o);
 function clubDecide(x) {
   const p = x.p,
     pr = price(p),
-    r = x.fee / pr;
+    r = x.fee / pr,
+    ow = plOwner(x.n);
+  if (ow && ow.sq.length <= 10) return ['rej', 'Le club ne peut pas se séparer d’un joueur de plus : son effectif est trop juste.'];
   if (r >= 1.1) return Math.random() < 0.95 ? ['acc'] : ['rej', 'Le club vendeur a finalement changé d’avis.'];
   if (r >= 1) return Math.random() < 0.8 ? ['acc'] : ['ctr', Math.round(pr * (1.05 + Math.random() * 0.1))];
   if (r >= 0.85) return ['ctr', Math.round(pr * (1 + Math.random() * 0.08))];
@@ -7945,7 +8564,7 @@ function plDecide(x) {
 function ofSend() {
   const o = V.of;
   if (!o) return;
-  const p = S.mkt.find((q) => q.n == o.n);
+  const p = plFind(o.n);
   if (!p) return;
   S.no = S.no || [];
   S.no.forEach((q) => {
@@ -7956,8 +8575,8 @@ function ofSend() {
   });
   const fee = Math.max(1, Math.round(+o.fee || 0)),
     sb = Math.max(0, Math.round(+o.sb || 0));
-  if (fee + sb > S.cash || sqN(me()) >= 15) return;
-  const cl = S.teams.filter((t) => t !== me());
+  if (fee + sb > S.cash || sqN(me()) >= 15 || numUser(Math.round(+o.num || 0), p.n)) return;
+  const ow = plOwner(p.n);
   const x = {
     id: Date.now() + Math.random(),
     n: p.n,
@@ -7967,7 +8586,8 @@ function ofSend() {
     sw: Math.max(1, Math.round(+o.sw || 1)),
     tb: Math.max(0, Math.round(+o.tb || 0)),
     ct: Math.min(4, Math.max(1, +o.ct || 3)),
-    cl: cl.length ? cl[(Math.random() * cl.length) | 0].name : 'Le club vendeur',
+    num: Math.min(99, Math.max(1, Math.round(+o.num || 2))),
+    cl: ow ? ow.name : 'L’agent du joueur',
     st: 'pend',
     d0: S.day,
     dr: S.day + 2 + ((Math.random() * 3) | 0),
@@ -7993,15 +8613,23 @@ function ofSign(x, auto) {
     }
     return false;
   }
+  if (!plFindS(x.n)) {
+    x.st = 'exp';
+    x.note = 'Le joueur n’est plus disponible.';
+    mail('Transfert annulé : ' + x.n, x.n + ' n’est plus disponible (transféré ailleurs).');
+    return false;
+  }
   const np = x.p;
+  delete np.num;
   if (!buyAt(np, x.fee)) return false;
+  np.num = numFree(x.num || 2, np.n);
   if (x.sb > 0) tx('Primes', -x.sb);
   np.sw = x.sw;
   np.tb = x.tb || 0;
   np.ct = x.ct;
   x.st = 'acc';
   x.note = 'Transfert conclu.';
-  mail('Transfert conclu : ' + x.n, x.cl + ' confirme le départ de ' + x.n + ' vers votre club (' + x.fee + ' crédits). ' + x.n + ' signe pour ' + x.ct + ' an' + (x.ct > 1 ? 's' : '') + ', avec un salaire de ' + x.sw + ' par match' + (x.sb ? ' et une prime de signature de ' + x.sb + ' crédits' : '') + (x.tb ? ' ; prime de titre : ' + x.tb + ' crédits' : '') + '. Bienvenue !');
+  mail('Transfert conclu : ' + x.n, x.cl + ' confirme le départ de ' + x.n + ' vers votre club (' + x.fee + ' crédits). ' + x.n + ' signe pour ' + x.ct + ' an' + (x.ct > 1 ? 's' : '') + ', avec un salaire de ' + x.sw + ' par match' + (x.sb ? ' et une prime de signature de ' + x.sb + ' crédits' : '') + (x.tb ? ' ; prime de titre : ' + x.tb + ' crédits' : '') + '. Il portera le n°' + np.num + (np.num != x.num ? ' (le n°' + x.num + ' avait été attribué entre-temps)' : '') + '. Bienvenue !');
   return true;
 }
 // Chaque jour : le club puis le joueur répondent aux offres arrivées à échéance ; les contre-offres expirent.
@@ -8078,7 +8706,7 @@ const ofRow = (l, k, st, mn, sfx) =>
 function ofModal() {
   const o = V.of;
   if (!o) return '';
-  const p = S.mkt.find((q) => q.n == o.n) || ((S.no || []).find((q) => q.n == o.n) || {}).p;
+  const p = plFind(o.n) || ((S.no || []).find((q) => q.n == o.n) || {}).p;
   if (!p) return '';
   ensure(p);
   const pr = price(p),
@@ -8089,8 +8717,9 @@ function ofModal() {
     tone = r >= 1.1 ? ['Très généreuse : acceptation quasi certaine', '#2fb36b'] : r >= 1 ? ['Correcte : bonnes chances', '#62c14a'] : r >= 0.85 ? ['Un peu basse : le club risque de contre-proposer', '#e0a526'] : r >= 0.7 ? ['Basse : refus probable', '#e8743b'] : ['Insultante : refus presque sûr', '#e5484d'],
     rp = plRatio(p, o),
     tp = rp >= 1 ? ['Le joueur sera séduit', '#2fb36b'] : rp >= 0.85 ? ['Il risque de demander un meilleur salaire', '#e0a526'] : rp >= 0.65 ? ['Insuffisantes : refus probable', '#e8743b'] : ['Très insuffisantes : refus presque sûr', '#e5484d'],
-    ex = (S.no || []).find((q) => q.n == p.n && NEGACT(q));
-  return `<div class="mo" onclick="V.of=null;render()"><div class="card ofm" onclick="event.stopPropagation()"><div class="ofh"><b>Faire une offre</b><button class="pfx" onclick="V.of=null;render()" aria-label="Fermer">✕</button></div><div class="ofp"><div class="pg">${pc(p, '', 'void 0', '')}</div><div class="ofi"><b>${p.n}</b><div class="mu">${p.p} · ${p.age || '—'} ans · note ${p.o}</div><div class="ofk"><span>Valeur estimée</span><b>${pr}</b></div><div class="ofk"><span>Salaire actuel</span><b>${sal(p)} / match</b></div><div class="ofk"><span>Vos crédits</span><b>${S.cash}</b></div></div></div>${ex ? `<div class="mu" style="margin:6px 0">Une négociation est déjà en cours pour ce joueur : une nouvelle offre la remplacera.</div>` : ''}<h3 class="ofh3">Le club vendeur</h3>${ofRow('Montant du transfert', 'fee', 10, 1, 'crédits')}<div class="ctl" style="justify-content:center;margin:4px 0">${[[80, '80 %'], [100, 'Valeur'], [110, '110 %'], [125, '125 %']].map(([v, l]) => `<button onclick="ofSet(${v},'pct')">${l}</button>`).join('')}</div><div class="oft" style="color:${tone[1]}">${tone[0]}</div><h3 class="ofh3">Le joueur</h3>${ofRow('Prime de signature', 'sb', 5, 0, 'payée à la signature')}${ofRow('Salaire', 'sw', 1, 1, 'par match')}${ofRow('Prime de titre', 'tb', 10, 0, 'si vous gagnez le championnat (≈ ' + Math.round(titleP() * 100) + ' % de chances)')}<div class="ofg"><span>Durée du contrat</span><div class="ofa2">${[1, 2, 3, 4].map((n) => `<button class="${o.ct == n ? 'p' : ''}" onclick="ofSet(${n},'abs','ct')">${n} an${n > 1 ? 's' : ''}</button>`).join('')}</div></div><div class="oft" style="color:${tp[1]}">${tp[0]}</div><div class="mu" style="text-align:center">Le club répond sous 2 à 4 jours, puis le joueur étudie vos conditions. Rien n’est payé avant l’accord : coût à la signature <b>${fee + o.sb}</b> cr.</div>${full ? '<div class="oft" style="color:#e5484d">Effectif complet (15 joueurs) : vendez un joueur d’abord.</div>' : ''}${broke ? '<div class="oft" style="color:#e5484d">Vous n’avez pas assez de crédits (transfert + prime).</div>' : ''}<div class="ctl" style="justify-content:center;margin-top:8px"><button class="p" onclick="ofSend()" ${full || broke ? 'disabled' : ''}>Déposer l’offre</button><button onclick="V.of=null;render()">Annuler</button></div></div></div>`;
+    ex = (S.no || []).find((q) => q.n == p.n && NEGACT(q)),
+    nuX = numUser(Math.round(+o.num || 0), p.n);
+  return `<div class="mo" onclick="V.of=null;render()"><div class="card ofm" onclick="event.stopPropagation()"><div class="ofh"><b>Faire une offre</b><button class="pfx" onclick="V.of=null;render()" aria-label="Fermer">✕</button></div><div class="ofp"><div class="pg">${pc(p, '', 'void 0', '')}</div><div class="ofi"><b>${p.n}</b><div class="mu">${p.p} · ${p.age || '—'} ans · note ${p.o}</div><div class="ofk"><span>Valeur estimée</span><b>${pr}</b></div><div class="ofk"><span>Salaire actuel</span><b>${sal(p)} / match</b></div><div class="ofk"><span>Vos crédits</span><b>${S.cash}</b></div></div></div>${ex ? `<div class="mu" style="margin:6px 0">Une négociation est déjà en cours pour ce joueur : une nouvelle offre la remplacera.</div>` : ''}<h3 class="ofh3">Le club vendeur</h3>${ofRow('Montant du transfert', 'fee', 10, 1, 'crédits')}<div class="ctl" style="justify-content:center;margin:4px 0">${[[80, '80 %'], [100, 'Valeur'], [110, '110 %'], [125, '125 %']].map(([v, l]) => `<button onclick="ofSet(${v},'pct')">${l}</button>`).join('')}</div><div class="oft" style="color:${tone[1]}">${tone[0]}</div><h3 class="ofh3">Le joueur</h3>${ofRow('Prime de signature', 'sb', 5, 0, 'payée à la signature')}${ofRow('Salaire', 'sw', 1, 1, 'par match')}${ofRow('Prime de titre', 'tb', 10, 0, 'si vous gagnez le championnat (≈ ' + Math.round(titleP() * 100) + ' % de chances)')}<div class="ofg"><span>Durée du contrat</span><div class="ofa2">${[1, 2, 3, 4].map((n) => `<button class="${o.ct == n ? 'p' : ''}" onclick="ofSet(${n},'abs','ct')">${n} an${n > 1 ? 's' : ''}</button>`).join('')}</div></div><div class="oft" style="color:${tp[1]}">${tp[0]}</div>${ofRow('Numéro de maillot', 'num', 1, 1, '1 à 99')}${nuX ? `<div class="oft" style="color:#e5484d">Le n°${o.num} est déjà porté par ${nuX.n} : choisissez un autre numéro.</div>` : `<div class="oft" style="color:#2fb36b">Le n°${o.num} est libre.</div>`}<div class="mu" style="text-align:center">Le club répond sous 2 à 4 jours, puis le joueur étudie vos conditions. Rien n’est payé avant l’accord : coût à la signature <b>${fee + o.sb}</b> cr.</div>${full ? '<div class="oft" style="color:#e5484d">Effectif complet (15 joueurs) : vendez un joueur d’abord.</div>' : ''}${broke ? '<div class="oft" style="color:#e5484d">Vous n’avez pas assez de crédits (transfert + prime).</div>' : ''}<div class="ctl" style="justify-content:center;margin-top:8px"><button class="p" onclick="ofSend()" ${full || broke || nuX ? 'disabled' : ''}>Déposer l’offre</button><button onclick="V.of=null;render()">Annuler</button></div></div></div>`;
 }
 // Onglet « Offres » : offres en attente, contre-propositions à traiter et historique.
 function ofView() {
@@ -8107,7 +8736,7 @@ function ofView() {
       else b = `<span class="oft2">${x.n} demande un salaire de <b>${x.pc.sw}</b> / match (au lieu de ${x.sw})</span><span class="mu">À traiter avant ${fmtDay(x.ex)}</span><button class="p" onclick="negAccept(${j})" ${cant ? 'disabled' : ''}>Accepter</button><button onclick="negNo(${j})">Refuser</button><button onclick="ofRe(${j})">Négocier</button>`;
       return `<div class="ofr"><div class="ofc"><b>${x.n}</b><span class="mu">${x.p.p} · note ${x.p.o} · valeur ${price(x.p)} · ${x.cl}</span><span class="mu ofct">${ofTerms(x)}</span></div><div class="ofs">${b}</div></div>`;
     };
-  return `<h2>Offres de transfert ${hp('mt3')}</h2><div class="card">${A.map(row).join('') || '<div class="mu">Aucune négociation en cours. Dans Recherche, touchez un joueur pour déposer une offre.</div>'}</div><h2>Historique</h2><div class="card">${H.map(([x]) => `<div class="ofr"><div class="ofc"><b>${x.n}</b><span class="mu">${x.cl || ''} · ${ofTerms(x)}</span>${x.note ? `<span class="mu">${x.note}</span>` : ''}</div><div class="ofs"><span class="ofb ${x.st}">${sT[x.st] || ''}</span></div></div>`).join('') || '<div class="mu">Aucun historique.</div>'}</div>`;
+  return `<h2>Offres de transfert ${hp('mt3')}</h2><div class="card">${A.map(row).join('') || '<div class="mu">Aucune négociation en cours. Dans Recherche, touchez un joueur pour déposer une offre.</div>'}</div><h2>Historique</h2><div class="card hscr">${H.map(([x]) => `<div class="ofr"><div class="ofc"><b>${x.n}</b><span class="mu">${x.cl || ''} · ${ofTerms(x)}</span>${x.note ? `<span class="mu">${x.note}</span>` : ''}</div><div class="ofs"><span class="ofb ${x.st}">${sT[x.st] || ''}</span></div></div>`).join('') || '<div class="mu">Aucun historique.</div>'}</div>`;
 }
 // Aperçu : liste des joueurs dont l'offre est en attente (cliquable, ouvre l'onglet Offres).
 function ovNeg() {
@@ -8125,7 +8754,7 @@ function ovNeg() {
 function ofRe(j) {
   const x = (S.no || [])[j];
   if (!x) return;
-  const p = S.mkt.find((q) => q.n == x.n) || x.p;
+  const p = plFind(x.n) || x.p;
   ofFrom(p, x, x.st == 'ctr' ? { fee: x.cf } : x.pc ? { sw: x.pc.sw } : {});
 }
 // Verse les primes de titre promises aux joueurs de l'équipe.
@@ -8138,23 +8767,7 @@ function tbPay(w) {
     }
   } catch (e) {}
 }
-// Achète un joueur du marché.
-function buy(i) {
-  const p = S.mkt[i],
-    t = me();
-  if (S.cash < price(p) || sqN(t) >= 15) return;
-  tx('Transferts', -price(p));
-  tlog('in', p, 'Marché', price(p));
-  const np = S.mkt.splice(i, 1)[0];
-  if (np.mkb) {
-    S.mk = { b: S.season, pp: price(np) };
-    delete np.mkb;
-  }
-  t.sq.push(np);
-  join(np, t);
-  save();
-  render();
-}
+
 // Vend un joueur de l'équipe (moitié du prix).
 function sell(i) {
   const t = me();
@@ -8211,6 +8824,9 @@ function cupRound() {
   }
   if (um) {
     V.m = mk(...um);
+    V.lnx = 0;
+    V.mxp = null;
+    V.mxd = 0;
     V.m.cup = 1;
     V.sub = 3;
     V.tab = 'match';
@@ -8252,7 +8868,12 @@ function cupAdvance() {
 function cont() {
   const c = V.m.cup;
   V.m = null;
-  V.tab = 'ov';
+  V.tab = 'mail'; // pour le moment, « Continuer » ramène à la messagerie
+  if (S.pcw) {
+    const w = S.pcw;
+    S.pcw = null;
+    pcOpen('post', w.o, w.k, w.sc, w.f);
+  }
   if (c) {
     cupAdvance();
     if (!V.m) V.tab = 'table';
@@ -8606,10 +9227,10 @@ function welcome(ti) {
   const rk =
     T.map((t) => t[1])
       .sort((a, b) => b - a)
-      .indexOf(T[ti][1]) + 1;
+      .indexOf((T[ti] || [0, (NEWT.find((x) => x.n == S.teams[ti].name) || { l: 14 }).l])[1]) + 1;
   S.obj = Math.max(1, rk - 2);
   mail(
-    'Bienvenue à la tête de ' + T[ti][0],
+    'Bienvenue à la tête de ' + S.teams[ti].name,
     'Odile Marchand, présidente du conseil, vous accueille.\n\nObjectifs du conseil pour cette saison :\n• Classement : ' +
       obRk() +
       ' (prime de 1500 crédits).' +
@@ -8633,6 +9254,7 @@ function act(i, j) {
   if (String(a[1]).startsWith('of')) return actOf(i, j);
   if (a[1] == 'mo' || a[1] == 'no2') return actMo(i, j);
   if (a[1] == 'md') return actMd(i, j);
+  if (a[1] == 'pz') return actPz(i, j);
   m.b += a[1] == 'sp' ? '\n\n→ Offre acceptée (+' + a[2] + '/match).' : '\n\n→ Offre refusée.';
   if (a[1] == 'sp') S.sp = a[2];
   m.a = null;
@@ -8647,9 +9269,9 @@ function report(M) {
   skTick(M);
   S.fh.push(S.cash);
   if (S.cash < 0) S.conf = Math.max(0, S.conf - 2);
-  // Contrats : durée plafonnée à celle du contrat signé (10, 26 ou 52 matchs), jamais de remontée.
+  // Contrats : durée plafonnée à celle du contrat signé (10 matchs, 1 ou 2 saisons), jamais de remontée.
   S.sps.forEach((s) => {
-    const m = [10, 26, 52].includes(+s.m) ? +s.m : 26;
+    const m = +s.m > 0 ? +s.m : seasonM();
     s.m = m;
     s.left = Math.min(m, Math.floor(+s.left || 0)) - 1;
   });
@@ -8686,7 +9308,7 @@ function report(M) {
       );
     S.fa = fs;
   }
-  mdPost(k, g, c, o);
+  mdPost(k, g, c, o, pcFacts(M));
   if (S.md >= S.fx.length) seasonEnd();
 }
 // FIN DE SAISON : vieillissement, contrats, titres, objectifs, nouvelle saison.
@@ -8757,9 +9379,15 @@ function calList() {
         z = played ? (D.hist[k] || []).find((q) => q[0] == m[0] && q[1] == m[1]) : null;
       o.push({ rp: (D.mrp || {})[k], c, k, day: dOf(c, k), h, opp: D.teams[h ? m[1] : m[0]], played, my: z ? (h ? z[2] : z[3]) : null, op: z ? (h ? z[3] : z[2]) : null });
     });
+  // Soirées du mode annexe (une fois débloqué) : un duel par tour, 3 tours par tournoi.
+  if (NBU()) {
+    const n = nbS(),
+      RN = ['Quart de finale', 'Demi-finale', 'Finale'];
+    for (let k = 0; k < 6; k++) o.push({ c: 'N', k, day: dN(k), h: null, opp: { em: '🌑', name: RN[k % 3] }, played: k < n.k, my: null, op: null });
+  }
   return o.sort((a, b) => a.day - b.day);
 }
-const calCmp = (c) => (c == 'C' ? 'Galactik Cup' : 'Galactik League');
+const calCmp = (c) => (c == 'N' ? NB : c == 'C' ? 'Galactik Cup' : 'Galactik League');
 const calRes = (e) => {
   if (e.my == null) return '';
   const k = e.my > e.op ? 'w' : e.my < e.op ? 'l' : 'd';
@@ -8789,7 +9417,7 @@ function calView() {
     first = (new Date(Date.UTC(y, mo, 1)).getUTCDay() + 6) % 7,
     nd = new Date(Date.UTC(y, mo + 1, 0)).getUTCDate(),
     weeks = Math.ceil((first + nd) / 7),
-    lg = (c) => `<img class="cl" src="${c == 'C' ? LGC : LGL}" alt="${calCmp(c)}" title="${calCmp(c)}">`;
+    lg = (c) => `<img class="cl" src="${c == 'N' ? LGN : c == 'C' ? LGC : LGL}" alt="${calCmp(c)}" title="${calCmp(c)}">`;
   // Trêve : jours sans match entre deux journées de League espacées de plus de 7 jours.
   const tr = new Set();
   L.filter((e) => e.c == 'L').forEach((e, i, a) => {
@@ -8800,7 +9428,7 @@ function calView() {
     ? nx
         .map(
           (e) =>
-            `<div class="cns"><span class="cnl">${e.opp.em}</span><div><b>${calAb(e.opp.name)}</b><span class="mu">${fmtDay(e.day)}</span></div><i class="${e.h ? 'dm' : 'ex'}">${e.h ? 'Dom.' : 'Ext.'}</i>${lg(e.c)}</div>`,
+            `<div class="cns"><span class="cnl">${e.opp.em}</span><div><b>${(e.c == 'N' ? ['1/4', '1/2', 'FIN'][e.k % 3] : calAb(e.opp.name))}</b><span class="mu">${fmtDay(e.day)}</span></div>${e.c == 'N' ? '' : `<i class="${e.h ? 'dm' : 'ex'}">${e.h ? 'Dom.' : 'Ext.'}</i>`}${lg(e.c)}</div>`,
         )
         .join('')
     : '<div class="mu">Aucun match à venir pour le moment.</div>';
@@ -8812,7 +9440,7 @@ function calView() {
       out = dn < 1 || dn > nd,
       es = by[n] || [];
     g += `<div class="cdc${out ? ' out' : ''}${n == today ? ' now' : ''}${es.length ? ' mt' : ''}${tr.has(n) && !es.length ? ' tr' : ''}"><span class="cdn">${dt.getUTCDate()}</span>${es
-      .map((e) => `<div class="cev" title="${calCmp(e.c)} · ${e.opp.name} · ${e.h ? 'à domicile' : 'à l’extérieur'}"><span class="cnl">${e.opp.em}</span><span class="cab">${calAb(e.opp.name)}</span><i class="${e.h ? 'dm' : 'ex'}">${e.h ? 'D' : 'E'}</i>${calRes(e)}${lg(e.c)}</div>`)
+      .map((e) => `<div class="cev" title="${calCmp(e.c)} · ${e.opp.name}${e.c == 'N' ? '' : e.h ? ' · à domicile' : ' · à l’extérieur'}"><span class="cnl">${e.opp.em}</span><span class="cab">${(e.c == 'N' ? ['1/4', '1/2', 'FIN'][e.k % 3] : calAb(e.opp.name))}</span>${e.c == 'N' ? '' : `<i class="${e.h ? 'dm' : 'ex'}">${e.h ? 'D' : 'E'}</i>`}${calRes(e)}${lg(e.c)}</div>`)
       .join('')}${tr.has(n) && !es.length && dn >= 1 && dn <= nd && n - 1 >= 0 && !tr.has(n - 1) ? '<span class="ctr">Trêve</span>' : ''}</div>`;
   }
   const ml = L.filter((e) => {
@@ -8823,7 +9451,7 @@ function calView() {
     ? ml
         .map(
           (e) =>
-            `<div class="clr${e.day == nx[0]?.day && !e.played ? ' nxt' : ''}"><span class="cnl">${e.opp.em}</span><b>${e.opp.name}</b><i class="${e.h ? 'dm' : 'ex'}">${e.h ? 'Domicile' : 'Extérieur'}</i><span class="cpl">${lg(e.c)} ${calCmp(e.c)}</span><span class="mu">${fmtDay(e.day)}</span>${e.played ? calRes(e) : '<span class="mu">À venir</span>'}${e.rp ? `<button class="rpb" onclick="V.rp='${e.c}:${e.k}';render()">Rapport</button>` : ''}</div>`,
+            `<div class="clr${e.day == nx[0]?.day && !e.played ? ' nxt' : ''}"><span class="cnl">${e.opp.em}</span><b>${e.opp.name}</b>${e.c == 'N' ? '' : `<i class="${e.h ? 'dm' : 'ex'}">${e.h ? 'Domicile' : 'Extérieur'}</i>`}<span class="cpl">${lg(e.c)} ${calCmp(e.c)}</span><span class="mu">${fmtDay(e.day)}</span>${e.played ? calRes(e) : '<span class="mu">À venir</span>'}${e.rp ? `<button class="rpb" onclick="V.rp='${e.c}:${e.k}';render()">Rapport</button>` : ''}</div>`,
         )
         .join('')
     : '<div class="mu" style="padding:10px">Aucun match ce mois-ci.</div>';
@@ -8846,7 +9474,7 @@ function rpView(L) {
       return `<div class="rpbr"><b>${a}${pc ? ' %' : ''}</b><div class="rpbt"><i style="width:${Math.round((100 * a) / t)}%"></i></div><span>${l}</span><div class="rpbt r"><i style="width:${Math.round((100 * b) / t)}%"></i></div><b>${b}${pc ? ' %' : ''}</b></div>`;
     },
     ic = (t) =>
-      t == 'g' ? '<svg class="ic" aria-hidden="true"><use href="#i-ball"/></svg>' : t == 'y' ? '<i class="rpc y"></i>' : t == 'r' ? '<i class="rpc r"></i>' : t == 'p' ? '<svg class="ic" aria-hidden="true"><use href="#i-target"/></svg>' : '<svg class="ic" aria-hidden="true"><use href="#i-fluid"/></svg>',
+      t == 'g' ? '<svg class="ic" aria-hidden="true"><use href="#i-ball"/></svg>' : t == 'r' ? '<i class="rpc r"></i>' : t == 'p' ? '<svg class="ic" aria-hidden="true"><use href="#i-target"/></svg>' : '<svg class="ic" aria-hidden="true"><use href="#i-fluid"/></svg>',
     ens = r.ev.map(([m, t, x]) => `<div class="rpe ${t}"><span class="mu">${m}’</span>${ic(t)}<span>${x}</span></div>`).join('') || '<div class="mu">Aucun événement marquant.</div>',
     col = (s) =>
       `<div class="rpp"><b>${r.n[s]}</b>${(r.rt[s] || [])
@@ -8919,17 +9547,19 @@ function kitOf(t) {
     k = t.kit || {};
   return { p: k.p && kOk(k.p) ? k.p : 'v', a: k.a || pl[0], b: k.b || pl[1], c: k.c || pl[1] };
 }
-// Numéro de maillot d'un joueur (unique dans l'équipe).
+// Numéro de maillot d'un joueur (unique dans l'équipe). Les numéros de la Ligue (num) et ceux de la Cup (nc) sont indépendants.
+const numKey = () => (S && S.ctx == 'C' ? 'nc' : 'num');
 function pnum(t, p) {
-  if (!p.num) {
-    const used = new Set(t.sq.map((x) => x.num).filter(Boolean));
+  const K = numKey();
+  if (!p[K]) {
+    const used = new Set(t.sq.map((x) => x[K]).filter(Boolean));
     let h = 7;
     for (const c of p.n) h = (h * 31 + c.charCodeAt(0)) % 100003;
     let n = p.p == 'GK' && !used.has(1) ? 1 : 2 + (h % 98);
     while (used.has(n)) n = (n % 99) + 1;
-    p.num = n;
+    p[K] = n;
   }
-  return p.num;
+  return p[K];
 }
 let JID = 0;
 // Dessine un maillot en SVG avec motif, couleurs, numéro et nom.
@@ -9442,8 +10072,8 @@ SKF = [
 // (w).
 const FACES = {
     Xzion: { i: LNF, m: [0, 1, 2, 4, 6, 8, 10, 12, 13, 15, 16, 18], w: [3, 5, 7, 9, 11, 14, 17, 19] },
-    Cyclos: { i: CYF, u: 1, m: [], w: [] },
-    Électra: {
+    Cyclopia: { i: CYF, u: 1, m: [], w: [] },
+    Hektonïa: {
       i: EDF,
       m: [0, 2, 3, 7, 9, 10, 11, 17, 18, 19, 22, 24, 28],
       w: [1, 4, 5, 6, 8, 12, 13, 14, 15, 16, 20, 21, 23, 25, 26, 27, 29],
@@ -9458,13 +10088,13 @@ const FACES = {
     // Ces portraits ne sont jamais donnés à un joueur inventé.
     Akillian: { c: { 'D’Jok': 3, 'Micro-Ice': 6, Sinedd: 27, Rocket: 2, Tia: 5, Mei: 4, Thran: 0, Ahito: 1 }, i: SKF, m: [0, 1, 2, 3, 6, 8, 10, 11, 12, 14, 15, 16, 17, 19, 20, 22, 24, 26, 27, 28, 29], w: [4, 5, 7, 9, 13, 18, 21, 23, 25] },
     'Wamba Prime': { i: WBF, m: [0, 1, 2, 3, 6, 7, 8, 12, 14, 16, 18, 19, 20, 23, 26, 28, 29], w: [4, 5, 9, 10, 11, 13, 15, 17, 21, 22, 24, 25, 27] },
-    Xéna: { i: XNF, u: 1, m: [], w: [] },
+    'Archipel Xenon': { i: XNF, u: 1, m: [], w: [] },
     Tigre: { i: TGF, u: 1, m: [], w: [] },
     Pirates: { i: PRF, u: 1, m: [], w: [] },
     Technoïd: { i: TCF, u: 1, m: [], w: [] },
     Vega: { i: VGF, u: 1, m: [], w: [] },
     Kaldor: { i: KDF, u: 1, m: [], w: [] },
-    Rykhar: { i: RYF, m: [], w: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] },
+    Unadar: { i: RYF, m: [], w: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] },
   },
   GOV = { Warren: 'M', Nitro: 'M', Sarlight: 'F' },
   GFW = new Set(
@@ -9476,15 +10106,15 @@ const FACES = {
 function gOf(p) {
   const f = p.n.split(' ')[0],
     pl = planet(p.og || '');
-  if (pl == 'Cyclos') return 'M';
-  if (pl == 'Électra' || pl == 'Rykhar') return 'F';
+  if (pl == 'Cyclopia') return 'M';
+  if (pl == 'Hektonïa' || pl == 'Unadar') return 'F';
   if (pl == 'Technoïd') return 'N';
   if (GOV[f]) return GOV[f];
   if (p.g_) return p.g_;
   return GFW.has(f) ? 'F' : 'M';
 }
 // Planètes dont les portraits sont ACTIFS. Pour activer d'autres équipes : ajouter leur nom ici
-// (ex. ['Xzion','Cyclos']).
+// (ex. ['Xzion','Cyclopia']).
 // PROTOTYPES : planètes dont les portraits sont encore des essais (visibles seulement pour le
 // créateur). Liste vidée au patch 1.36 : portraits provisoires masqués.
 const FACE_PROTO = Object.keys(FACES).filter((k) => k != 'Xzion'), // portraits de toutes les planètes réactivés (1.39.0.3)
@@ -9656,11 +10286,11 @@ const MAN = (() => {
     Paradisia: { sky: '#aeeeff', g: ['#45dcc0', '#38c9ae'], l: '#ffffff', fx: 'spore', af: 620, dk: 0 },
     Xzion: { sky: '#14140a', g: ['#3c4118', '#343815'], l: '#ffe14a', fx: 'bolt', af: 560 },
     'Wamba Prime': { sky: '#0b3318', g: ['#2f9a40', '#278a36'], l: '#ffffff', fx: 'leaf', af: 480 },
-    Rykhar: { sky: '#321a0e', g: ['#8c5b34', '#7d4f2b'], l: '#f5dcb4', fx: 'ash', af: 420 },
-    Xéna: { sky: '#06282a', g: ['#1f8f72', '#1a7f64'], l: '#c8fff2', fx: 'spore', af: 500 },
+    Unadar: { sky: '#321a0e', g: ['#8c5b34', '#7d4f2b'], l: '#f5dcb4', fx: 'ash', af: 420 },
+    'Archipel Xenon': { sky: '#06282a', g: ['#1f8f72', '#1a7f64'], l: '#c8fff2', fx: 'spore', af: 500 },
     Pirates: { sky: '#08162d', g: ['#3f6e90', '#356380'], l: '#ffffff', fx: 'wave', af: 450 },
-    Électra: { sky: '#2a1304', g: ['#d98a1c', '#c97d14'], l: '#fff6c4', fx: 'bolt', af: 600 },
-    Cyclos: { sky: '#1a0a2c', g: ['#7b3ba9', '#6d3299'], l: '#f3dcff', fx: 'star', af: 430 },
+    Hektonïa: { sky: '#2a1304', g: ['#d98a1c', '#c97d14'], l: '#fff6c4', fx: 'bolt', af: 600 },
+    Cyclopia: { sky: '#1a0a2c', g: ['#7b3ba9', '#6d3299'], l: '#f3dcff', fx: 'star', af: 430 },
     Technoïd: { sky: '#0e131a', g: ['#5e6b77', '#535f6b'], l: '#d2e8ff', fx: 'grid', af: 520 },
     Vega: { sky: '#040920', g: ['#2559ba', '#1f4fa9'], l: '#d9e7ff', fx: 'star', af: 540 },
     Kaldor: { sky: '#150a2e', g: ['#5b38c2', '#4f2fb1'], l: '#eee2ff', fx: 'swirl', af: 400 },
@@ -9671,11 +10301,11 @@ const MAN = (() => {
   TH['Paradisia'].n = 'Parc de Paradisia';
   TH['Xzion'].n = 'Stade orageux de Xzion';
   TH['Wamba Prime'].n = 'Jungle de Wamba Prime';
-  TH['Rykhar'].n = 'Carrière de Rykhar';
-  TH['Xéna'].n = 'Marais de Xéna';
+  TH['Unadar'].n = 'Carrière d’Unadar';
+  TH['Archipel Xenon'].n = 'Marais de l’Archipel Xenon';
   TH['Pirates'].n = 'Pont des Pirates';
-  TH['Électra'].n = 'Centrale d’Électra';
-  TH['Cyclos'].n = 'Cirque de Cyclos';
+  TH['Hektonïa'].n = 'Centrale d’Hektonïa';
+  TH['Cyclopia'].n = 'Cirque de Cyclopia';
   TH['Technoïd'].n = 'Complexe de Technoïd';
   TH['Vega'].n = 'Observatoire de Vega';
   TH['Kaldor'].n = 'Spirale de Kaldor';
@@ -9769,10 +10399,12 @@ const MAN = (() => {
       kb =
         lum(kb) < 85 && lum(ka) < 85 ? shade(kb, 4.2) : lum(kb) >= lum(ka) ? shade(kb, 0.58) : shade(kb, 1.7);
     if (dist(ka, kb) < 60) kb = lum(ka) > 140 ? '#222a44' : '#f4f6ff';
-    const gk =
-      ['#16c47f', '#ffb703', '#ff4fa3', '#33e0ff'].find((c) => dist(c, ka) > 110 && dist(c, kb) > 110) ||
-      '#16c47f';
-    return { c: [ka, kb], c2: [a[1], b[1]], gk };
+    // Gardiens : maillot de leur équipe avec les couleurs inversées (secondaire en principale, principale en secondaire).
+    const kc = [ka, kb],
+      g1 = [a[1], b[1]].map((x, t) => (dist(x, kc[t]) < 70 ? (lum(kc[t]) > 140 ? shade(kc[t], 0.5) : shade(kc[t], 1.9)) : x)),
+      gk = g1,
+      gk2 = kc;
+    return { c: [ka, kb], c2: [a[1], b[1]], gk, gk2 };
   }
   // Numéros de maillot des joueurs en match.
   function nums(M) {
@@ -9818,8 +10450,10 @@ const MAN = (() => {
     st.hold = null;
     st.v3 = 0;
     st.vk = 0;
+    st.stall = 0;
     st.cam = null;
     st.look = null;
+    st.camv = null;
     st.fx = [];
     st.cheer = 0;
     st.flash = 0;
@@ -9833,6 +10467,8 @@ const MAN = (() => {
     st.trail = [];
     st.gone = new Set();
     st.fin = 0;
+    st.hold = null;
+    st.sawSc = 0;
     st.id = 0;
     st.hold2 = 0;
     st.th = TH[planetOf(M)] || TD;
@@ -9920,7 +10556,7 @@ const MAN = (() => {
   // Vrai si le canevas de l'animation est bien affiché dans la page.
   const conn = () => !!(st.w && st.w.isConnected);
   // Vrai si une animation est en cours (scène, célébration ou rejeu).
-  const busy = () => on() && st.M === V.m && !!(st.cur || st.Q.length || st.cutEnd || st.rpl);
+  const busy = () => on() && st.M === V.m && !!(st.cur || st.Q.length || st.cutEnd || st.rpl || st.hold > 0);
   // Fait avancer le match plus vite quand aucune animation n'est en cours.
   const idle = () => {
     if (!on()) return true;
@@ -9932,7 +10568,7 @@ const MAN = (() => {
       flush();
       return true;
     }
-    return !(st.cur || st.Q.length || st.cutEnd || st.rpl || st.rpq);
+    return !(st.cur || st.Q.length || st.cutEnd || st.rpl || st.rpq || st.hold > 0);
   };
   /* ---------- affichage différé (score, chrono, journal, stats) ---------- */
   // Texte de la minute affichée (ou « Terminé »).
@@ -9957,7 +10593,9 @@ const MAN = (() => {
       l = el('anlg'),
       s = el('anst');
     if (a) a.textContent = sc(M).join(' - ');
-    if (c) c.textContent = (M.dby ? 'DERBY · ' : '') + M.t[0].name + ' – ' + M.t[1].name + ' · ' + clk(M);
+    if (c) c.textContent = clk(M);
+    const cm = el('ancm');
+    if (cm) cm.innerHTML = lgR(lg(M)[0] || '');
     if (l) {
       l.classList.toggle('cap', !(M.done && !busy()));
       l.innerHTML = lgR(
@@ -10074,7 +10712,13 @@ const MAN = (() => {
     for (let j = 0; j < n; j++) {
       let nx;
       if (shot && j == n - 1) nx = sc.pl;
-      else nx = pickW([chain[chain.length - 1], ...(shot ? [sc.pl] : [])], (k) => 1 + tier(k) * 1.2);
+      else {
+        // Les passes vont surtout vers l'avant : un joueur plus reculé que le porteur est beaucoup moins choisi.
+        const from = chain[chain.length - 1],
+          tA = tm(A),
+          fx0 = pos(tA, from, 0)[0];
+        nx = pickW([from, ...(shot ? [sc.pl] : [])], (k) => (1 + tier(k) * 1.2) * (pos(tA, k, 0)[0] >= fx0 - 0.03 ? 1.6 : 0.2));
+      }
       chain.push(nx);
     }
     if (sc.k == 'block' || (!shot && chain.length < 3 && !fast))
@@ -10107,7 +10751,7 @@ const MAN = (() => {
         }
       }
       const fl = !!sc.fl && onT && ST.anfl !== 0;
-      segs.push({ k: 'wind', a: sc.pl, d: (fl ? 1.25 : 0.6) * f, spot, fl });
+      segs.push({ k: 'wind', a: sc.pl, d: (fl ? 1.25 : 0.6) * f, spot, fl, fk: sc.fk });
       segs.push({ k: 'shot', a: sc.pl, d: 0.72 * f, t: [gx, ty, tz], o: sc.o, spot, fl });
       segs.push({
         k: 'res',
@@ -10116,6 +10760,8 @@ const MAN = (() => {
         t: [gx, ty, tz],
         o: sc.o,
         spot,
+        gf: sc.gf,
+        gn: sc.gn,
       });
     } else {
       const by = pickW([0], (k) => 1 + { GK: 0, DEF: 1, MID: 2, ATT: 3 }[slots(tm(D).form)[k]], D);
@@ -10153,6 +10799,7 @@ const MAN = (() => {
   }
   // Démarre une scène animée.
   function startScene(sc, replay) {
+    st.sawSc = 1;
     st.cur = sc;
     st.plan = planOf(sc);
     st.si = -1;
@@ -10168,6 +10815,7 @@ const MAN = (() => {
       st.p0 = snap();
       const M = st.M;
       M.vmin = sc.min;
+      st.stall = sc.k == 'build' && !sc.bn ? (st.stall || 0) + 1 : 0;
       ui();
     }
     nextSeg();
@@ -10184,6 +10832,8 @@ const MAN = (() => {
     g.ready = 0;
     enterSeg(g);
   }
+  // Vue 3D par défaut ; la vue 2D n'apparaît que quand le match s'enlise (3 phases de construction de suite sans occasion).
+  const view3d = () => FULL && ST.an3d !== 0 && (st.rp || (st.stall || 0) < 3);
   // Début d'un segment : initialise le mouvement.
   function enterSeg(g) {
     const sc = st.cur,
@@ -10197,10 +10847,21 @@ const MAN = (() => {
         st.ban = { txt: sc.pen ? 'PENALTY' : 'COUP FRANC', sub: pname(A, g.a), t: 1.4, c: '#ffd23f' };
       if (FULL && (sc.o != 'miss' || sc.fl) && ST.an3d !== 0) {
         st.v3 = 1;
-        st.flash = 0.35;
+        if (st.vk < 0.5) st.flash = 0.35;
       }
       if (g.fl) {
-        st.aura = { t: A, k: g.a, s: 0 };
+        st.aura = { t: A, k: g.a, s: 0, fk: g.fk };
+        if ((g.fk == 'smog' || g.fk == 'ionic') && g.spot) {
+          // Téléportation : le tireur quitte sa place et réapparaît à son point de tir.
+          const q0 = st.pos[A][g.a],
+            bk = clamp(g.spot[0] - dirOf(A) * 0.3, 0.06, 0.94),
+            by = clamp(g.spot[1] + (g.spot[1] < 0.5 ? 0.22 : -0.22), 0.1, 0.9);
+          // Le tireur part d'un point éloigné (en arrière et sur le côté) puis réapparaît d'un coup à son point de tir.
+          q0[0] = bk;
+          q0[1] = by;
+          st.aura.from = [bk, by];
+          st.aura.to = g.spot;
+        }
         if (!st.rp && ST.ancut >= 1) {
           showCut('fluid', sc);
         }
@@ -10214,6 +10875,7 @@ const MAN = (() => {
     if (g.k == 'res') {
       const o = g.o;
       st.aura = null;
+      if (g.gf && !st.rp) st.ban = { txt: 'FLUIDE !', sub: g.gn + ' (' + tm(st.plan.D).name + ')', t: 1.8, c: st.kit.gk[st.plan.D] };
       if (!st.rp) reveal(sc, true);
       if (o == 'goal') {
         st.cheer = 3;
@@ -10235,7 +10897,7 @@ const MAN = (() => {
     }
     if (g.k == 'steal') {
       if (sc.bn && !st.rp) st.ban = { txt: sc.bn, sub: sc.sub, t: 1.8, c: sc.bc };
-      if (sc.card && !st.rp) st.gone.add(sc.tm + '_' + sc.kk);
+      if (sc.card == 'x' && !st.rp) st.gone.add(sc.tm + '_' + sc.kk);
       if (g.fn && !st.rp)
         st.ban = {
           txt: 'FLUIDE !',
@@ -10325,7 +10987,16 @@ const MAN = (() => {
   // Fait avancer la simulation d'un petit pas de temps.
   function update(dt) {
     const M = st.M;
-    if (!M || (M.done && !busy() && !st.cur)) {
+    // Fin de match : on laisse « FIN DU MATCH » à l'écran quelques secondes avant le résultat.
+    if (M && M.done && st.sawSc && !st.cur && !st.Q.length && !st.cutEnd && !st.rpl) {
+      if (st.hold == null) st.hold = 3.5;
+      else if (st.hold > 0) {
+        st.hold -= dt;
+        if (st.hold <= 0) {
+          st.hold = 0;
+          render();
+        }
+      }
     }
     if (V.iv) st.fin = 0;
     if (!st.cur && st.rpq && !st.Q.length && st.last && !st.cutEnd) {
@@ -10352,10 +11023,32 @@ const MAN = (() => {
     if (st.ban && st.ban.t < 90) st.ban.t -= dt;
     if (st.ban && st.ban.t <= 0) st.ban = null;
     if (st.ban && st.ban.t > 90 && st.cur) st.ban = null;
+    if (st.M && st.M.rd) st.gone.forEach((kk) => { if ((st.M.rd[kk] || 0) <= st.M.min) st.gone.delete(kk); });
     moveAll(dt, run);
-    if (st.aura) st.aura.s += dt;
+    if (st.aura) {
+      // L'animation du Fluide attend la fin de l'écran de présentation du joueur.
+      if (!st.cutEnd) st.aura.s += dt;
+      const a = st.aura;
+      if (a.from && !a.done && a.fk == 'ionic') {
+        // Vague Ionique : le tireur file à une vitesse phénoménale et laisse une traînée d'éclairs.
+        if (a.s >= 0.25) {
+          const u = Math.min(1, (a.s - 0.25) / 0.3),
+            e = u * u * (3 - 2 * u),
+            q = st.pos[a.t][a.k];
+          q[0] = a.from[0] + (a.to[0] - a.from[0]) * e;
+          q[1] = a.from[1] + (a.to[1] - a.from[1]) * e;
+          (a.tr = a.tr || []).push([q[0], q[1], a.s]);
+          if (u >= 1) a.done = 1;
+        }
+      } else if (a.from && !a.done && a.s >= 0.3) {
+        a.done = 1;
+        const q = st.pos[a.t][a.k];
+        q[0] = a.to[0];
+        q[1] = a.to[1];
+      }
+    }
     st.fx = st.fx.filter((f) => (f.t -= dt) > 0);
-    const sh = st.v3;
+    const sh = st.v3 || view3d() ? 1 : 0;
     st.vk += (sh - st.vk) * (1 - Math.exp(-dt * 5));
   }
   /* ---------- ballon selon le segment ---------- */
@@ -10479,7 +11172,10 @@ const MAN = (() => {
       u = 0.035 + (ballU > 0.75 ? 0.05 : 0);
       y = 0.5 + (b.y - 0.5) * 0.16;
     } else {
-      u = q[0] * (atk ? 1.18 : 0.88) + (atk ? 0.06 : -0.02) + (ballU - 0.5) * 0.26;
+      // Défenseurs : ligne plus basse (ils montent peu), réglable avec la consigne « Ligne défensive ».
+      const isD = slots(T.form)[k] == 'DEF';
+      u = q[0] * (atk ? (isD ? 1.02 : 1.18) : 0.88) + (atk ? (isD ? 0.01 : 0.06) : -0.02) + (ballU - 0.5) * (isD ? 0.15 : 0.26);
+      if (isD) u = Math.min(u + ((typeof tiV == 'function' ? tiV(T, 'dl') : 1) - 1) * 0.035, atk ? 0.4 : 0.34);
       y = 0.5 + (q[1] - 0.5) * (atk ? 1.05 : 0.92) + (b.y - 0.5) * 0.2;
     }
     u = clamp(u, 0.03, 0.95);
@@ -10528,6 +11224,7 @@ const MAN = (() => {
     }
     for (let t = 0; t < 2; t++)
       for (let k = 0; k < 7; k++) {
+        if (st.aura && st.aura.from && !st.aura.done && st.aura.t == t && st.aura.k == k) continue;
         let tg = target(t, k);
         if (
           press[t] &&
@@ -10542,8 +11239,9 @@ const MAN = (() => {
           dy = tg[1] - p[1];
         const gk = k == 0,
           div = st.dive && gk && st.cur && t == st.plan.D,
-          rate = div ? 9 : st.cur ? 3.4 : 2.6,
-          mx = (div ? 0.55 : 0.16) * dt,
+          gl = st.aura && st.aura.fk == 'bubble' && st.aura.t == t && st.aura.k == k,
+          rate = div || gl ? 9 : st.cur ? 3.4 : 2.6,
+          mx = (div ? 0.55 : gl ? 0.45 : 0.16) * dt,
           ds = Math.hypot(dx, dy * 0.65),
           mv = Math.min(1, ds ? mx / ds : 0) * 1;
         const f = Math.min(1 - Math.exp(-dt * rate), Math.min(1, ds ? (mx * (div ? 1 : 1.2)) / ds : 1));
@@ -10783,16 +11481,73 @@ const MAN = (() => {
   function ballCol() {
     return st.kit.c[st.own] || '#fff';
   }
+  // Téléportation : le tireur est invisible pendant le début de l'effet.
+  const tpHidden = (t, k) => !!(st.aura && st.aura.from && st.aura.fk != 'ionic' && st.aura.s >= 0.22 && st.aura.s < 0.38 && st.aura.t == t && st.aura.k == k);
+  // Saut du tireur (Vague d'Hektonïa), en hauteur : 0 au sol, environ 1,4 au sommet.
+  const jumpY = (t, k) =>
+    st.aura && st.aura.fk == 'bubble' && st.aura.t == t && st.aura.k == k ? 1.4 * Math.sin(Math.PI * Math.min(1, st.aura.s / 1.1)) : 0;
   // Dessine l'aura de Fluide autour d'un joueur.
   function drawAura2D(c, p, col, r) {
     const a = st.aura;
     if (!a) return;
+    col = FXV[a.fk] || col;
     const s = a.s,
       pulse = 1 + 0.15 * Math.sin(s * 9);
     c.save();
-    c.globalCompositeOperation = 'lighter';
+    c.globalCompositeOperation = a.fk == 'smog' ? 'source-over' : 'lighter';
+    if (a.fk == 'ionic' && a.from && !a.done && a.s >= 0.25) (a.sp = a.sp || []).push([p[0], p[1], a.s]);
+    if (a.fk == 'ionic' && a.sp && a.sp.length > 1)
+      [r * 0.9, r * 0.3, -r * 0.4].forEach((oy, hi) => {
+        for (let w = 0; w < 2; w++) {
+          c.strokeStyle = w ? '#ffffff' : '#dfe9ff';
+          c.lineWidth = w ? 2 : 5;
+          c.globalAlpha = w ? 0.95 : 0.5;
+          c.beginPath();
+          a.sp.forEach((q, i) => {
+            if (s - q[2] > 0.6) return;
+            const x = q[0] + (Math.random() - 0.5) * r * 0.3,
+              y = q[1] + oy + (Math.random() - 0.5) * r * 0.4;
+            if (i) c.lineTo(x, y);
+            else c.moveTo(x, y);
+          });
+          c.stroke();
+        }
+        c.globalAlpha = 1;
+      });
+    // Éclat de téléportation : à l'endroit quitté, puis à l'arrivée.
+    if (a.from)
+      [
+        [PX(a.from[0], a.from[1]), s / 0.6],
+        [p, (s - 0.3) / 0.6],
+      ].forEach(([pp, u]) => {
+        if (u < 0 || u > 1) return;
+        const al = 1 - u,
+          rd = r * (1.5 + 3.5 * u);
+        const g0 = c.createRadialGradient(pp[0], pp[1], rd * 0.1, pp[0], pp[1], rd);
+        g0.addColorStop(0, rgba(col, 0.9 * al));
+        g0.addColorStop(1, rgba(col, 0));
+        c.fillStyle = g0;
+        c.beginPath();
+        c.arc(pp[0], pp[1], rd, 0, 7);
+        c.fill();
+      });
+    // Bulles qui montent autour du tireur (Vague d'Hektonïa).
+    if (a.fk == 'bubble') {
+      c.strokeStyle = rgba(col, 0.9);
+      c.lineWidth = 2;
+      for (let n = 0; n < 9; n++) {
+        const u = (s * 0.8 + n / 9) % 1,
+          an = n * 2.4 + s,
+          rr = r * (0.8 + 0.9 * ((n * 7) % 5) / 5);
+        c.globalAlpha = 1 - u;
+        c.beginPath();
+        c.arc(p[0] + Math.cos(an) * rr, p[1] + r * 0.6 - u * r * 3.4, r * (0.18 + 0.12 * (n % 3)), 0, 7);
+        c.stroke();
+      }
+      c.globalAlpha = 1;
+    }
     const g = c.createRadialGradient(p[0], p[1], r * 0.4, p[0], p[1], r * 4.2 * pulse);
-    g.addColorStop(0, rgba(col, 0.55));
+    g.addColorStop(0, rgba(col, a.fk == 'ionic' ? 0.3 : 0.55));
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g;
     c.beginPath();
@@ -10829,14 +11584,15 @@ const MAN = (() => {
     for (let t = 0; t < 2; t++) for (let k = 0; k < 7; k++) list.push([t, k, st.pos[t][k]]);
     list.sort((a, b) => a[2][1] - b[2][1]);
     for (const [t, k, q] of list) {
-      if (st.gone.has(t + '_' + k)) continue;
+      if (st.gone.has(t + '_' + k) || tpHidden(t, k)) continue;
       const p = PX(q[0], q[1]),
-        col = k == 0 ? st.kit.gk : st.kit.c[t],
+        col = k == 0 ? st.kit.gk[t] : st.kit.c[t],
         hold = st.hold && st.hold.t == t && st.hold.k == k;
       c.fillStyle = '#00000040';
       c.beginPath();
       c.ellipse(p[0], p[1] + r * 0.75, r * 0.95, r * 0.4, 0, 0, 7);
       c.fill();
+      p[1] -= jumpY(t, k) * r;
       if (hold) {
         c.fillStyle = rgba(col, 0.35);
         c.beginPath();
@@ -10853,8 +11609,9 @@ const MAN = (() => {
       c.lineWidth = 3;
       c.strokeStyle = lum(col) < 110 ? '#ffffff' : '#0a0c22';
       c.stroke();
-      if (k != 0 && dist(st.kit.c2[t], col) > 80) {
-        c.strokeStyle = st.kit.c2[t];
+      const rc = k == 0 ? st.kit.gk2[t] : st.kit.c2[t];
+      if (dist(rc, col) > 80) {
+        c.strokeStyle = rc;
         c.lineWidth = 2;
         c.beginPath();
         c.arc(p[0], p[1], r * 0.62, 0.3, Math.PI - 0.3);
@@ -11196,17 +11953,23 @@ const MAN = (() => {
         g.k == 'res' || g.k == 'shot' ? Z(b.y) * 0.6 : 0,
       ];
     } else {
-      tc = [bx * 0.5, 38, 76];
-      tl = [bx * 0.75, 0, -3];
+      tc = [bx * 0.4, 38, 76];
+      tl = [bx * 0.6, 0, -3];
     }
     if (!st.cam) {
       st.cam = [bx * 0.5, 38, 76];
       st.look = [bx * 0.75, 0, -3];
     }
-    const kk = 1 - Math.exp(-(1 / 60) * (cine ? 5.5 : 3.5) * (st.cam ? 1 : 1));
+    // CAMÉRA DOUCE (anti-nausée) : ressort amorti. Départ et arrêt progressifs, pas de mouvement sec,
+    // et déplacements plus lents qu'avant (plan large 1,3 ; gros plan de tir 2,1).
+    if (!st.camv) st.camv = [[0, 0, 0], [0, 0, 0]];
+    const w = cine ? 2.1 : 1.3,
+      dt = 1 / 60;
     for (let i = 0; i < 3; i++) {
-      st.cam[i] += (tc[i] - st.cam[i]) * kk;
-      st.look[i] += (tl[i] - st.look[i]) * kk;
+      st.camv[0][i] += (w * w * (tc[i] - st.cam[i]) - 2 * w * st.camv[0][i]) * dt;
+      st.camv[1][i] += (w * w * (tl[i] - st.look[i]) - 2 * w * st.camv[1][i]) * dt;
+      st.cam[i] += st.camv[0][i] * dt;
+      st.look[i] += st.camv[1][i] * dt;
     }
     R3.cam = st.cam;
     R3.look = st.look;
@@ -11327,18 +12090,19 @@ const MAN = (() => {
     const camP = st.cam;
     for (let t = 0; t < 2; t++)
       for (let k = 0; k < 7; k++) {
+        if (tpHidden(t, k)) continue;
         const q = st.pos[t][k],
           x = X(q[0]),
           z = Z(q[1]),
           ang = st.ang[t][k] || 0,
           fx = Math.sin(ang),
           fz = Math.cos(ang),
-          col = k == 0 ? st.kit.gk : st.kit.c[t],
-          col2 = st.kit.c2[t];
+          col = k == 0 ? st.kit.gk[t] : st.kit.c[t],
+          col2 = k == 0 ? st.kit.gk2[t] : st.kit.c2[t];
         const sw = Math.sin(st.tm * 10 + k + t) * 0.3,
           K = 1.4,
           dv = k == 0 && st.dive && st.cur && t == st.plan.D;
-        const dy = dv ? -0.35 : 0;
+        const dy = (dv ? -0.35 : 0) + jumpY(t, k);
         ground.push({
           v: [
             [x - 0.6, 0.03, z - 0.6],
@@ -11429,21 +12193,130 @@ const MAN = (() => {
     R3.flush(ctx, ground.slice(0, 1 + stripes));
     R3.flush(ctx, ground.slice(1 + stripes));
     R3.flush(ctx, objs, lbl);
+    /* encadré transparent avec le nom du porteur du ballon (comme sur Football Manager) */
+    try {
+      let hk = st.hold ? [st.hold.t, st.hold.k] : null;
+      if (!hk && !st.cur) {
+        let bd = 1e9;
+        for (let k = 0; k < 7; k++) {
+          const q = st.pos[A][k];
+          if (!q || st.gone.has(A + '_' + k) || tpHidden(A, k)) continue;
+          const d = (X(q[0]) - bx) ** 2 + (Z(q[1]) - bz) ** 2;
+          if (d < bd) {
+            bd = d;
+            hk = [A, k];
+          }
+        }
+        if (bd > 60) hk = null;
+      }
+      if (hk && !(cine && st.seg && st.seg.k == 'wind')) {
+        const q = st.pos[hk[0]][hk[1]],
+          pp = R3.P([X(q[0]), 3.1 + jumpY(hk[0], hk[1]), Z(q[1])]);
+        if (pp) {
+          const parts = String(pname(hk[0], hk[1])).split(' '),
+            nm = parts.length > 1 ? parts[0][0] + '. ' + parts.slice(1).join(' ') : parts[0];
+          ctx.save();
+          ctx.font = `600 17px ${FNT}`;
+          const tw = ctx.measureText(nm).width + 18,
+            bxl = Math.max(4, Math.min(W - tw - 4, pp[0] - tw / 2)),
+            byl = Math.max(4, pp[1] - 24);
+          ctx.fillStyle = 'rgba(10,12,34,0.5)';
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(bxl, byl, tw, 26, 6) : ctx.rect(bxl, byl, tw, 26);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(nm, bxl + tw / 2, byl + 14);
+          ctx.restore();
+        }
+      }
+    } catch (e) {}
     /* aura de Fluide autour du tireur (tirs cadrés uniquement) */
     if (st.aura) {
       const a = st.aura,
         q = st.pos[a.t][a.k],
         x = X(q[0]),
         z = Z(q[1]),
-        col = st.kit.c[a.t],
+        col = FXV[a.fk] || st.kit.c[a.t],
         s = a.s;
       ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalCompositeOperation = a.fk == 'smog' ? 'source-over' : 'lighter';
+      // Éclats de téléportation (départ puis arrivée) et bulles de la Vague d'Hektonïa.
+      if (a.from)
+        [
+          [X(a.from[0]), Z(a.from[1]), s / 0.6],
+          [x, z, (s - 0.3) / 0.6],
+        ].forEach(([bx, bz, u]) => {
+          if (u < 0 || u > 1) return;
+          const al = 1 - u,
+            cb = R3.P([bx, 1.2, bz]);
+          if (!cb) return;
+          const rd = ((2.2 + 3 * u) * R3.fl) / cb[2],
+            gb = ctx.createRadialGradient(cb[0], cb[1], rd * 0.1, cb[0], cb[1], rd);
+          gb.addColorStop(0, rgba(col, 0.9 * al));
+          gb.addColorStop(1, rgba(col, 0));
+          ctx.fillStyle = gb;
+          ctx.beginPath();
+          ctx.arc(cb[0], cb[1], rd, 0, 7);
+          ctx.fill();
+          if (a.fk != 'ionic')
+            for (let n = 0; n < 7; n++) {
+              const pb = R3.P([bx + Math.cos(n * 1.3) * u * 2.2, 0.4 + u * 2.6 + n * 0.15, bz + Math.sin(n * 1.3) * u * 2.2]);
+              if (!pb) continue;
+              ctx.fillStyle = rgba(col, 0.7 * al);
+              ctx.beginPath();
+              ctx.arc(pb[0], pb[1], Math.max(2, (0.7 * R3.fl) / pb[2]), 0, 7);
+              ctx.fill();
+            }
+        });
+      if (a.fk == 'ionic' && a.tr && a.tr.length > 1) {
+        // Traînée d'éclairs derrière le tireur lancé à pleine vitesse.
+        [0.3, 0.8, 1.3, 1.8].forEach((h, hi) => {
+          for (let w = 0; w < 2; w++) {
+            ctx.strokeStyle = w ? '#ffffff' : '#dfe9ff';
+            ctx.lineWidth = w ? 2 : 6;
+            ctx.beginPath();
+            let on = false;
+            a.tr.forEach((q, i) => {
+              const age = s - q[2];
+              if (age > 0.6) return;
+              const j = (Math.random() - 0.5) * 0.7 * (1 - age),
+                pb = R3.P([X(q[0]) + j, h + (Math.random() - 0.5) * 0.4, Z(q[1]) + j]);
+              if (!pb) return;
+              if (on) ctx.lineTo(pb[0], pb[1]);
+              else ctx.moveTo(pb[0], pb[1]);
+              on = true;
+            });
+            ctx.globalAlpha = w ? 0.95 : 0.5;
+            ctx.stroke();
+          }
+        });
+        ctx.globalAlpha = 1;
+      }
+      if (a.fk == 'bubble') {
+        ctx.strokeStyle = rgba(col, 0.9);
+        ctx.lineWidth = 2;
+        for (let n = 0; n < 9; n++) {
+          const u = (s * 0.8 + n / 9) % 1,
+            an = n * 2.4 + s,
+            pb = R3.P([x + Math.cos(an) * (0.8 + ((n * 7) % 5) * 0.12), 0.3 + u * 3.2, z + Math.sin(an) * (0.8 + ((n * 7) % 5) * 0.12)]);
+          if (!pb) continue;
+          ctx.globalAlpha = 1 - u;
+          ctx.beginPath();
+          ctx.arc(pb[0], pb[1], Math.max(2, ((0.18 + 0.12 * (n % 3)) * R3.fl) / pb[2]), 0, 7);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      }
       const c0 = R3.P([x, 1.8, z]);
       if (c0) {
         const rad = ((3.4 * R3.fl) / c0[2]) * (1 + 0.1 * Math.sin(s * 9));
         const g2 = ctx.createRadialGradient(c0[0], c0[1], rad * 0.15, c0[0], c0[1], rad);
-        g2.addColorStop(0, rgba(col, 0.5));
+        g2.addColorStop(0, rgba(col, a.fk == 'ionic' ? 0.28 : 0.5));
         g2.addColorStop(1, rgba(col, 0));
         ctx.fillStyle = g2;
         ctx.beginPath();
@@ -11573,8 +12446,9 @@ window.phFit = function (im) {
       col2 = st.kit.c2[t] === col ? '#ffffff' : st.kit.c2[t],
       e = document.createElement('div');
     e.className = 'ancut ' + (type == 'fluid' ? 'fluid' : '') + (lite() ? ' lite' : '');
-    e.style.setProperty('--tc', type == 'fluid' ? '#7a2cff' : col);
-    e.style.setProperty('--tt', lum(col) > 170 && type != 'fluid' ? '#0a0c22' : '#fff');
+    const tcol = type == 'fluid' ? FXV[sc.fk] || '#7a2cff' : col;
+    e.style.setProperty('--tc', tcol);
+    e.style.setProperty('--tt', lum(tcol) > 170 ? '#0a0c22' : '#fff');
     let extra = '';
     if (type == 'fluid' || sc.fl) {
       extra = '<div class="ring"></div><div class="ring"></div><div class="ring"></div>';
@@ -11714,6 +12588,7 @@ window.phFit = function (im) {
     clk,
     sc,
     lg,
+    kit: (M) => (st.M === M && st.kit) || null,
     sts,
     tog,
     pace,
@@ -11733,15 +12608,11 @@ window.phFit = function (im) {
   };
 })();
 /*MAN-END*/
-// Fait défiler jusqu'à l'encadré de gestion des joueurs (changements en match).
-function gotoSq() {
-  const e = document.getElementById('sqbox');
-  if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+
 // Panneau « Tactique » du match : terrain, remplaçants, instructions et rôles (modifiable pendant la pause).
 function mtacBox(M) {
   if (M.done) return '';
-  return `<div class="mtm" onclick="V.mtc=0;render()"><div class="card mtac" id="mtac" onclick="event.stopPropagation()"><div class="tvh"><b>Tactique du match</b><span class="mu">${V.iv ? 'Mettez le match en pause pour modifier.' : 'Match en pause : réglez puis reprenez.'}</span><button class="p" onclick="V.mtc=0;render()" style="margin-left:auto">Fermer ✕ · Retour au match</button></div>${tacView()}</div></div>`;
+  return `<div class="mtm" onclick="V.mtc=0;render()"><div class="card mtac" id="mtac" onclick="event.stopPropagation()"><div class="tvh"><b>${!M.min ? 'Tactique avant le match' : 'Tactique du match'}</b><span class="mu">${!M.min ? 'Réglez l’équipe, la stratégie et les rôles, puis lancez le match.' : V.iv ? 'Mettez le match en pause pour modifier.' : 'Match en pause : réglez puis reprenez.'}</span><button class="p" onclick="V.mtc=0;render()" style="margin-left:auto">${!M.min ? 'Valider · Aller au coup d’envoi' : 'Fermer ✕ · Retour au match'}</button></div>${tacView()}</div></div>`;
 }
 // Ouvre ou ferme le panneau tactique (met le match en pause à l’ouverture).
 function mtacTog() {
@@ -11750,20 +12621,116 @@ function mtacTog() {
   V.sel = null;
   render();
 }
+// COMPOSITIONS avant le coup d'envoi : fenêtre sur l'écran d'animation avec les deux équipes (titulaires placés
+// selon leur formation, numéros, remplaçants).
+// Vrai si la couleur (#rrggbb) est claire : le texte dessus doit être foncé.
+const lnDark = (c) => {
+  const h = String(c).replace('#', '');
+  return 0.299 * parseInt(h.slice(0, 2), 16) + 0.587 * parseInt(h.slice(2, 4), 16) + 0.114 * parseInt(h.slice(4, 6), 16) > 150;
+};
+// Fond de la fiche de composition : la moitié de terrain de l'équipe (but à gauche, ligne médiane à droite).
+function lnPitch() {
+  const X = (x) => (4 + (x / 0.78) * 92).toFixed(2),
+    Y = (y) => (8 + y * 84).toFixed(2);
+  let st = '';
+  for (let i = 0; i < 8; i++) st += `<rect x="${(4 + i * 11.5).toFixed(1)}" y="5" width="11.5" height="90" fill="${i % 2 ? '#1d5a33' : '#216638'}"/>`;
+  const L = (a, b, c, d) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}"/>`;
+  return `<svg class="lnsv" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><rect x="0" y="0" width="100" height="100" fill="#174a2b"/>${st}<g fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="0.7" vector-effect="non-scaling-stroke"><rect x="4" y="5" width="92" height="90"/>${L(X(0.5), 5, X(0.5), 95)}<rect x="4" y="${Y(0.24)}" width="${(X(0.16) - 4).toFixed(2)}" height="${(Y(0.76) - Y(0.24)).toFixed(2)}"/><rect x="4" y="${Y(0.38)}" width="${(X(0.06) - 4).toFixed(2)}" height="${(Y(0.62) - Y(0.38)).toFixed(2)}"/><ellipse cx="${X(0.5)}" cy="50" rx="${((0.1 / 0.78) * 92).toFixed(2)}" ry="13"/><path d="M${X(0.16)} ${Y(0.4)} A7 9 0 0 1 ${X(0.16)} ${Y(0.6)}"/></g><circle cx="${X(0.5)}" cy="50" r="0.9" fill="#fff" fill-opacity=".8"/></svg>`;
+}
+function lnTeam(t, r) {
+  const sq = t.sq || [],
+    lu = t.lu || [],
+    kt = kitOf(t),
+    sn = (n) => {
+      const w = String(n).split(' ');
+      return w.length > 1 ? w.slice(1).join(' ') : n;
+    },
+    cs = lu
+      .map((li, k) => {
+        const p = sq[li];
+        if (!p) return '';
+        const q = pos(t, k, 0),
+          X = 4 + Math.min(1, q[0] / 0.78) * 92,
+          Y = 8 + q[1] * 84,
+          u = phUrl(p);
+        return `<div class="lnp" style="left:${X.toFixed(1)}%;top:${Y.toFixed(1)}%">${u ? `<i style="background-image:url('${u}')"></i>` : '<i></i>'}<span><b style="background:${kt.a};color:${lnDark(kt.a) ? '#0a0c22' : '#fff'}">${pnum(t, p)}</b><em>${sn(p.n)}</em></span></div>`;
+      })
+      .join(''),
+    sb = sq
+      .map((p, i) => [p, i])
+      .filter(([p, i]) => p && !lu.includes(i) && !p.inj)
+      .sort((x, y) => (y[0].o || 0) - (x[0].o || 0))
+      .slice(0, 8)
+      .map(([p]) => `<div><b>${pnum(t, p)}</b><span>${p.n}</span></div>`)
+      .join('');
+  return `<div class="lnt"><div class="lnh" style="border-left:6px solid ${kt.a}"><b>${t.name}</b><small>${t.form}</small><span class="lnst" title="Stratégie : ${(TSTY[t.sty || 0] || TSTY[0]).n}">${stIc(t.sty || 0, 18)}<em>${(TSTY[t.sty || 0] || TSTY[0]).n}</em></span></div><div class="lnb"><div class="lnf">${lnPitch()}${cs}</div><div class="lns"><h5>Remplaçants</h5>${sb || '<span class="mu">—</span>'}</div></div></div>`;
+}
+function lnUp(M) {
+  try {
+    return `<div class="lno"><div class="lni">${lnTeam(M.t[0])}${lnTeam(M.t[1])}</div><button class="p" onclick="lnClose()">Continuer vers la tactique</button></div>`;
+  } catch (e) {
+    return '';
+  }
+}
+// Ferme la fenêtre de compositions ; avant le coup d'envoi, l'écran de tactique complet s'ouvre automatiquement (une fois par match).
+function lnClose() {
+  V.lnx = 1;
+  const M = V.m;
+  if (M && !M.min && !M.done && !M.tpre && !V.iv) {
+    M.tpre = 1;
+    V.mtc = 1;
+    V.sel = null;
+  }
+  render();
+}
 // Nombre maximal de lignes du journal pendant un match.
 const LOGN = 7;
-// Page « Match » : score, animation, boutons, journal et statistiques.
+// Bascule l'un des panneaux superposés de l'écran de match (stats, journal, consignes, compo).
+function mxp(k) {
+  V.mxp = V.mxp == k ? null : k;
+  render();
+}
+// Page « Match » façon Football Manager : la 3D en plein écran, avec par-dessus un bandeau score/chrono,
+// des boutons (Tactiques, Consignes, Stats, Journal, Compo, Menu), un commentaire et les commandes.
 function mxView(M, t) {
-  const ctl = !M.done
-    ? (!M.min && !V.iv ? preBar(t) : '') + `<div class="ctl" style="justify-content:center">${V.iv ? `<button onclick="stop();render()">⏸ Pause</button>` : `<button class="p" onclick="loop();render()">▶ ${M.min ? 'Reprendre' : 'Coup d’envoi'}</button>`}<select onchange="V.sp=+this.value;if(V.iv)loop()"><option value="0" ${V.sp == 0 ? 'selected' : ''}>Lent</option><option value="1" ${V.sp == 1 ? 'selected' : ''}>Normal</option><option value="2" ${V.sp == 2 ? 'selected' : ''}>Rapide</option></select><label>Mentalité <select onchange="me().m=+this.value;me().sty=0;save()">${MENT.map((m, i) => `<option value="${i}" ${i == t.m ? 'selected' : ''}>${m}</option>`).join('')}</select></label><label>Pressing <select onchange="me().pr=+this.value;me().sty=0;save()">${['Bas', 'Moyen', 'Haut'].map((m, i) => `<option value="${i}" ${(t.pr ?? 1) == i ? 'selected' : ''}>${m}</option>`).join('')}</select></label>${foSel()}<span class="mu">Remplacements : ${V.sub}</span></div>`
-    : MAN.busy()
-      ? `<div class="ctl" style="justify-content:center"><button class="p" onclick="MAN.flush();render()">Passer l’animation</button></div>`
-      : `<div class="ctl" style="justify-content:center"><button class="p" onclick="cont()">Continuer</button></div>`;
-  return `<div class="mxg"><div class="mxl"><div class="card"><div class="mu" id="anclk" style="text-align:center">${M.dby ? '🔥 DERBY · ' : ''}${M.t[0].name} – ${M.t[1].name} · ${MAN.clk(M)}</div><div class="score" id="ansc">${MAN.sc(M)[0]} - ${MAN.sc(M)[1]}</div><div id="anh"></div><div class="mu">Le ballon prend la couleur de l’équipe qui a la possession. ${hp('pitch')}</div></div></div><div class="mxr"><div id="anst">${statsBox(M)}</div><div class="card mxc">${ctl}${M.done ? '' : `<div class="ctl" style="justify-content:center"><button class="${V.mtc ? 'p' : ''}" onclick="mtacTog()">⚙ Tactique et équipe</button></div>`}${shoutBox(M)}</div><div class="card log${M.done ? '' : ' cap'}" id="anlg">${
-    MAN.lg(M)
-      .map((l) => `<div>${l}</div>`)
-      .join('') || "<div class='mu'>Le match n’a pas commencé.</div>"
-  }</div></div></div>`;
+  const done = M.done && !MAN.busy(),
+    kk = MAN.kit(M),
+    cc = (i) => {
+      const q = kitOf(M.t[i]);
+      return kk ? [kk.c[i], kk.c2[i]] : [q.a, q.b];
+    },
+    chip = (i) => `<i class="mxk" style="background:linear-gradient(90deg,${cc(i)[0]} 55%,${cc(i)[1]} 55%)"></i>`;
+  if (done && !V.mxd) {
+    V.mxd = 1;
+    V.mxp = 'st';
+  }
+  const bt = (k, ic, l) => `<button class="mxb${V.mxp == k ? ' on' : ''}" onclick="mxp('${k}')" title="${l}"><span>${ic}</span><em>${l}</em></button>`,
+    pre = !M.min && !V.iv && !M.done,
+    sel = (lab, on, opts, cur) => `<label>${lab} <select onchange="${on}">${opts.map((m, i) => `<option value="${i}" ${i == cur ? 'selected' : ''}>${m}</option>`).join('')}</select></label>`,
+    pan = {
+      st: ['Statistiques', `<div id="anst">${statsBox(M)}</div>`],
+      lg: ['Journal du match', `<div class="log" id="anlg">${MAN.lg(M).map((l) => `<div>${l}</div>`).join('') || "<div class='mu'>Le match n’a pas commencé.</div>"}</div>`],
+      rg: [
+        'Consignes',
+        M.done
+          ? '<span class="mu">Le match est terminé.</span>'
+          : `<div class="ctl">${sel('Mentalité', 'me().m=+this.value;me().sty=0;save()', MENT, t.m)}${sel('Pressing', 'me().pr=+this.value;me().sty=0;save()', ['Bas', 'Moyen', 'Haut'], t.pr ?? 1)}${foSel()}<span class="mu">Remplacements : ${V.sub}</span></div>${shoutBox(M)}`,
+      ],
+      cp: ['Compositions', `${pre ? preBar(t) : ''}<div class="lni">${lnTeam(M.t[0])}${lnTeam(M.t[1])}</div>`],
+    }[V.mxp],
+    bar = !M.done
+      ? `${V.iv ? `<button class="mxg1" onclick="stop();render()">⏸ Pause</button>` : `<button class="mxg1 p" onclick="loop();render()">▶ ${M.min ? 'Reprendre' : 'Coup d’envoi'}</button>`}<select onchange="V.sp=+this.value;if(V.iv)loop()"><option value="0" ${V.sp == 0 ? 'selected' : ''}>Lent</option><option value="1" ${V.sp == 1 ? 'selected' : ''}>Normal</option><option value="2" ${V.sp == 2 ? 'selected' : ''}>Rapide</option></select>`
+      : MAN.busy()
+        ? `<button class="mxg1 p" onclick="MAN.flush();render()">Passer l’animation</button>`
+        : `<button class="mxg1 p" onclick="cont()">Continuer</button>`;
+  return `<div class="mxf"><div id="anh"></div>
+<div class="mxt"><div class="mxtl">${M.done ? '' : `<button class="mxb${V.mtc ? ' on' : ''}" onclick="mtacTog()" title="Tactique et équipe"><span>⚙</span><em>Tactiques</em></button>${bt('rg', '🎚', 'Consignes')}`}</div>
+<div class="mxm"><div class="mxcp" title="${S.ctx == 'C' ? 'Galactik Cup' : 'Galactik League'}"><img src="${S.ctx == 'C' ? LGC : LGL}" alt=""></div><div class="mxs">${M.dby ? `<small>${M.dby == 'C' ? '⚡ CLASSICO' : '🔥 DERBY'}</small>` : ''}<span class="mxn l">${M.t[0].name}${chip(0)}</span><span class="mxsc" id="ansc">${MAN.sc(M)[0]} - ${MAN.sc(M)[1]}</span><span class="mxn r">${chip(1)}${M.t[1].name}</span><span class="mxc" id="anclk">${MAN.clk(M)}</span></div></div>
+<div class="mxtr">${bt('st', '📊', 'Stats')}${bt('lg', '📝', 'Journal')}${bt('cp', '📋', 'Compo')}${M.done ? '' : `<button class="mxb" onclick="stop();V.menu=1;render()" title="Met le match en pause et ouvre le menu principal."><span>🏠</span><em>Menu</em></button>`}</div></div>
+${pan ? `<div class="mxp mxp-${V.mxp}"><div class="mxph"><b>${pan[0]}</b><button onclick="mxp('${V.mxp}')" aria-label="Fermer">✕</button></div><div class="mxpb">${pan[1]}</div></div>` : ''}
+${pre && !V.lnx && !V.mxp ? lnUp(M) : ''}
+<div class="mxcm" id="ancm">${lgR(MAN.lg(M)[0] || '')}</div>
+<div class="mxbar">${bar}</div></div>`;
 }
 // Ancienne vue du terrain (simple) du match.
 function pitch(M) {
@@ -11842,16 +12809,16 @@ const INS = [
   { k: 'dtr', g: 'tr', l: 'Transition défensive (après perte)', o: ['Contre-pressing', 'Standard', 'Repli'], df: 1, h: 'Contre-pressing : on presse tout de suite pour reprendre le ballon (fatigant). Repli : on se replace.', e: { m: [0.7, 0, -0.3], d: [-0.2, 0, 0.4], f: [0.5, 0, -0.2], x: [0.1, 0, 0] } },
   { k: 'eng', g: 'sp', l: 'Ligne d’engagement du pressing', o: ['Pressing haut', 'Bloc médian', 'Bloc bas'], df: 1, h: 'Où l’équipe commence à défendre : haut = plus de ballons récupérés mais plus de fatigue ; bas = solide, peu de ballons récupérés.', e: { m: [0.8, 0, -0.6], d: [-0.4, 0, 0.8], f: [0.6, 0, -0.3] } },
   { k: 'dl', g: 'sp', l: 'Ligne défensive', o: ['Plus basse', 'Standard', 'Plus haute', 'Beaucoup plus haute'], df: 1, h: 'Plus haute = équipe compacte et milieu fort, mais défense exposée aux ballons en profondeur.', e: { d: [0.5, 0, -0.4, -0.8], m: [-0.3, 0, 0.3, 0.6] } },
-  { k: 'dlb', g: 'sp', l: 'Comportement de la ligne', o: ['Équilibré', 'Piège du hors-jeu', 'Montée'], df: 0, h: 'Piège du hors-jeu : peut stopper des attaques, risqué si mal réglé.', e: { d: [0, 0.4, 0.2], m: [0, 0, 0.2] } },
+  { k: 'dlb', g: 'sp', l: 'Comportement de la ligne', o: ['Équilibré', 'Bloc compact', 'Montée'], df: 0, h: 'Bloc compact : la ligne se resserre devant le but et gêne les attaques, au prix de moins de soutien au milieu.', e: { d: [0, 0.4, 0.2], m: [0, 0, 0.2] } },
   { k: 'tp', g: 'sp', l: 'Déclenchement du pressing', o: ['Moins souvent', 'Équilibré', 'Plus souvent'], df: 1, h: 'Plus on presse souvent, plus on récupère le ballon mais plus on se fatigue et on commet de fautes.', e: { m: [-0.3, 0, 0.4], f: [-0.3, 0, 0.5], x: [-0.05, 0, 0.08] } },
-  { k: 'tk', g: 'sp', l: 'Tacles', o: ['Modérés', 'Standard', 'Agressifs'], df: 1, h: 'Agressifs : défense plus solide mais plus de fautes et de cartons.', e: { d: [-0.2, 0, 0.4], x: [-0.1, 0, 0.12] } },
+  { k: 'tk', g: 'sp', l: 'Tacles', o: ['Modérés', 'Standard', 'Agressifs'], df: 1, h: 'Agressifs : défense plus solide mais plus de fautes et d’exclusions.', e: { d: [-0.2, 0, 0.4], x: [-0.1, 0, 0.12] } },
   { k: 'trap', g: 'sp', l: 'Piège de pressing', o: ['Équilibré', 'Actif'], df: 0, h: 'L’équipe coordonne son pressing pour piéger le porteur du ballon.', e: { m: [0, 0.3], f: [0, 0.2] } },
   { k: 'cx', g: 'sp', l: 'Engagement sur les centres', o: ['Tenir sa position', 'Équilibré', 'Contester'], df: 1, h: 'Contester : on va chercher les centres, au risque de laisser des espaces et de commettre des fautes.', e: { d: [0.1, 0, 0.1], x: [-0.03, 0, 0.05] } },
 ];
 // Consignes les plus importantes, affichées directement dans l'onglet Tactique (les autres sont
 // dans « Toutes les consignes »).
 const INS_MAIN = ['dir', 'tmp', 'wid', 'atr', 'dtr', 'eng', 'dl', 'tk'];
-const INSG = { ep: 'Avec le ballon', tr: 'Transitions', sp: 'Sans le ballon' };
+
 // Valeur d'une consigne pour une équipe (sa valeur par défaut si elle n'a rien choisi).
 const tiV = (t, k) => (t.ti && t.ti[k] != null ? t.ti[k] : INS.find((i) => i.k == k).df);
 // Additionne les effets de toutes les consignes d'une équipe.
@@ -12023,6 +12990,33 @@ function roleStars(p, R) {
     v = k.reduce((s, i) => s + at[i], 0) / k.length;
   return Math.max(1, Math.min(5, Math.round(v / 4)));
 }
+// Paliers de maîtrise d'un rôle (1 à 5) et jauge de Fluide qui remplace les étoiles.
+const RTIER = ['Débutant', 'Apprenti', 'Confirmé', 'Expert', 'Maître'];
+const RTCL = ['#7c86b8', '#4aa3ff', '#35d6a0', '#ffb703', '#ff5ab4'];
+const roleGauge = (n) =>
+  `<span class="rgj" style="--rc:${RTCL[n - 1]}" title="${RTIER[n - 1]} (${n}/5)">${[1, 2, 3, 4, 5].map((k) => `<i class="${k <= n ? 'on' : ''}"></i>`).join('')}<em>${RTIER[n - 1]}</em></span>`;
+// Sélecteur de rôle : la liste déroulante classique, précédée de la jauge de maîtrise du rôle choisi
+// (elle se met à jour toute seule quand on change de rôle). li = indice du joueur, ph = 're' ou 'rs'.
+function rolePk(li, ph, groups, compact) {
+  const p = me().sq[li],
+    cur = p[ph] || '',
+    GN = { GK: 'Gardien', DEF: 'Défenseur', MID: 'Milieu', ATT: 'Attaquant' },
+    L = (g) => ROLES[g][ph == 're' ? 'ep' : 'sp'],
+    pk = rolePick(p, ph),
+    cr = pk ? L(pk.g)[pk.i] : null,
+    gj = cr
+      ? roleGauge(roleStars(p, cr))
+      : `<span class="rgj" style="--rc:#7c86b8" title="Aucun rôle choisi">${'<i></i>'.repeat(5)}<em>—</em></span>`,
+    opts = groups
+      .map((g) => {
+        const o = L(g)
+          .map((R, j) => (j ? `<option value="${g}:${j}" ${cur == g + ':' + j ? 'selected' : ''}>${R[0]}</option>` : ''))
+          .join('');
+        return groups.length > 1 ? `<optgroup label="${GN[g]}">${o}</optgroup>` : o;
+      })
+      .join('');
+  return `<span class="rpk${compact ? ' cp' : ''}">${gj}<select title="${ph == 're' ? 'Rôle avec le ballon' : 'Rôle sans le ballon'}" onchange="setRole(${li},'${ph}',this.value)"><option value="">— Rôle standard —</option>${opts}</select></span>`;
+}
 // Effets de tous les rôles et consignes individuelles des 7 titulaires d'une équipe.
 function roleFx(t) {
   const o = { d: 0, m: 0, a: 0, g: 0, f: 0, x: 0, wt: t.lu.map(() => 1) },
@@ -12160,25 +13154,7 @@ function setPI(i, k, v) {
   save();
   render();
 }
-// Change le numéro de maillot d'un joueur (de 1 à 99). Si un coéquipier a déjà ce numéro, les
-// deux joueurs échangent leurs numéros.
-function setNum(i, v) {
-  const t = me(),
-    p = t.sq[i],
-    n = Math.round(+v);
-  if (!p || !(n >= 1 && n <= 99)) {
-    render();
-    return;
-  }
-  const old = pnum(t, p),
-    other = t.sq.find((x) => x !== p && pnum(t, x) == n);
-  if (other) other.num = old;
-  p.num = n;
-  if (typeof ntf == 'function') ntf(other ? `Numéros échangés : ${p.n} n°${n}, ${other.n} n°${old}` : `${p.n} portera le n°${n}`);
-  save();
-  render();
-}
-// Section « Rôle et numéro » de la fiche d'un joueur (i = place dans l'effectif).
+// Section « Rôle tactique » de la fiche d'un joueur (i = place dans l'effectif).
 function roleSec(p, i) {
   ensure(p);
   const t = me(),
@@ -12202,13 +13178,13 @@ function roleSec(p, i) {
     ii = p.ii || {},
     sel = (k, arr) =>
       `<select onchange="setPI(${i},'${k}',this.value)">${arr.map((n, j) => `<option value="${j}" ${(ii[k] || 0) == j ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
-  return `<h2>Numéro et rôle tactique${hp('role')}</h2><div class="ctl"><label>Numéro de maillot <input type="number" min="1" max="99" value="${pnum(t, p)}" style="width:64px" onchange="setNum(${i},this.value)"></label></div><div class="ctl"><label>Avec le ballon <select onchange="setRole(${i},'re',this.value)">${opt('re')}</select></label></div>${desc('re')}<div class="ctl"><label>Sans le ballon <select onchange="setRole(${i},'rs',this.value)">${opt('rs')}</select></label></div>${desc('rs')}<div class="ctl"><label>Tacles ${sel('tk', ['Normaux', 'Agressifs', 'Prudents'])}</label><label>Dribbles ${sel('dr', ['Normaux', 'Plus', 'Moins'])}</label><label>Mouvement ${sel('ro', ['Garde sa position', 'Libre de se déplacer'])}</label>${!sl || sl == 'GK' ? '' : `<label>Hauteur <select onchange="setDp(${i},this.value)">${['Très bas', 'Plus bas', 'Position de base', 'Plus haut', 'Très haut'].map((n, j) => `<option value="${j - 2}" ${(p.dp || 0) == j - 2 ? 'selected' : ''}>${n}</option>`).join('')}</select></label><label>Côté <select onchange="setDl(${i},this.value)">${['Légèrement à gauche', 'Position de base', 'Légèrement à droite'].map((n, j) => `<option value="${j - 1}" ${(p.dl || 0) == j - 1 ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`}</div><div class="mu" style="font-size:12px">Les rôles agissent quand le joueur est titulaire à un poste du même type (ex. « Faux neuf » pour un attaquant). Les étoiles indiquent l’adéquation avec ses attributs.</div>`;
+  return `<h2>Rôle tactique${hp('role')}</h2><div class="ctl"><label>Avec le ballon ${rolePk(i, 're', [p.p, ...POS.filter((g) => g != p.p)])}</label></div>${desc('re')}<div class="ctl"><label>Sans le ballon ${rolePk(i, 'rs', [p.p, ...POS.filter((g) => g != p.p)])}</label></div>${desc('rs')}<div class="ctl"><label>Tacles ${sel('tk', ['Normaux', 'Agressifs', 'Prudents'])}</label><label>Dribbles ${sel('dr', ['Normaux', 'Plus', 'Moins'])}</label><label>Mouvement ${sel('ro', ['Garde sa position', 'Libre de se déplacer'])}</label>${!sl || sl == 'GK' ? '' : `<label>Hauteur <select onchange="setDp(${i},this.value)">${['Très bas', 'Plus bas', 'Position de base', 'Plus haut', 'Très haut'].map((n, j) => `<option value="${j - 2}" ${(p.dp || 0) == j - 2 ? 'selected' : ''}>${n}</option>`).join('')}</select></label><label>Côté <select onchange="setDl(${i},this.value)">${['Légèrement à gauche', 'Position de base', 'Légèrement à droite'].map((n, j) => `<option value="${j - 1}" ${(p.dl || 0) == j - 1 ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`}</div><div class="mu" style="font-size:12px">Les rôles agissent quand le joueur est titulaire à un poste du même type (ex. « Faux neuf » pour un attaquant). La jauge devant la liste indique l’adéquation avec ses attributs.</div>`;
 }
 
 // CRIS DE TOUCHE : un cri toutes les 10 minutes pendant un match. [nom, explication].
 const SHOUTS = [
   ['Encourager', 'Équipe en difficulté : redonne du cœur (surtout si on est menés).'],
-  ['Calmer', 'Réduit les fautes et les cartons, mais baisse un peu l’attaque.'],
+  ['Calmer', 'Réduit les fautes et les exclusions, mais baisse un peu l’attaque.'],
   ['Concentrer', 'Pour garder l’avantage : défense plus solide quand on mène.'],
   ['Électriser', 'Plus d’intensité en attaque, mais plus de fautes.'],
   ['Pas de pression', 'Détend l’équipe : tirs plus précis.'],
@@ -12289,7 +13265,7 @@ function shoutBox(M) {
   const side = M.t.indexOf(me());
   if (side < 0) return '';
   const wait = M.shl != null ? Math.max(0, 10 - (M.min - M.shl)) : 0;
-  return `<div class="card"><b>Cris de touche</b>${hp('cris')}<div class="mu" style="font-size:12px">${wait ? 'Prochain cri possible dans ' + wait + ' min.' : 'Un cri toutes les 10 minutes.'}${M.shm && M.min <= M.shm.until ? ' En cours : <b>' + SHOUTS[M.shm.k][0] + '</b>.' : ''}</div><div class="ctl" style="flex-wrap:wrap">${SHOUTS.map((s, i) => `<button ${wait ? 'disabled' : ''} title="${s[1]}" onclick="shoutDo(${i})">${s[0]}</button>`).join('')}</div></div>`;
+  return `<div class="card"><b>Cris de touche</b>${hp('cris')}<div class="mu" style="font-size:12px">${!M.min ? 'Disponible après le coup d’envoi.' : wait ? 'Prochain cri possible dans ' + wait + ' min.' : 'Un cri toutes les 10 minutes.'}${M.shm && M.min <= M.shm.until ? ' En cours : <b>' + SHOUTS[M.shm.k][0] + '</b>.' : ''}</div><div class="ctl" style="flex-wrap:wrap">${SHOUTS.map((s, i) => `<button class="${M.shm && M.min <= M.shm.until && M.shm.k == i ? 'p' : ''}" ${wait || !M.min ? 'disabled style="opacity:.35;filter:grayscale(1);cursor:not-allowed"' : ''} title="${s[1]}" onclick="shoutDo(${i})">${M.shm && M.min <= M.shm.until && M.shm.k == i ? '✓ ' : ''}${s[0]}</button>`).join('')}</div></div>`;
 }
 
 // CONSEILS DE L'ADJOINT : toutes les 15 minutes, un conseil selon les statistiques du match.
@@ -12343,33 +13319,9 @@ function anaBox(M) {
   return `<div class="card anab" style="margin-top:8px"><b>Analyse</b>${hp('ana')}<div class="mu" style="font-size:12px;margin-top:4px">Zones d’action (où se joue le ballon)</div>${row('Zone défensive', 0)}${row('Milieu', 1)}${row('Zone offensive', 2)}<div class="mu" style="font-size:12px;margin-top:6px">Élan : ${M.t[0].name} (haut) / ${M.t[1].name} (bas)</div><svg viewBox="0 0 300 60" preserveAspectRatio="none" style="display:block;width:100%;height:60px"><line x1="0" x2="${n * w}" y1="30" y2="30" stroke="#8886"/>${bars}</svg></div>`;
 }
 
-// ÉCRAN TACTIQUE : encadrés « Style et schémas » et « Consignes d'équipe ».
-function tacStyle(t) {
-  const sel = (id, arr, v, fn) =>
-      `<select onchange="${fn}">${arr.map((n, j) => `<option value="${j}" ${v == j ? 'selected' : ''}>${n}</option>`).join('')}</select>`,
-    fo = fsOf(t),
-    sp = spShape(t),
-    ins = (i) =>
-      `<label title="${i.h}">${i.l} ${sel(i.k, i.o, tiV(t, i.k), `setIns('${i.k}',this.value)`)}</label>`;
-  const shape = (f) =>
-    FORM[f]
-      .slice(1)
-      .map((n, j) => n + (j < 2 ? '-' : ''))
-      .join('');
-  return `<div class="card"><b>Style de jeu et schémas</b>${hp('sty')}<div class="ctl" style="margin-top:6px"><label>Style <select onchange="setSty(+this.value)">${TSTY.map((s, i) => `<option value="${i}" ${(t.sty || 0) == i ? 'selected' : ''}>${s.n}</option>`).join('')}</select></label><label>Schéma sans ballon <select onchange="setFo(this.value)">${Object.keys(FORM).map((f) => `<option ${f == fo ? 'selected' : ''}>${f}</option>`).join('')}</select></label></div><div class="mu" style="font-size:12px">${TSTY[t.sty || 0].d} Avec le ballon : <b>${t.form}</b> · sans le ballon : <b>${fo}</b>${fo != t.form ? ` — ${sp.d > 0 ? 'défense renforcée' : sp.d < 0 ? 'défense allégée' : 'défense inchangée'}, ${sp.f ? 'repli fatigant' : ''}` : ''}</div></div><div class="card"><b>Consignes d’équipe</b>${hp('cons')}<div class="ctl" style="margin-top:6px">${INS.filter((i) => INS_MAIN.includes(i.k)).map(ins).join('')}</div><details class="dd"><summary>Toutes les consignes</summary>${['ep', 'tr', 'sp'].map((g) => `<h2>${INSG[g]}</h2><div class="ctl" style="flex-wrap:wrap">${INS.filter((i) => i.g == g).map(ins).join('')}</div>`).join('')}</details></div>`;
-}
 
-// Page « Tactique » : formation, mentalité, consignes par ligne, terrain.
-function tacViewOld() {
-  const h = tacView0(),
-    box = document.createElement('div');
-  box.innerHTML = h;
-  const k = [...box.children];
-  if (k.length < 8) return h;
-  const col = (c, a) => `<div class="tcol ${c}">${a.map((e) => e.outerHTML).join('')}</div>`;
-  // Trois colonnes aux emplacements FIXES : réglages (A), terrain et consignes (B), effectif (C).
-  return `<div class="tcols">${col('ta', k.slice(0, 3))}${col('tb2', k.slice(3, 7))}${col('tc', k.slice(7))}</div>`;
-}
+
+
 // ======================================================================
 // ONGLET TACTIQUE (présentation « terrain en perspective + panneau d'instructions »)
 // À gauche : terrain en perspective où les réglages se voient (flèches, teintes, lignes), puis
@@ -12431,6 +13383,13 @@ function tvSvg(t, mode) {
       r0 = [0.34, 0.18, 0.02][m] ?? 0.18;
     o += tvPoly([[0, r0], [1, r0], [1, 1], [0, 1]], `fill="${['rgba(255,80,110,.32)', 'rgba(255,255,255,.10)', 'rgba(110,255,150,.24)'][m] || 'rgba(255,255,255,.1)'}"`);
     o += tvPoly([[0.5, 0.97], [0.06, r0 + 0.02], [0.94, r0 + 0.02]], 'fill="rgba(255,255,255,.14)"');
+    const tp = tiV(t, 'tmp') - 1;
+    if (tp) {
+      // Tempo : flèche centrale plus longue et plus épaisse quand le jeu est rapide, plus courte et fine quand il est lent.
+      const c = TVP(0.5, 0.8),
+        e = TVP(0.5, tp > 0 ? 0.3 : 0.62);
+      o += tvArr(c[0], c[1], e[0], e[1], tp > 0 ? 5 : 2.4, '#ffffff', 0.55);
+    }
     const d = tiV(t, 'wid') - 2;
     if (d) {
       const Lg = 5 + Math.abs(d) * 5;
@@ -12471,7 +13430,8 @@ function tvSvg(t, mode) {
   } else if (mode == 'def') {
     o += tvPoly([[0, 0], [1, 0], [1, 1], [0, 1]], 'fill="rgba(255,140,30,.5)"');
     const dl = [0.8, 0.64, 0.48, 0.34][tiV(t, 'dl')] ?? 0.64,
-      en = [0.3, 0.52, 0.74][tiV(t, 'eng')] ?? 0.52;
+      // Le pressing (Bas/Moyen/Haut) déplace aussi la ligne d'engagement ; elle reste toujours devant la ligne défensive.
+      en = Math.max(0.08, Math.min(dl - 0.1, ([0.3, 0.52, 0.74][tiV(t, 'eng')] ?? 0.52) - ((t.pr ?? 1) - 1) * 0.1));
     o += tvLn([[0, en], [1, en]], 'stroke="#fff" stroke-width=".7" stroke-dasharray="2 1.4"');
     o += tvLn([[0, dl], [1, dl]], 'stroke="#ff3b2a" stroke-width="1"');
     const pa = TVP(0.03, en),
@@ -12525,9 +13485,42 @@ function tvForm(f) {
 }
 const tvRow = (l, tip, ctl) => `<div class="tvrow" title="${tip || ''}"><span>${l}</span>${ctl}</div>`;
 const tvSel = (arr, v, fn) => `<select onchange="${fn}">${arr.map((n, j) => `<option value="${j}" ${v == j ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
+// ICÔNES DES STRATÉGIES ET DES CONSIGNES (pictogrammes dessinés pour le jeu, aux couleurs des Fluides).
+const SVG0 = (b, c, sz) => `<svg class="stic" viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="${c}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`;
+const STIC = [
+  '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  '<circle cx="12" cy="12" r="3.2"/><ellipse cx="12" cy="12" rx="10" ry="4.2" transform="rotate(-28 12 12)"/>',
+  '<path d="M12 12a1.6 1.6 0 0 1 3.2 0 4 4 0 0 1-8 0 6.6 6.6 0 0 1 13.2 0 9.2 9.2 0 0 1-3.2 7"/>',
+  '<path d="M12 5l7 13H5z"/><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="19" cy="18" r="1.8" fill="currentColor"/><circle cx="5" cy="18" r="1.8" fill="currentColor"/>',
+  '<circle cx="6.5" cy="19" r="1.8"/><circle cx="13" cy="12.5" r="1.8"/><path d="M8 17.5l3.5-3.5M14.5 11L19 5.5m0 0h-4.5m4.5 0V10"/>',
+  '<path d="M3 15c4-1 6-5 8-11 1 4 3 7 10 9-5 0-7 2-9 7-1-3-4-5-9-5z"/>',
+  '<path d="M4 20L19 5m0 0h-7m7 0v7"/><path d="M4 13l7 7" opacity=".45"/>',
+  '<path d="M2 16c3-6 5 6 8 0s5 6 8 0"/><path d="M16 6h5v5"/>',
+  '<path d="M13 2L5 14h6l-1 8 9-13h-6z"/>',
+  '<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',
+  '<rect x="3" y="7" width="18" height="11" rx="2"/><path d="M3 12.5h18M8 7v11M16 7v11"/>',
+];
+// Couleur de chaque stratégie (même ordre que TSTY).
+const STCL = ['#9aa3c7', '#4aa3ff', '#ff5a5f', '#35d6a0', '#2fd0c5', '#ffb703', '#ff8a2b', '#b78bff', '#e6f21a', '#5b8cff', '#8b93b8'];
+const stIc = (i, sz = 30, c) => SVG0(STIC[i] || STIC[0], c || STCL[i] || '#9aa3c7', sz);
+// Icônes des consignes (clé → tracé).
+const INSIC = {
+  dir: '<path d="M12 20V5m0 0l-5 5m5-5l5 5"/>', tmp: '<circle cx="12" cy="13" r="8"/><path d="M12 8v5l3 2M9 2h6"/>', wst: '<path d="M6 3h12M6 21h12M7 3c0 6 5 6 5 9s-5 3-5 9M17 3c0 6-5 6-5 9s5 3 5 9"/>',
+  wid: '<path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4"/>', cre: '<path d="M12 3l2.4 6.2L21 10l-5 4.3L17.5 21 12 17.6 6.5 21 8 14.3 3 10l6.6-.8z"/>', bu: '<path d="M5 20c0-8 4-8 7-12m0 0l-4 0m4 0l0 4M19 20c0-6-3-8-7-12"/>',
+  gk: '<path d="M7 21v-8a2 2 0 0 1 4 0v-3a2 2 0 0 1 4 0v3a2 2 0 0 1 4 0v5a5 5 0 0 1-5 5H9a2 2 0 0 1-2-2z"/>', pf: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>', pat: '<path d="M4 12c0-5 8-5 8 0s8 5 8 0"/>',
+  shd: '<circle cx="5" cy="19" r="2"/><path d="M7 17L20 4m0 0h-5m5 0v5"/>', cro: '<path d="M4 20c0-9 6-14 16-14m0 0l-4-3m4 3l-3 4"/>', drb: '<path d="M4 18c5 0 3-12 8-12s3 12 8 12"/>',
+  atr: '<path d="M3 17l7-7 4 4 7-8m0 0h-5m5 0v5"/>', dtr: '<path d="M21 7l-7 7-4-4-7 8m0 0h5m-5 0v-5"/>', eng: '<path d="M3 8h18"/><path d="M3 15h18" stroke-dasharray="3 3"/><path d="M12 11v2"/>',
+  dl: '<path d="M3 17h18"/><path d="M8 17l4-9 4 9"/>', dlb: '<path d="M4 8h16M4 16h16M9 11l3 -2 3 2"/>', tp: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>', tk: '<path d="M5 19l14-14M5 5l5 5M14 14l5 5"/>',
+  trap: '<path d="M4 20L12 4l8 16zM9 15h6"/>', cx: '<path d="M12 21V8m0 0l-4 4m4-4l4 4M5 5h14"/>',
+};
+const insIc = (k) => SVG0(INSIC[k] || '<circle cx="12" cy="12" r="4"/>', 'currentColor', 20);
 const tvIns = (t, k) => {
   const i = INS.find((x) => x.k == k);
-  return tvRow(i.l, i.h, tvSel(i.o, tiV(t, k), `setIns('${k}',this.value);`));
+  const v = tiV(t, k),
+    n = i.o.length;
+  // Curseur visuel : une pastille par option, la valeur choisie est éclairée ; le texte dessous donne son nom.
+  const pips = `<div class="tvpips" role="radiogroup" aria-label="${i.l}">${i.o.map((o, j) => `<button type="button" role="radio" aria-checked="${v == j}" class="${v == j ? 'on' : ''}${j < v ? ' pre' : ''}" title="${o}" style="height:${10 + (n > 1 ? (j * 10) / (n - 1) : 0)}px" onclick="setIns('${k}',${j})"></button>`).join('')}</div>`;
+  return `<div class="tvrow tvins" title="${i.h || ''}"><span class="tvil">${insIc(k)}<span><b>${i.l}</b><small>${i.o[v]}</small></span></span>${pips}</div>`;
 };
 function tvSub(k) {
   V.ts = k;
@@ -12536,6 +13529,24 @@ function tvSub(k) {
 function tvTab(k) {
   V.tt = k;
   render();
+}
+// Onglet « Adversaire » de la tactique de match : formation de l'équipe adverse et fiche de chacun de ses joueurs.
+function opView(M) {
+  const o = M.t[0] === me() ? M.t[1] : M.t[0],
+    oi = S.teams.indexOf(o),
+    sl = slots(o.form),
+    col = { GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' },
+    row = (g) =>
+      o.lu
+        .map((li, k) => [li, k])
+        .filter(([, k]) => sl[k] == g)
+        .map(([li]) => {
+          const p = o.sq[li],
+            out = M.rd && M.rd[(M.t.indexOf(o) + '_' + o.lu.indexOf(li))] > M.min;
+          return `<button class="opc${out ? ' out' : ''}" style="border-top:3px solid ${col[g]}" ${oi >= 0 ? `onclick="prof('lt','L${oi}|${p.n.replace(/'/g, "\\'")}')"` : ''} title="Voir la fiche de ${p.n}"><b>${p.o}</b><span>${p.n.split(' ').map((x, i, a) => (i < a.length - 1 ? x[0] + '.' : x)).join(' ')}</span></button>`;
+        })
+        .join('');
+  return `<div class="tvh"><b>${o.em || ''} ${o.name}</b><span class="mu">Formation <b>${o.form}</b> · Note équipe <b>${nf1(teamNote(o))}</b></span></div><div class="opf">${['ATT', 'MID', 'DEF', 'GK'].map((g) => `<div class="opr">${row(g)}</div>`).join('')}</div><div class="mu" style="font-size:12px;margin-top:6px">Touchez un joueur pour ouvrir sa fiche.</div>`;
 }
 function tacView() {
   const t = me(),
@@ -12581,6 +13592,8 @@ function tacView() {
       .join('')}</div><div class="mu" style="font-size:12px">Glissez un remplaçant sur un joueur du terrain (ou touchez les deux) pour les échanger.</div>${rvCard()}`;
   } else if (V.tt == 'fm' && lv) {
     body = `<div class="tvh"><b>Formation</b></div><div class="tvg">${Object.keys(FORM).map((f) => `<button class="tvf${f == t.form ? ' on' : ''}" onclick="tvFormLive('${f}')" title="Formation ${f}">${tvDots(f)}<span>${f}</span></button>`).join('')}</div><div class="mu" style="font-size:12px;margin-top:8px">Les 7 joueurs sur le terrain ne changent pas : ils sont replacés selon leur poste, sans consommer de remplacement.</div>`;
+  } else if (V.tt == 'op' && lv) {
+    body = opView(V.m);
   } else if (V.tt == 'ro') {
     body = `<div class="tvh"><b>Rôles des joueurs</b>${hp('tvr')}</div><div class="mu" style="font-size:12px;margin-bottom:6px">Colonne de gauche : rôle avec le ballon. Colonne de droite : rôle sans le ballon.</div>${t.lu
       .map((li, k) => {
@@ -12600,7 +13613,7 @@ function tacView() {
     if (st == 'str')
       r = `<div class="tvh"><b>Stratégie</b>${hp('sty')}</div><div class="tvsg">${TSTY.map(
         (x, i) =>
-          `<button class="tvsc${(t.sty || 0) == i ? ' on' : ''}" onclick="setSty(${i})"><b>${x.n}</b><span>${x.d}</span><i><u style="width:${[22, 55, 88][x.m]}%"></u></i><em><span>Défense</span><span>Attaque</span></em></button>`,
+          `<button class="tvsc${(t.sty || 0) == i ? ' on' : ''}" onclick="setSty(${i})" style="--sc:${STCL[i]}"><span class="tvsi">${stIc(i, 34)}</span><b>${x.n}</b><span>${x.d}</span><i><u style="width:${[22, 55, 88][x.m]}%"></u></i><em><span>Défense</span><span>Attaque</span></em></button>`,
       ).join('')}</div>`;
     else if (st == 'sch') {
       const fo = fsOf(t),
@@ -12615,35 +13628,11 @@ function tacView() {
       r = `<div class="tvh"><b>Défense</b>${hp('tvd')}</div>${tvRow('Pressing', 'Intensité du pressing : plus haut = plus de milieu mais plus de fatigue.', tvSel(['Bas', 'Moyen', 'Haut'], t.pr ?? 1, 'me().pr=+this.value;me().sty=0;save();render()'))}${['eng', 'dl', 'dlb', 'tp', 'tk', 'trap', 'cx', 'dtr'].map((k) => tvIns(t, k)).join('')}${ln('d', 'Consigne de la défense', ['Ligne basse', 'Équilibrée', 'Ligne haute'])}`;
     body = tabs([['str', 'Stratégie'], ['sch', 'Schémas'], ['gen', 'Général'], ['att', 'Attaque'], ['def', 'Défense']], st, 'tvSub', 'tvt2') + r;
   }
-  const right = `<div class="card tvr">${tabs(lv ? [['fm', 'Formation'], ['eq', 'Équipe'], ['in', 'Instructions'], ['ro', 'Rôles']] : [['eq', 'Équipe'], ['in', 'Instructions'], ['ro', 'Rôles']], V.tt, 'tvTab', lv ? 'tvt tv4' : 'tvt')}<div class="tvbd">${body}</div></div>`;
+  const right = `<div class="card tvr">${tabs(lv ? [['fm', 'Formation'], ['eq', 'Équipe'], ['in', 'Instructions'], ['ro', 'Rôles'], ['op', 'Adversaire']] : [['eq', 'Équipe'], ['in', 'Instructions'], ['ro', 'Rôles']], V.tt, 'tvTab', lv ? 'tvt tv5' : 'tvt')}<div class="tvbd">${body}</div></div>`;
   return `<div class="tcv">${left}${right}</div>`;
 }
 
-// Contenu brut de la page Tactique (les cartes à la suite).
-function tacView0() {
-  const t = me(),
-    s = slots(t.form),
-    dots = t.lu
-      .map((li, k) => {
-        const [x, y] = pos(t, k, 0),
-          p = t.sq[li];
-        return `<g onclick="pick(${li})" style="cursor:pointer"><circle cx="${x * 105}" cy="${y * 68}" r="3.4" fill="${p.p != s[k] ? '#d33' : 'var(--ac)'}" stroke="${V.sel === li ? '#fff' : 'none'}" stroke-width="1"/><text x="${x * 105}" y="${y * 68 + 1}" font-size="3" fill="#fff" text-anchor="middle">${p.o}</text><text x="${x * 105}" y="${y * 68 + 7}" font-size="2.6" fill="#fff" text-anchor="middle">${p.n
-          .split(' ')
-          .map((w, i, a) => (i < a.length - 1 ? w[0] + '.' : w))
-          .join(' ')}</text></g>`;
-      })
-      .join('');
-  return (
-    `<div class="card"><div class="ctl"><label>Formation <select onchange="me().form=this.value;autoLU(me());capSync(me());save();render()">${Object.keys(
-      FORM,
-    )
-      .map((f) => `<option ${f == t.form ? 'selected' : ''}>${f}</option>`)
-      .join(
-        '',
-      )}</select></label><label>Mentalité <select onchange="me().m=+this.value;me().sty=0;save()">${MENT.map((m, i) => `<option value="${i}" ${i == t.m ? 'selected' : ''}>${m}</option>`).join('')}</select></label><label>Pressing <select onchange="me().pr=+this.value;me().sty=0;save()">${['Bas', 'Moyen', 'Haut'].map((m, i) => `<option value="${i}" ${(t.pr ?? 1) == i ? 'selected' : ''}>${m}</option>`).join('')}</select></label><button onclick="autoLU(me());capSync(me());render()">Auto</button></div></div>${tacStyle(t)}<div class="card">${foSel()}</div>${ordView()}<div class="card">${tacPitch(t, s)}<div class="mu">Glissez un remplaçant sur un joueur du terrain pour l’échanger (ou touchez-en deux). Fond rouge = hors de son poste. Pressing haut : plus de milieu mais plus de fatigue.</div></div>` +
-    squad()
-  );
-}
+
 // Polices de caractères par équipe (nom d'équipe stylisé).
 const TFN = {
     'Snow Kids': ['Fredoka', 1],
@@ -12657,19 +13646,30 @@ const TFN = {
     Wambas: ['Luckiest Guy', 0.95],
     'Wamba Prime': ['Luckiest Guy', 0.95],
     Rykers: ['Staatliches', 1.15],
-    Rykhar: ['Staatliches', 1.15],
+    Unadar: ['Staatliches', 1.15],
     Xenons: ['Audiowide', 0.85],
-    Xéna: ['Audiowide', 0.85],
+    'Archipel Xenon': ['Audiowide', 0.85],
     'Tigres Rouges': ['Permanent Marker', 1],
     Pirates: ['Pirata One', 1.2],
     Elektras: ['Share Tech Mono', 0.95],
-    Électra: ['Share Tech Mono', 0.95],
+    Hektonïa: ['Share Tech Mono', 0.95],
     Cyclopes: ['Bangers', 1.1],
-    Cyclos: ['Bangers', 1.1],
+    Cyclopia: ['Bangers', 1.1],
     Technodroids: ['Michroma', 0.72],
     Technoïd: ['Michroma', 0.72],
     'Comet': ['Righteous', 1],
     Vega: ['Righteous', 1],
+    Echoes: ['Righteous', 1],
+    Nocturnes: ['Creepster', 1.1],
+    Cumulus: ['Audiowide', 0.85],
+    Magmas: ['Staatliches', 1.15],
+    Lyrrhia: ['Righteous', 1],
+    Quasars: ['Audiowide', 0.85],
+    Hélion: ['Audiowide', 0.85],
+    Titans: ['Staatliches', 1.15],
+    Kéthros: ['Staatliches', 1.15],
+    Mirage: ['Permanent Marker', 1],
+    Sahélis: ['Permanent Marker', 1],
     'Vortex': ['Fascinate', 0.85],
     Kaldor: ['Fascinate', 0.85],
     Ysolde: ['Pacifico', 0.9],
@@ -12731,15 +13731,15 @@ const HELP = {
   cap: 'Le capitaine porte le brassard. Il apporte un petit bonus à toute l’équipe (plus il est expérimenté, plus il pèse) et aide dans les matchs serrés en fin de rencontre. S’il est blessé, suspendu ou sur le banc, l’équipe perd un peu de cohésion. Un nouveau capitaine met quelques matchs à s’imposer et l’ancien le vit mal. Par défaut, c’est le joueur le plus expérimenté et le mieux noté.',
   kit: 'Choisissez le motif et les couleurs du maillot de votre club. Il s’affiche sur les fiches de vos joueurs avec leur numéro et leur nom, et vos couleurs sont reprises sur le terrain.',
   m_new: 'Lance une nouvelle partie : choix du club, de la difficulté et des événements.',
-  m_cont: 'Reprend votre carrière en cours là où vous l’avez laissée.',
+  m_cont: 'Reprend votre carrière en cours là où vous l’avez laissée. La carte affiche votre club, la journée et les mails à traiter.',
   m_load: 'Charge l’une de vos 5 sauvegardes ou la sauvegarde automatique.',
   m_ed: 'Créez vos propres équipes, joueurs et Fluides (mods).',
-  m_tuto: 'Le tutoriel complet du jeu, section par section.',
+  m_tuto: 'Le tutoriel complet du jeu, section par section, avec l’aide sur les mails et les adversaires.',
   m_vid:
     'Ouvre sur YouTube une vidéo d’environ 14 minutes, réalisée par @andsboy (tous droits réservés à son auteur), qui présente l’histoire et l’univers de Galactik Football, pour ceux qui découvrent la série. Lien externe, sans rapport avec le jeu.',
   heat: 'Carte de chaleur : les zones du terrain où le joueur évolue le plus (plus la couleur est vive, plus il y passe de temps). Elle se construit match après match selon son poste, sa position dans votre composition et son pied fort. Sans historique, c’est une projection d’après son poste.',
   foot: 'Le pied fort (gauche, droit ou ambidextre) influence légèrement le rendement : un joueur placé du côté de son pied fort gagne un peu, un joueur placé du côté opposé perd un peu. Les ambidextres n’ont aucun malus.',
-  m_tour: 'Une visite guidée de 10 étapes de l’interface.',
+  m_tour: 'Une visite guidée de l’interface, racontée par Clamp, étape par étape.',
   m_pref: 'Affichage des joueurs, événements et difficulté par défaut des nouvelles parties.',
   m_more: 'Autres accès : tutoriel, visite guidée, éditeur de mods, sauvegardes.',
   m_news: 'Les dernières nouveautés du jeu.',
@@ -12759,7 +13759,7 @@ const HELP = {
   pfmo: 'Le moral influence légèrement le rendement. Il monte avec les victoires et le temps de jeu, et baisse avec les défaites ou un rôle de remplaçant.',
   pfco: 'L’énergie du joueur : plus elle est basse, plus il rend moins bien et risque la blessure. Elle se récupère entre les matchs.',
   pffl: 'Le Fluide est la puissance du pouvoir du joueur. La compatibilité indique à quel point il s’accorde au Fluide de son équipe. Paradisia : multifluide, compatible avec tout. Pirates : aucun Fluide.',
-  pfsu: 'Blessure ou suspension en cours, et cartons reçus cette saison.',
+  pfsu: 'Blessure en cours et nombre d’exclusions (5 minutes hors du terrain) cette saison.',
   pfi: 'Résumé de la situation du joueur : origine, Fluide, contrat, potentiel.',
   pfd: 'Évolution attendue de la note : le trait plein monte vers le potentiel jusqu’à environ 27 ans, le trait pointillé indique un joueur arrivé à maturité.',
   pfp: 'Les notes de ses 5 derniers matchs de championnat en tant que titulaire (sur 10).',
@@ -12772,6 +13772,7 @@ const HELP = {
   tvd: 'Réglages de défense : la ligne rouge montre la hauteur de la défense, la ligne pointillée le début du pressing.',
   tvr: 'Chaque titulaire a un rôle avec le ballon et un rôle sans le ballon. Les étoiles indiquent son adéquation.',
   tve: 'Les joueurs sur le banc. Glissez-en un sur un titulaire pour les échanger.',
+  rc: 'Un joueur de champ peut apprendre un autre poste (défenseur, milieu ou attaquant). La durée dépend de l’âge ; « Repos » met la reconversion en pause et « Intensif » l’accélère. Pendant ce temps son malus au nouveau poste diminue chaque jour, et il est un peu moins efficace à son poste actuel. Les gardiens ne peuvent pas se reconvertir.',
   xp: 'La petite jauge sous la carte montre l’expérience du joueur : à 100 %, il gagne un niveau. L’entraînement la fait monter chaque jour (plus vite pour les jeunes et avec l’intensité Intensif).',
   pre: 'Un préréglage mémorise la formation, les titulaires, la mentalité, le pressing et les consignes. Vous pouvez le charger depuis le Planificateur ou juste avant le coup d’envoi d’un match.',
   eqs: 'Classement de vos joueurs sur la saison en cours pour la statistique choisie.',
@@ -12825,6 +13826,8 @@ const HELP = {
   t_cal: 'Toutes les journées de la saison avec les scores.',
   t_mkt: 'Recrutement, prêts, vente de joueurs et staff.',
   t_car: 'Confiance du conseil, palmarès et succès.',
+  scout: 'Tactiques observées du club : formation avec et sans ballon, mentalité, pressing, style et principales consignes. Les clubs gérés par l’ordinateur gardent des consignes standard ; seule leur formation change. Aucun effet sur le match : c’est de l’information pour préparer votre composition.',
+  adv: 'Cherchez un club ou un joueur et consultez la fiche complète de n’importe quel adversaire à tout moment : classement, forme, tactique, joueurs à surveiller et cartes des joueurs. Vous pouvez aussi cliquer sur un club dans le classement du Championnat.',
   t_table: 'Classement du championnat et Coupe de la Ligue.',
   t_gest: 'Stade, sponsors et boutique de produits dérivés.',
   t_fin: 'Revenus, dépenses et courbe de trésorerie.',
@@ -12837,9 +13840,9 @@ const HELP = {
   car1: 'Si la confiance du conseil tombe trop bas après un objectif manqué, vous êtes licencié. Une seule « dernière chance » est accordée par partie.',
   ord: 'Consignes par ligne : Ligne haute = plus de pression au milieu mais défense plus exposée ; Passes courtes = plus de possession, Jeu direct = plus d’attaque mais moins de ballon ; Tirs lointains = plus de tirs mais moins précis, En profondeur = moins de tirs mais plus dangereux.',
   ind: 'Consigne individuelle : Offensif = tire plus souvent mais couvre moins ; Défensif = tire peu et renforce la défense. Normal = comportement habituel.',
-  fo: 'Consigne d’usage du Fluide : Économisé = peu de déclenchements, plus fréquents en fin de match, peu de fatigue ; Modéré = équilibré ; Abondance = déclenchements fréquents mais vos joueurs se fatiguent plus vite.',
+  fo: 'Consigne d’usage du Fluide : Économisé = environ 4 actions sur 10, plus fréquent en fin de match, peu de fatigue ; Modéré = environ 55 % des actions ; Abondance = environ 3 actions sur 4 mais vos joueurs se fatiguent plus vite. Le taux monte avec la mentalité offensive, le pressing haut et quand vous êtes menés, et baisse quand vous menez.',
   evt: 'Active ou désactive les événements rares inspirés de la série (descente de police, sabotages, météorites…). Ce choix est fixé à la création de la partie.',
-  spn: 'Un sponsor verse des crédits à chaque match de championnat pendant la durée du contrat (10, 26 ou 52 matchs ; 26 = 1 saison, la liste indique les matchs restants). Maximum 3 sponsors ; les offres changent à chaque journée.',
+  spn: 'Un sponsor verse des crédits à chaque match de championnat pendant la durée du contrat (10 matchs, 1 saison ou 2 saisons ; la durée d’une saison dépend du nombre d’équipes dans la Ligue, la liste indique les matchs restants). Maximum 3 sponsors ; les offres changent à chaque journée.',
   shp: 'Investir dans la boutique augmente les ventes de maillots, écharpes, mugs et posters à chaque match. Le revenu dépend aussi de la confiance du conseil.',
   fin2: 'Tous vos transferts et prêts de la saison : joueur, note, club concerné, montant et date. Les chiffres du bas résument vos dépenses et vos gains.',
   fin3: 'Chaque barre montre la part d’une catégorie dans le total des revenus ou des dépenses de la saison.',
@@ -12869,8 +13872,9 @@ const HELP = {
   sy: 'Centre de formation : deux jeunes talents rejoignent l’effectif à chaque fin de saison ; plus le niveau est haut, meilleurs ils sont.',
   stade:
     'Plus le stade est grand, plus la recette des matchs à domicile augmente. Elle dépend aussi du prix du billet et de la confiance du conseil.',
+  stad: 'Plus le stade est grand, plus il accueille de spectateurs et plus la recette à domicile augmente. Chaque niveau coûte plus cher que le précédent (5 niveaux).',
   tk: 'Un billet cher rapporte plus par spectateur mais remplit moins le stade.',
-  dbj: 'Moteur de recherche de tous les joueurs de la partie (clubs et marché). Touchez un joueur pour voir sa fiche. Vous ne pouvez pas les acheter ici : passez par le marché ou les offres.',
+  mks: 'Tous les joueurs disponibles à cette saison : ceux des autres équipes et les agents libres. Les équipes qui arrivent plus tard dans la Ligue n’y figurent qu’à partir de leur saison. Cherchez un nom ou filtrez par équipe, Fluide, planète, poste et niveau. Touchez un joueur pour voir sa fiche, « Offre » pour négocier : le club vend rarement en dessous de la valeur du joueur.',
   rsv: 'La réserve accueille jusqu’à 15 joueurs de plus que votre effectif : ils ne sont ni titulaires ni remplaçants et ne jouent pas les matchs. Ils restent payés et peuvent être rappelés, échangés avec un joueur de l’effectif ou prêtés. Seuls les changements hors match sont possibles.',
   mkt: 'Joueurs libres à recruter ; le prix dépend de leur niveau. Effectif limité à 15 joueurs. La liste se renouvelle régulièrement.',
   sell: 'Vous pouvez vendre vos remplaçants (pas les titulaires) pour la moitié de leur valeur. Gardez au moins 11 joueurs.',
@@ -12988,7 +13992,7 @@ const TU = [
   ],
   [
     'Les onglets',
-    'Club : effectif et prochain match. Tactique : formation et placement. Match : le match en direct. Cal. : calendrier et scores. ✉️ : messages du club. Transferts : offres, prêts et staff. Gestion : stade, sponsors et boutique. Finances : revenus et dépenses. Class. : classement et coupe. Aide : cette page.',
+    'Club : effectif et prochain match. Tactique : formation et placement. Match : le match en direct. Cal. : calendrier et scores. ✉️ : messages du club. Transferts : offres, prêts et staff. Gestion : stade, sponsors et boutique. Finances : revenus et dépenses. Class. : classement et coupe. Adversaires : fiches et tactiques de tous les clubs. Aide : cette page.',
   ],
   [
     'Jouer une journée',
@@ -13016,7 +14020,7 @@ const TU = [
   ],
   [
     'Les messages (✉️)',
-    'Le club vous écrit : bienvenue, objectifs, offres de sponsors (à accepter ou refuser), blessures, réactions de la presse et du conseil, bilan de saison. Un chiffre indique les messages non lus. La messagerie fonctionne comme une boîte mail : dossiers (non lus, suivis ⭐, à traiter, corbeille), recherche, et des réponses au choix pour certains messages (conseil, service médical, presse, centre de formation).',
+    'Le club vous écrit : bienvenue, objectifs, offres de sponsors (à accepter ou refuser), blessures, réactions de la presse et du conseil, bilan de saison. Un chiffre indique les messages non lus. La messagerie fonctionne comme une boîte mail : dossiers (non lus, suivis ⭐, à traiter, corbeille), recherche, et des réponses au choix pour certains messages (conseil, service médical, presse, centre de formation). Un message qui attend une réponse porte le badge « Réponse requise » : tant que vous n’y avez pas répondu, le bouton « Continuer » devient « Répondre au mail » et la partie ne peut pas avancer. Après votre réponse, un encadré vert ou rouge résume ce qu’elle a changé.',
   ],
   [
     'Argent, transferts et staff',
@@ -13072,7 +14076,7 @@ const TU = [
   ],
   [
     'Gestion et finances',
-    'L’onglet Gestion regroupe le stade (places, prix du billet), jusqu’à 3 sponsors (contrats de 10 matchs, 1 saison ou 2 saisons) et la boutique de produits dérivés (maillots, écharpes, mugs, posters) avec 5 niveaux d’investissement chacun. L’onglet Finances détaille tous vos revenus et dépenses de la saison.',
+    'L’onglet Gestion est présenté comme une page web aux couleurs de votre club : Match (stade, prix du billet), Sponsors (jusqu’à 3 contrats de 10 matchs, 1 saison ou 2 saisons, chacun avec son logo) et Boutique de produits dérivés (maillots, écharpes, mugs, posters, à vos couleurs) avec 5 niveaux d’investissement chacun. Le staff (entraîneur, kiné, analyste, centre de formation) s’améliore dans Transferts, onglet Staff. L’onglet Finances détaille tous vos revenus et dépenses de la saison.',
   ],
   [
     'Les prêts',
@@ -13088,7 +14092,19 @@ const TU = [
   ],
   [
     'Accessibilité et confort',
-    'Dans le menu de gauche, « Texte » agrandit toute l’interface de 15 % et « Contraste » rend les textes secondaires et les bordures plus visibles. Vos choix sont retenus dans ce navigateur. Les informations importantes ne reposent jamais sur la couleur seule : chaque poste a son sigle, chaque jauge a sa valeur chiffrée au survol et un état faible est signalé en rouge ET dans l’infobulle. Les « ? » sont plus faciles à toucher sur mobile, et le clavier (Tab, Entrée) fonctionne avec un contour de focus visible.',
+    'Dans le menu de gauche, « Texte » agrandit toute l’interface de 15 % et « Contraste » rend les textes secondaires et les bordures plus visibles (activé par défaut). Vos choix sont retenus dans ce navigateur. Les informations importantes ne reposent jamais sur la couleur seule : chaque poste a son sigle, chaque jauge a sa valeur chiffrée au survol et un état faible est signalé en rouge ET dans l’infobulle. Les « ? » sont plus faciles à toucher sur mobile, et le clavier (Tab, Entrée) fonctionne avec un contour de focus visible.',
+  ],
+  [
+    'Le match plein écran',
+    'Pendant un match, la vue 3D occupe tout l’écran. Le tableau en haut affiche les équipes, le score, le chrono et le logo de la compétition. Les boutons du bas ouvrent les panneaux Stats, Journal, Compo et Consignes. Avant le coup d’envoi, une fenêtre montre les compositions.',
+  ],
+  [
+    'Conférences de presse',
+    'Avant et après un match, la journaliste Callie Mystic vous pose une question dans une fenêtre. Les questions varient : résultat, buteurs, joueur du match, état de l’équipe. Votre réponse influence l’ambiance du club. Celle d’après-match s’affiche après « Continuer ».',
+  ],
+  [
+    'Les adversaires',
+    'L’onglet Adversaires liste tous les clubs, classés. Tapez un nom de club ou de joueur pour chercher. La fiche affiche le classement, la forme, la prochaine rencontre, la tactique (formation avec et sans ballon, mentalité, pressing, style, consignes), les joueurs à surveiller, la composition probable et les cartes des joueurs. Les clubs de l’ordinateur utilisent des consignes standard, seule leur formation change. Le même volet s’ouvre depuis le classement ou depuis l’icône de l’adversaire dans « Prochain match ».',
   ],
   [
     'Glossaire',
@@ -13117,78 +14133,88 @@ function tutoView() {
       .join('')
   );
 }
-// Étapes de la visite guidée (14 étapes) : [page affichée, titre, texte]. Chaque étape ouvre la page
-// dont elle parle ; les textes ne citent que des éléments qui existent dans le jeu.
+// Étapes de la visite guidée (16 étapes) racontées par Clamp : [page affichée, titre, texte]. Chaque étape ouvre la page
+// dont elle parle ; {N} est remplacé par le nombre d'étapes.
 const TOUR = [
   [
     'ov',
     'Bienvenue, manager !',
-    'Cette visite présente le jeu en 14 étapes ; vous pouvez la quitter à tout moment. Voici l’Aperçu, votre page d’accueil : boîte de réception, prochain match, résultats, classement, finances… Votre mission : mener votre club à l’objectif fixé par le conseil.',
+    'Salut, manager ! Moi, c’est Clamp, et c’est moi qui vais te faire visiter les lieux. Je te montre tout en {N} étapes, tu peux me quitter quand tu veux avec « Passer la visite ». Là, c’est l’Aperçu, ta page d’accueil : boîte de réception, prochain match, résultats, classement, finances… Ta mission : mener ton club à l’objectif fixé par le conseil.',
   ],
   [
     'ov',
     'Le menu',
-    'Le menu donne accès à toutes les pages. Le bouton « Réduire le menu », en bas, le fait passer du mode classique (icônes et noms) au mode tiroir (icônes seules). Sur tablette, le menu est un ruban d’icônes ; sur mobile, il s’ouvre avec le bouton ☰. Survolez ou touchez les « ? » : ils expliquent chaque élément du jeu.',
+    'Le menu, c’est ta carte du monde : chaque page du jeu est là. Le bouton « Réduire le menu », en bas, passe du mode classique (icônes et noms) au mode tiroir (icônes seules). Sur tablette, c’est un ruban d’icônes ; sur mobile, il s’ouvre avec le bouton ☰. Et retiens ça : les petits « ? » partout dans le jeu, survole-les ou touche-les, ils t’expliquent chaque élément.',
+  ],
+  [
+    'mail',
+    'La boîte de réception',
+    'Ici arrive tout le courrier du club : conseil, sponsors, service médical, presse… Les messages non lus ont un point coloré et un fond teinté ; la liste défile pour retrouver les anciens. Attention, c’est important : quand un mail attend une réponse, il porte le badge « Réponse requise », et le bouton « Continuer » en haut à droite devient « Répondre au mail ». Tu ne peux pas avancer dans la partie tant que tu n’as pas répondu. Pas de panique, je t’y emmène directement !',
   ],
   [
     'club',
-    'Votre équipe',
-    'Ici, votre effectif : 7 titulaires et des remplaçants. Sur chaque carte, le symbole 🧬 indique la compatibilité du joueur avec le Fluide de votre équipe (les joueurs de Paradisia sont compatibles avec tout grâce au multifluide, ceux des Pirates n’ont pas de Fluide) ; les notifications changent de couleur selon leur type. Touchez deux joueurs pour les échanger. Jusqu’à 15 joueurs peuvent être mis en réserve (onglet Réserve, ou section Réserve de leur fiche) : ils ne jouent pas, mais on peut les placer titulaires ou remplaçants hors match, ou les prêter. Ouvrez la fiche d’un joueur (bouton « i » de sa carte) pour choisir son numéro de maillot, son rôle tactique ou son capitaine : il y a toujours un capitaine sur le terrain. La barre sous la carte montre son expérience : à 100 %, il gagne un niveau (jusqu’à son potentiel).',
+    'Ton équipe',
+    'Voici ton effectif : 7 titulaires et des remplaçants. Sur chaque carte, le symbole 🧬 indique la compatibilité du joueur avec le Fluide de ton équipe (Paradisia est compatible avec tout grâce au multifluide, les Pirates n’ont pas de Fluide). Touche deux joueurs pour les échanger. Jusqu’à 15 joueurs peuvent être mis en réserve : ils ne jouent pas, mais tu peux les replacer hors match ou les prêter. Le bouton « i » d’une carte ouvre la fiche : numéro de maillot, rôle tactique, capitaine (il y en a toujours un sur le terrain). La barre d’expérience sous la carte : à 100 %, il gagne un niveau, jusqu’à son potentiel.',
   ],
   [
     'tac',
     'La tactique',
-    'Réglez la formation, la mentalité et le pressing, choisissez un style de jeu, puis affinez les consignes d’équipe (passes, tempo, ligne défensive…). Le terrain montre vos joueurs à leur poste : un joueur en rouge est hors de son poste. Choisissez parmi 7 formations, puis touchez un joueur pour le placer plus haut, plus bas ou légèrement sur le côté grâce à ses flèches. Un clic dans le vide le désélectionne. Dans Instructions, la « ligne d’engagement du pressing » règle où l’équipe commence à presser. Tout se règle avant le coup d’envoi, et aussi pendant la pause d’un match grâce au bouton « ⚙ Tactique ».',
+    'Ici, tu règles la formation, la mentalité et le pressing, tu choisis un style de jeu, puis tu affines les consignes d’équipe (passes, tempo, ligne défensive, ligne d’engagement du pressing…). Sur le terrain, un joueur en rouge est hors de son poste. Touche un joueur pour le monter, le descendre ou le décaler avec ses flèches ; un clic dans le vide le désélectionne. Tout se règle avant le coup d’envoi, et aussi pendant la pause du match avec le bouton « ⚙ Tactique ».',
+  ],
+  [
+    'adv',
+    'Les adversaires',
+    'Un bon manager prépare ses matchs ! Dans l’onglet Adversaires, tu peux chercher un club ou même un joueur, puis consulter la fiche complète du club à tout moment : classement, forme récente, prochaine rencontre, tactique (formation avec et sans ballon, mentalité, pressing, style, consignes), joueurs à surveiller, composition probable et cartes de tous ses joueurs. Tu peux aussi cliquer sur un club dans le classement du Championnat, ou sur l’icône de l’adversaire dans l’encadré « Prochain match » de l’Aperçu.',
   ],
   [
     'ov',
     'Lancer un match',
-    'Le bouton « Continuer », en haut, fait avancer le calendrier ; quand un match est prévu, il devient « Jouer le match ». L’Aperçu précise si le match se joue à domicile ou à l’extérieur. Les autres matchs de la journée sont simulés en même temps.',
+    'Le bouton « Continuer », en haut, fait avancer le calendrier ; quand un match est prévu, il devient « Jouer le match ». L’Aperçu précise si tu joues à domicile ou à l’extérieur. Avant le coup d’envoi, la journaliste Callie Mystic, de la Galactik Post, peut te réserver une conférence de presse : tes réponses influencent le moral et la confiance du conseil. Les autres matchs de la journée sont simulés en même temps.',
   ],
   [
     'ov',
     'Le match en direct',
-    'Le match s’ouvre en plein écran, sans les autres menus, pour que vous restiez concentré. Appuyez sur « Coup d’envoi » : vous pouvez mettre en pause, changer la mentalité ou l’usage du Fluide, et faire jusqu’à 3 remplacements. Les cris de touche (un toutes les 10 minutes), les conseils de l’adjoint et l’analyse du match vous aident à réagir. Les mails reçus pendant le match vous attendent après le coup de sifflet final.',
+    'Le match s’ouvre en plein écran, sans les autres menus, pour que tu restes concentré. Appuie sur « Coup d’envoi » : tu peux mettre en pause, changer la mentalité ou l’usage du Fluide, et faire jusqu’à 3 remplacements. Les cris de touche (un toutes les 10 minutes), les conseils de l’adjoint et l’analyse du match t’aident à réagir. Les mails reçus pendant le match t’attendent après le coup de sifflet final.',
   ],
   [
     'mail',
     'Après le match',
-    'Chaque joueur reçoit une note de match. Le club vous écrit : objectifs, offres de sponsors à accepter ou refuser, interviews (vos réponses influencent le moral et la confiance du conseil), blessures, réactions de la presse. Le chiffre indique les messages non lus.',
+    'Chaque joueur reçoit une note de match. Le club t’écrit : objectifs, offres de sponsors à accepter ou refuser, interviews (Callie te pose des questions sur le match, sur les buteurs, sur ton équipe…), blessures, réactions de la presse. Quand tu réponds, le résultat de ta réponse s’affiche dans un encadré bien visible, vert si c’est positif et rouge si ça coûte cher : tu comprends tout de suite ce que ton choix a changé.',
   ],
   [
     'cal',
     'Calendrier et classement',
-    'Retrouvez toutes les journées et les scores des autres équipes. Victoire = 3 points, nul = 1. À la fin de la saison, les 8 meilleures équipes jouent la Coupe de la Ligue.',
+    'Retrouve ici toutes les journées et les scores des autres équipes. Victoire = 3 points, nul = 1. À la fin de la saison, les 8 meilleures équipes jouent la Coupe de la Ligue.',
   ],
   [
     'mkt',
-    'Transferts : offres et négociation',
-    'Dans Recherche, touchez un joueur pour déposer une offre : montant du transfert, prime de signature, salaire, prime de titre et durée du contrat. Le club vendeur répond sous quelques jours, puis le joueur étudie vos conditions ; l’onglet Offres suit chaque négociation et les contre-propositions. Rien n’est payé avant l’accord. L’onglet Base de joueurs permet de consulter la fiche de tous les joueurs du jeu, sans achat.',
+    'Les transferts',
+    'Dans l’Aperçu des transferts, touche n’importe où dans un encadré (meilleur joueur disponible, joueur convoité…) pour aller directement dans l’onglet correspondant. Dans Recherche, touche un joueur pour déposer une offre : montant du transfert, prime de signature, salaire, prime de titre et durée du contrat. Le club vendeur répond sous quelques jours, puis le joueur étudie tes conditions ; l’onglet Offres suit chaque négociation. Rien n’est payé avant l’accord. La Base de joueurs te laisse consulter la fiche de tous les joueurs du jeu, sans achat.',
   ],
   [
     'table',
     'Championnat',
-    'Le classement détaillé, la forme récente de chaque équipe et vos prochains adversaires. Victoire = 3 points, nul = 1.',
+    'Le classement détaillé, la forme récente de chaque équipe, les leaders de la ligue et le suivi de tes prochains adversaires. Clique sur un club pour ouvrir sa fiche : composition, tactique et cartes de ses joueurs.',
   ],
   [
     'fin',
     'Finances',
-    'Revenus, dépenses, courbe de trésorerie et principaux postes : de quoi surveiller votre budget, y compris les salaires et les primes promises à vos joueurs.',
+    'Revenus, dépenses, courbe de trésorerie et principaux postes : de quoi surveiller ton budget, y compris les salaires et les primes promises à tes joueurs.',
   ],
   [
     'gest',
-    'Gestion, marché et stade',
-    'Dépensez vos crédits : agrandissez le stade et gérez la boutique et les sponsors dans Gestion ; améliorez le staff (entraîneur, kiné, analyste, formation). Surveillez vos finances.',
+    'Gestion, boutique et stade',
+    'Dépense tes crédits intelligemment : agrandis le stade, gère la boutique et les sponsors dans Gestion, et améliore le staff (entraîneur, kiné, analyste, formation).',
   ],
   [
     'car',
-    'Votre carrière de manager',
-    'Chaque match rapporte de l’expérience. À chaque niveau, vous gagnez un point de compétence à investir dans l’arbre de l’onglet Manager : 2 branches au choix sur 5, des bonus passifs, et des personnages qui gagnent en confiance.',
+    'Ta carrière de manager',
+    'Chaque match te rapporte de l’expérience. À chaque niveau, tu gagnes un point de compétence à investir dans l’arbre de l’onglet Manager : 2 branches au choix sur 5, des bonus passifs, et des personnages qui gagnent en confiance.',
   ],
   [
     'tuto',
     'Besoin d’aide ?',
-    'L’onglet Aide contient un tutoriel complet, et vous pouvez relancer cette visite quand vous voulez. Le jeu se sauvegarde automatiquement dans votre navigateur, mais exportez une sauvegarde de temps en temps. Bon match !',
+    'Voilà, tu sais l’essentiel ! L’onglet Aide contient un tutoriel complet, et tu peux relancer cette visite quand tu veux. Le jeu se sauvegarde automatiquement dans ton navigateur, mais exporte une sauvegarde de temps en temps. Bon match, manager !',
   ],
 ];
 // Passe à une étape de la visite guidée.
@@ -13218,8 +14244,8 @@ function tourBox() {
   const i = V.tour;
   if (i == null) return '';
   const t = TOUR[i][1],
-    x = TOUR[i][2];
-  return `<div class="tourg"></div><div class="card tourb"><div class="mu">Visite guidée · étape ${i + 1}/${TOUR.length}</div><b>${t}</b><div style="margin:6px 0">${x}</div><div class="ctl">${i ? `<button onclick="tourGo(${i - 1})" aria-label="Étape précédente">← <span class="tl2">Précédent</span></button>` : ''}<button class="p" onclick="tourGo(${i + 1})">${i == TOUR.length - 1 ? 'Terminer' : 'Suivant →'}</button><button onclick="tourEnd()">Passer<span class="tl2"> la visite</span></button></div></div>`;
+    x = TOUR[i][2].replace('{N}', TOUR.length);
+  return `<div class="tourg"></div><div class="card tourb"><div class="tourh"><div class="toura"><svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#3a1a6a"/><circle cx="50" cy="42" r="20" fill="#d9a066"/><path d="M26 48l-10-22 18 8 6-20 14 14 14-14 6 20 18-8-10 22z" fill="#9a9aa4"/><path d="M10 100c4-26 20-36 40-36s36 10 40 36z" fill="#4b2d6e"/></svg><img src="img/clamp.jpg" alt="Clamp" onerror="this.remove()"></div><div class="tourn"><b>Clamp</b><span class="mu">Ton guide · étape ${i + 1}/${TOUR.length}</span></div></div><div class="tourt"><b>${t}</b><div style="margin:4px 0 8px">${x}</div></div><div class="ctl">${i ? `<button onclick="tourGo(${i - 1})" aria-label="Étape précédente">← <span class="tl2">Précédent</span></button>` : ''}<button class="p" onclick="tourGo(${i + 1})">${i == TOUR.length - 1 ? 'Terminer' : 'Suivant →'}</button><button onclick="tourEnd()">Passer<span class="tl2"> la visite</span></button></div></div>`;
 }
 // Carte joueur TOUJOURS en mode « carte » (même si l'affichage est en liste).
 function pcC(...a) {
@@ -13253,9 +14279,13 @@ function pc(p, cls, onclk, extra) {
           : onclk[5] == 'l'
             ? 'lo'
             : 'sq'
-        : onclk.startsWith('pr')
-          ? 'ed'
-          : 'sq',
+        : onclk.startsWith("nk('rc'")
+          ? 'mk'
+          : onclk.startsWith("nk('cv'")
+            ? 'nv'
+            : onclk.startsWith('pr')
+              ? 'ed'
+              : 'sq',
     ix = onclk.split(',').pop().replace(/\D/g, '');
   return `<div class="pc ${cls}${p.pr ? ' prs' : p.c ? ' chr' : ''}" onclick="${onclk}" style="border-top:4px solid ${col};position:relative${phBg(p)}"><span class="pci" role="button" aria-label="Voir le profil" title="Voir le profil du joueur" onclick="event.stopPropagation();prof('${kd}',${ix})">i</span><div class="o">${p.o}</div>${capB(p)}<div class="ps" style="color:${col}">${p.p}${p.c ? ' ★' : fp(p)}</div><div class="pn${p.pr ? ' prn' : p.c ? ' chn' : ''}">${p.n
     .split(' ')
@@ -13270,7 +14300,7 @@ function mk2(a, i) {
   const k = a + i;
   if (a == 'b' || V.mk == k || !ST.cf) {
     V.mk = null;
-    a == 'b' ? ofOpen(i) : a == 'l' ? borrow(i) : a == 'o' ? takeS(i) : sell(i);
+    a == 'b' ? ofOpenN((S.mkt[i] || {}).n) : a == 'l' ? borrow(i) : a == 'o' ? takeS(i) : sell(i);
   } else {
     V.mk = k;
     render();
@@ -13517,9 +14547,13 @@ function prow(p, cls, onclk, extra) {
           : onclk[5] == 'l'
             ? 'lo'
             : 'sq'
-        : onclk.startsWith('pr')
-          ? 'ed'
-          : 'sq',
+        : onclk.startsWith("nk('rc'")
+          ? 'mk'
+          : onclk.startsWith("nk('cv'")
+            ? 'nv'
+            : onclk.startsWith('pr')
+              ? 'ed'
+              : 'sq',
     ix = onclk.split(',').pop().replace(/\D/g, '');
   return `<div class="row ${cls}${p.pr ? ' prs' : p.c ? ' chr' : ''}" onclick="${onclk}" style="cursor:pointer"><span class="pos">${p.p}</span><span class="nm">${p.c ? '★ ' : ''}<span class="${p.pr ? 'prn' : p.c ? 'chn' : ''}">${p.n}</span>${fp(p)}${p.nz ? ' 🤢' : ''}${p.inj ? ' 🩹' + p.inj : ''}${p.sus ? ' · susp. ' + p.sus : ''}${p.ln ? ' 🔁' + p.ln.left : ''}</span><span class="mu">⚽${p.g || 0}</span><span class="gp gpl">${gg(p.e ?? 100, { size: 30, fs: 32, c: '#2fd0c5', tt: 'Endurance' })}${gg(p.f, { size: 30, fs: 32, c: '#b78bff', tt: 'Fluide' })}</span>${xpB(p, 'l')}<b>${p.o}</b>${extra || ''}<span onclick="event.stopPropagation();prof('${kd}',${ix})">ⓘ</span></div>`;
 }
@@ -13754,7 +14788,9 @@ const MER = {
     mu: ['Mugs', 5, 200],
     po: ['Posters', 4, 150],
   },
-  dur = (m) => (m >= 26 ? m / 26 + ' saison' + (m > 26 ? 's' : '') : m + ' matchs'),
+  // Nombre de matchs d'une équipe sur une saison (14 équipes = 26, 21 équipes = 40...).
+  seasonM = () => (S && S.ctx != 'C' && S.teams && S.teams.length > 2 ? (S.teams.length - 1) * 2 : 26),
+  dur = (m) => (m == seasonM() ? '1 saison' : m == 2 * seasonM() ? '2 saisons' : m + ' matchs'),
   spons = () => S.sps.reduce((a, s) => a + (s.left > 0 ? s.v : 0), 0),
   shop = () =>
     Math.round(Object.keys(MER).reduce((a, k) => a + S.mer[k] * MER[k][1], 0) * (0.6 + S.conf / 100));
@@ -13794,8 +14830,8 @@ function soffers() {
   ].sort(() => Math.random() - 0.5);
   return [
     [10, 1.15],
-    [26, 1],
-    [52, 0.9],
+    [seasonM(), 1],
+    [2 * seasonM(), 0.9],
   ].map(([m, k], i) => ({
     n: N[i],
     m,
@@ -13831,38 +14867,72 @@ function upM(k) {
 function stadeCard() {
   return `<div class="card"><div class="row"><span class="nm">Stade niv. ${S.st} · ${2000 * S.st} places <span class="mu">recette estimée à domicile : ${gate()}</span></span><button onclick="upS()" ${S.st >= 5 || S.cash < S.st * 1000 + 500 ? 'disabled' : ''}>+ ${S.st * 1000 + 500}</button></div><div class="row"><span class="nm">Prix du billet : ${S.tk} <span class="mu">(plus cher = moins de monde)</span></span><button onclick="S.tk=Math.max(5,S.tk-1);save();render()">−</button><button onclick="S.tk=Math.min(25,S.tk+1);save();render()">+</button></div></div>`;
 }
-// Page « Gestion du club » : stade, sponsors, boutique.
+// Logos des sponsors (dessins plats, 64 x 64).
+const SPL = {
+  'Nova Corp': '<circle cx="32" cy="32" r="30" fill="#14193f"/><path d="M32 6l5.5 17.5L55 18l-11 14 11 14-17.5-5.5L32 58l-5.5-17.5L9 46l11-14L9 18l17.5 5.5z" fill="#ffd23f"/><circle cx="32" cy="32" r="7" fill="#14193f"/><circle cx="32" cy="32" r="3.5" fill="#ff7a4d"/>',
+  'Technoid Inc.': '<rect x="2" y="2" width="60" height="60" rx="14" fill="#0e2a35"/><path d="M32 8l20 11.5v25L32 56 12 44.5v-25z" fill="#2fd6e8"/><path d="M32 18l12 7v14l-12 7-12-7V25z" fill="#0e2a35"/><circle cx="32" cy="32" r="4.5" fill="#b6f23a"/><path d="M32 8v10M52 19.5l-9 5.5M52 44.5L43 39M32 56V46M12 44.5L21 39M12 19.5l9 5.5" stroke="#0e2a35" stroke-width="2.5"/>',
+  'Comet Cola': '<circle cx="32" cy="32" r="30" fill="#e8453a"/><circle cx="32" cy="32" r="24" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 3"/><circle cx="42" cy="24" r="8" fill="#fff"/><path d="M36 30C26 36 18 44 10 52c12-2 22-6 30-14z" fill="#fff"/><path d="M30 34c-6 4-10 8-14 12" stroke="#e8453a" stroke-width="2" stroke-linecap="round"/>',
+  'Orion Bank': '<circle cx="32" cy="32" r="30" fill="#ffd23f"/><circle cx="32" cy="32" r="24" fill="#1d2a6e"/><circle cx="19" cy="40" r="4" fill="#ffd23f"/><circle cx="32" cy="32" r="4" fill="#ffd23f"/><circle cx="45" cy="24" r="4" fill="#ffd23f"/><path d="M19 40L32 32 45 24" stroke="#ffd23f" stroke-width="2.5"/><path d="M14 52h36" stroke="#ffd23f" stroke-width="3" stroke-linecap="round"/>',
+  'Zéta Motors': '<path d="M32 3l26 8v22c0 14-11 24-26 28C17 57 6 47 6 33V11z" fill="#ff7a4d"/><path d="M18 20h28v6L28 40h18v6H18v-6l18-14H18z" fill="#1b1030"/><path d="M10 52h44" stroke="#1b1030" stroke-width="2.5" stroke-dasharray="6 3"/>',
+  'Vega Foods': '<circle cx="32" cy="32" r="30" fill="#2fb36b"/><path d="M14 44C14 24 28 14 48 14c0 20-10 34-30 34z" fill="#b6f23a"/><path d="M16 46C26 36 34 28 44 18" stroke="#1c6b43" stroke-width="2.5" stroke-linecap="round"/><path d="M26 40l-1-8M33 33l-1-8" stroke="#1c6b43" stroke-width="2" stroke-linecap="round"/>',
+  'Plasma Drinks': '<circle cx="32" cy="32" r="30" fill="#2a1a6e"/><path d="M32 6C22 20 14 28 14 38a18 18 0 0036 0C50 28 42 20 32 6z" fill="#a99bff"/><path d="M35 22L24 38h8l-3 12 12-18h-8z" fill="#ffd23f"/>',
+  'Akillian Dairy': '<rect x="2" y="2" width="60" height="60" rx="14" fill="#6cc9ff"/><path d="M20 10h24l4 12v32a3 3 0 01-3 3H19a3 3 0 01-3-3V22z" fill="#fff"/><path d="M20 10h24l4 12H16z" fill="#2a6ccf"/><circle cx="26" cy="38" r="5" fill="#14193f"/><circle cx="38" cy="46" r="4" fill="#14193f"/><circle cx="40" cy="34" r="3" fill="#14193f"/>',
+};
+const spLogo = (n, sz = 40) =>
+  `<svg class="spl" viewBox="0 0 64 64" width="${sz}" height="${sz}" role="img" aria-label="Logo ${n}">${SPL[n] || `<circle cx="32" cy="32" r="30" fill="#6b6f9a"/><text x="32" y="43" text-anchor="middle" font-size="32" font-weight="800" fill="#fff">${(n || '?')[0]}</text>`}</svg>`;
+// Illustrations plates de la page « Gestion du club ».
+const GIL = {
+  st: '<svg viewBox="0 0 120 80"><ellipse cx="60" cy="62" rx="44" ry="10" fill="#000" opacity=".25"/><path d="M14 40v14c0 8 21 14 46 14s46-6 46-14V40z" fill="#e8583a"/><path d="M14 40c0-8 21-14 46-14s46 6 46 14-21 14-46 14S14 48 14 40z" fill="#f4f1ff"/><ellipse cx="60" cy="40" rx="32" ry="9.5" fill="#cfd6ff"/><ellipse cx="60" cy="40" rx="26" ry="7" fill="#2fb36b"/><path d="M60 33v14M34 40h52" stroke="#fff" stroke-width="1.2" opacity=".7"/><circle cx="60" cy="40" r="3.2" fill="none" stroke="#fff" stroke-width="1.2" opacity=".8"/></svg>',
+  tk: '<svg viewBox="0 0 120 80"><g transform="rotate(-8 60 40)"><path d="M18 22h84v12a6 6 0 000 12v12H18V46a6 6 0 000-12z" fill="#ffd23f"/><rect x="26" y="28" width="68" height="24" rx="3" fill="none" stroke="#e08a1e" stroke-width="2" stroke-dasharray="4 3"/><path d="M60 22v36" stroke="#e08a1e" stroke-width="1.5" stroke-dasharray="2 3"/></g></svg>',
+};
+// Produits dérivés aux couleurs et au logo du club (maillot : a, b ; logo de l'équipe choisie).
+function emU(em) {
+  try {
+    const m = /^⟦~[0-9a-f.]+⟧$/.exec(em || ''),
+      k = /^⟦([a-z]{2})⟧$/.exec(em || '');
+    return m ? crU(em) : k && LGB[k[1]] ? lgU(k[1]) : '';
+  } catch (e) {
+    return '';
+  }
+}
+function merchIl(k) {
+  const K = kitOf(me()),
+    u = emU(me().em),
+    lg = (x, y, w) => (u ? `<image href="${u}" x="${x}" y="${y}" width="${w}" height="${w}" preserveAspectRatio="xMidYMid meet"/>` : ''),
+    ol = 'stroke="#0a0c22" stroke-width="1.6" stroke-linejoin="round"';
+  return {
+    ma: `<svg viewBox="0 0 120 80"><ellipse cx="60" cy="75" rx="30" ry="3.5" fill="#0a0c22" opacity=".18"/><path d="M36 8l14 4c3 5 17 5 20 0l14-4 18 14-9 10-8-5v42H35V27l-8 5-9-10z" fill="${K.a}" ${ol}/><path d="M18 22l9 10 8-5V19zM102 22l-9 10-8-5V19z" fill="${K.b}" ${ol}/><path d="M50 12c3 5 17 5 20 0" fill="none" stroke="${K.b}" stroke-width="3.5" stroke-linecap="round"/>${lg(48, 24, 24)}</svg>`,
+    ec: `<svg viewBox="0 0 120 80"><ellipse cx="60" cy="74" rx="38" ry="3.5" fill="#0a0c22" opacity=".18"/><path d="M14 22c10-8 24-10 46-4 22-6 36-4 46 4l-6 14c-8-7-22-8-40-2-18-6-32-5-40 2z" fill="${K.a}" ${ol}/><path d="M26 20l-4 14M42 18l-3 14M78 18l3 14M94 20l4 14" stroke="${K.b}" stroke-width="5"/><path d="M20 36l-6 28h18l4-30zM100 36l6 28H88l-4-30z" fill="${K.a}" ${ol}/><path d="M18 46h14M16 54h16M88 46h14M88 54h16" stroke="${K.b}" stroke-width="4"/><path d="M16 64l-1 7M21 64l-1 7M26 64l-1 7M31 64l-1 7M89 64l1 7M94 64l1 7M99 64l1 7M104 64l1 7" stroke="${K.b}" stroke-width="2" stroke-linecap="round"/>${lg(50, 12, 20)}</svg>`,
+    mu: `<svg viewBox="0 0 120 80"><ellipse cx="58" cy="73" rx="28" ry="3.5" fill="#0a0c22" opacity=".18"/><path d="M82 26h6a10 10 0 010 24h-6" fill="none" stroke="${K.b}" stroke-width="6"/><path d="M34 14h48v48a8 8 0 01-8 8H42a8 8 0 01-8-8z" fill="${K.a}" ${ol}/><rect x="34" y="14" width="48" height="8" fill="${K.b}" ${ol}/>${lg(42, 28, 32)}</svg>`,
+    po: `<svg viewBox="0 0 120 80"><g transform="rotate(3 60 40)"><rect x="34" y="4" width="52" height="72" rx="3" fill="${K.b}" ${ol}/><rect x="38" y="8" width="44" height="64" rx="2" fill="${K.a}"/>${lg(44, 12, 32)}<path d="M44 52h32M48 59h24M52 66h16" stroke="${K.b}" stroke-width="3.5" stroke-linecap="round"/></g></svg>`,
+  }[k];
+}
+// Fond des images : clair si le noir figure parmi les couleurs principales du club, noir sinon.
+function gBg() {
+  const K = kitOf(me()),
+    dk = (c) => c && c[0] == '#' && c.length == 7 && 0.299 * parseInt(c.slice(1, 3), 16) + 0.587 * parseInt(c.slice(3, 5), 16) + 0.114 * parseInt(c.slice(5, 7), 16) < 60;
+  return dk(K.a) || dk(K.b) ? '#e7e9ff' : '#07080f';
+}
+// Une tuile de la page : illustration, bulle d'aide, titre, détail et bouton.
+const gTile = (ic, hk, t, d, act) =>
+  `<div class="gtl"><div class="gti" style="background:${gBg()}">${GIL[ic] || merchIl(ic)}<span class="gth">${hp(hk)}</span></div><div class="gtb"><div class="gtt"><b>${t}</b><small>${d}</small></div>${act}</div></div>`;
+// Page « Gestion du club » : présentée comme une page web (stade, sponsors, boutique).
 function gestView() {
   if (S.sod !== S.md || !S.so) {
     S.so = soffers();
     S.sod = S.md;
   }
-  return (
-    '<h2>Stade</h2>' +
-    stadeCard() +
-    `<h2>Sponsors (${S.sps.length}/3)</h2><div class="card">` +
-    (S.sps
-      .map(
-        (s) =>
-          `<div class="row"><span class="nm">${s.n} <span class="mu">${s.v}/match · reste ${Math.max(0, Math.min(s.left, s.m || s.left))} sur ${s.m || s.left} matchs</span></span></div>`,
-      )
-      .join('') || '<div class="mu">Aucun sponsor.</div>') +
-    `</div><div class="card"><div class="mu">Offres du moment (touchez deux fois pour signer) :</div><div class="pg" style="grid-template-columns:repeat(3,1fr);margin-top:6px">` +
-    S.so
-      .map(
-        (o, i) =>
-          `<div class="pc ${V.mk == 'o' + i ? 'sel' : ''}" onclick="mk2('o',${i})"><div class="pn">${o.n}</div><div class="o">${o.v}</div><div class="mu">par match</div><div class="mu">${dur(o.m)}</div>${V.mk == 'o' + i ? '<div class="mu">confirmer ?</div>' : ''}</div>`,
-      )
-      .join('') +
-    `</div></div><h2>Boutique de produits dérivés</h2><div class="card"><div class="mu">Revenu estimé : ${shop()} crédits par match</div>` +
-    Object.keys(MER)
-      .map(
-        (k) =>
-          `<div class="row"><span class="nm">${MER[k][0]} niv. ${S.mer[k]}/5 <span class="mu">+${MER[k][1]} par niveau</span></span><button onclick="upM('${k}')" ${S.mer[k] >= 5 || S.cash < Math.round((1 + S.mer[k] * 0.5) * MER[k][2]) ? 'disabled' : ''}>+ ${Math.round((1 + S.mer[k] * 0.5) * MER[k][2])}</button></div>`,
-      )
-      .join('') +
-    '</div>'
-  );
+  const t = me(),
+    K = kitOf(t),
+    u = emU(t.em),
+    lum = (c) => (c && c[0] == '#' && c.length == 7 ? 0.299 * parseInt(c.slice(1, 3), 16) + 0.587 * parseInt(c.slice(3, 5), 16) + 0.114 * parseInt(c.slice(5, 7), 16) : 0),
+    slug = t.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    upS_ = S.st >= 5 || S.cash < S.st * 1000 + 500,
+    mer = (k) => Math.round((1 + S.mer[k] * 0.5) * MER[k][2]);
+  return `<div class="wb"><div class="wbt"><span class="wbn">‹</span><span class="wbn">›</span><span class="wbu"><i></i>galactik.club/${slug}</span></div><div class="wbp"><div class="wbh" style="background:${K.a};color:${lum(K.a) > 150 ? '#0a0c22' : '#fff'}">${u ? `<img class="wbg" alt="" src="${u}">` : ''}<span class="wbl" style="background:${K.b};color:${lum(K.b) > 150 ? '#0a0c22' : '#fff'}">the club</span><span class="wbs">${t.name}</span><span class="wbv">${[['wb-m', 'Match'], ['wb-s', 'Sponsors'], ['wb-b', 'Boutique']].map(([, l]) => `<a>${l}</a>`).join('')}</span><span class="wbk2">${S.cash} cr.</span></div><div class="wbm">
+<div class="wbc" id="wb-m"><h2 class="wbk">Match</h2><div class="wbg2">${gTile('st', 'stad', `Stade niv. ${S.st} · ${2000 * S.st} places`, `recette estimée à domicile : ${gate()}`, `<button onclick="upS()" ${upS_ ? 'disabled' : ''}>${S.st >= 5 ? 'Max' : '+ ' + (S.st * 1000 + 500)}</button>`)}${gTile('tk', 'tk', `Prix du billet : ${S.tk}`, 'plus cher = moins de monde, mais plus par spectateur', `<span class="gtp"><button onclick="S.tk=Math.max(5,S.tk-1);save();render()" aria-label="Baisser le prix">−</button><button onclick="S.tk=Math.min(25,S.tk+1);save();render()" aria-label="Augmenter le prix">+</button></span>`)}</div></div>
+<div class="wbc" id="wb-s"><h2 class="wbk">Sponsors</h2><div class="wbg2 wbs1"><div class="card gsp"><div class="gsh"><b>Sélectionnés</b>${hp('spn')}<span class="mu">(${S.sps.length}/3)</span></div>${S.sps.map((s) => `<div class="gsr">${spLogo(s.n, 38)}<b>${s.n}</b><span class="mu">${s.v}/match · reste ${Math.max(0, Math.min(s.left, s.m || s.left))} sur ${s.m || s.left} matchs</span></div>`).join('') || '<div class="mu">Aucun sponsor.</div>'}</div><div class="card gsp"><div class="gsh"><b>Offres du moment</b><span class="mu">touchez deux fois pour signer</span></div><div class="gso">${S.so.map((o, i) => `<div class="pc ${V.mk == 'o' + i ? 'sel' : ''}" onclick="mk2('o',${i})">${spLogo(o.n, 40)}<div class="pn">${o.n}</div><div class="o">${o.v}</div><div class="mu">par match</div><div class="mu">${dur(o.m)}</div>${V.mk == 'o' + i ? '<div class="mu">confirmer ?</div>' : ''}</div>`).join('')}</div></div></div></div>
+<div class="wbc" id="wb-b"><h2 class="wbk">Boutique <small>revenu estimé : ${shop()} crédits par match ${hp('shp')}</small></h2><div class="wbg4">${Object.keys(MER).map((k) => gTile(k, 'shp', `${MER[k][0]} niv. ${S.mer[k]}/5`, `+${MER[k][1]} par niveau`, `<button onclick="upM('${k}')" ${S.mer[k] >= 5 || S.cash < mer(k) ? 'disabled' : ''}>${S.mer[k] >= 5 ? 'Max' : '+ ' + mer(k)}</button>`)).join('')}</div></div></div></div>`;
 }
 // Page « Finances » : trésorerie, revenus, dépenses, dernières opérations.
 function finView() {
@@ -14130,8 +15200,10 @@ function svBox() {
 function evRoll(M) {
   if (M.dby && (M.h == S.t || M.a == S.t))
     mail(
-      '🔥 Derby : ' + M.t[0].name + ' – ' + M.t[1].name,
-      'Rivalité historique : ambiance électrique, plus d’occasions et de fautes, billetterie +40 % à domicile.',
+      (M.dby == 'C' ? '⚡ Classico : ' : '🔥 Derby : ') + M.t[0].name + ' – ' + M.t[1].name,
+      M.dby == 'C'
+        ? 'La grande rivalité historique : ambiance explosive, beaucoup plus d’occasions et de fautes, billetterie +40 % à domicile.'
+        : 'Derby entre deux équipes de la même planète : ambiance électrique, plus d’occasions et de fautes, billetterie +20 % à domicile.',
     );
   if (S.evt === false) return;
   const A = M.t[0],
@@ -14279,41 +15351,7 @@ const legLinks = () =>
   Object.entries(LEGD)
     .map(([k, v]) => `<button class="lgk" onclick="V.lg='${k}';render()">${v[1]}</button>`)
     .join('');
-// Liste des emblèmes disponibles pour une équipe créée.
-const EMBL = [
-  '🏟',
-  '⚽',
-  '🏆',
-  '⭐',
-  '🔥',
-  '⚡',
-  '✨',
-  '🌀',
-  '🌌',
-  '🪐',
-  '☄',
-  '❄',
-  '🌑',
-  '🌴',
-  '🪨',
-  '🦎',
-  '🐯',
-  '🏴‍☠',
-  '🤖',
-  '🧬',
-  '🔋',
-  '👁',
-  '🛡',
-  '🏅',
-  '🎯',
-  '🧤',
-  '🚀',
-  '🏛',
-  '🏢',
-  '🎮',
-  '🎲',
-  '🤝',
-];
+
 // Bouton « Nouvelle carrière » du menu.
 function menuNew() {
   if (S) autosave();
@@ -14335,11 +15373,24 @@ function menuTour() {
 function fz(M, s, f) {
   const t = M.t[s],
     m = t.fo ?? 1,
-    p = (0.03 + f / 3000) * [0.5, 1, 1.8][m] * (m == 0 && M.min >= 60 ? 2.2 : 1);
+    df = M.sc[s] - M.sc[1 - s],
+    late = M.min >= 60,
+    p = Math.max(
+      0.12,
+      Math.min(
+        0.9,
+        [0.38, 0.56, 0.74][m] +
+          (f - 60) / 500 +
+          ((t.m ?? 1) - 1) * 0.04 +
+          ((t.pr ?? 1) - 1) * 0.03 +
+          (df < 0 ? (late ? 0.1 : 0.05) : df > 0 ? (late ? -0.08 : -0.03) : 0) +
+          (m == 0 && late ? 0.2 : 0),
+      ),
+    );
   if (Math.random() >= p) return false;
   (M.fu = M.fu || [0, 0])[s]++;
   t.lu.forEach((k) => {
-    t.sq[k].e = Math.max(40, t.sq[k].e - [0.5, 1, 2][m]);
+    t.sq[k].e = Math.max(40, t.sq[k].e - [0.15, 0.3, 0.6][m]);
   });
   return true;
 }
@@ -14361,24 +15412,7 @@ const ldBox = () =>
   V.ld
     ? `<div style="position:fixed;inset:0;background:#000a;z-index:90;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:12px"><div class="spin"></div><div>${V.ld}</div></div>`
     : '';
-// Consignes par ligne (défense, milieu, attaque).
-function ordView() {
-  const t = me(),
-    s = slots(t.form),
-    L = t.ln || (t.ln = { d: 1, m: 1, a: 1 }),
-    S1 = (k, o) =>
-      `<label>${o[0]} <select onchange="me().ln.${k}=+this.value;save()">${o[1].map((n, i) => `<option value="${i}" ${L[k] == i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>`;
-  return (
-    `<div class="card"><b>Consignes par ligne</b>${hp('ord')}<div class="ctl" style="margin-top:6px">${S1('d', ['Défense', ['Ligne basse', 'Équilibrée', 'Ligne haute']])}${S1('m', ['Milieu', ['Passes courtes', 'Mixte', 'Jeu direct']])}${S1('a', ['Attaque', ['Tirs lointains', 'Équilibrée', 'En profondeur']])}</div></div><details class="dd card" ${innerHeight > 900 ? 'open' : ''}><summary><b>Consignes individuelles</b>${hp('ind')}</summary>` +
-    t.lu
-      .map((li, k) => {
-        const p = t.sq[li];
-        return `<div class="row"><span class="pos">${s[k]}</span><span class="nm">${p.n}</span>${roleRow(li, s[k])}</div>`;
-      })
-      .join('') +
-    '</details>'
-  );
-}
+
 // Deux listes de rôles (avec et sans ballon) pour un titulaire de l'écran Tactique.
 function roleRow(li, g) {
   const p = me().sq[li],
@@ -14386,7 +15420,7 @@ function roleRow(li, g) {
       ROLES[g][ph == 're' ? 'ep' : 'sp']
         .map((R, j) => `<option value="${j ? g + ':' + j : ''}" ${(p[ph] || '') == (j ? g + ':' + j : '') ? 'selected' : ''}>${R[0]}${j ? ' ' + '★'.repeat(roleStars(p, R)) : ''}</option>`)
         .join('');
-  return `<select style="width:132px;min-width:0;font-size:12px" title="Rôle avec le ballon" onchange="setRole(${li},'re',this.value)">${o('re')}</select><select style="width:132px;min-width:0;font-size:12px" title="Rôle sans le ballon" onchange="setRole(${li},'rs',this.value)">${o('rs')}</select>`;
+  return rolePk(li, 're', [g], 1) + rolePk(li, 'rs', [g], 1);
 }
 // Génère parfois une offre d'un autre club pour un de tes joueurs.
 function genOffer() {
@@ -14499,14 +15533,16 @@ function actOf(i, j) {
 }
 // Rivalités entre équipes (derbys).
 const RIV = [
-    ['Snow Kids', 'Tigres Rouges'],
+    // Classicos : les grandes rivalités historiques (les derbys sont les équipes d'une même planète).
     ['Snow Kids', 'Shadows'],
     ['Lightnings', 'Xenons'],
     ['Technodroids', 'Vortex'],
     ['Pirates', 'Shadows'],
   ],
-  isDerby = (a, b) => RIV.some(([x, y]) => (x == a && y == b) || (x == b && y == a)),
-  moralIco = (m) => ((m ?? 60) >= 75 ? '😀' : (m ?? 60) >= 50 ? '🙂' : (m ?? 60) >= 30 ? '😐' : '😠');
+  // Renvoie 'C' (classico), 'D' (derby : même planète) ou '' (match ordinaire).
+  rivK = (a, b) =>
+    RIV.some(([x, y]) => (x == a && y == b) || (x == b && y == a)) ? 'C' : a != b && planet(a) == planet(b) ? 'D' : '',
+  isDerby = (a, b) => !!rivK(a, b);
 // Après un match : met à jour le moral des joueurs (victoire, défaite, confiance).
 function moral(M) {
   const t = me(),
@@ -14553,6 +15589,16 @@ function train() {
       (((3 + stL('c')) * y * it) / 7) * (1 + skV('f1') + mgb('tx') + (p.age <= 24 ? mgb('ty') : 0));
     if ((p.in ?? 1) == 2) p.e = Math.max(45, p.e - 0.5);
     if ((p.in ?? 1) == 0) p.e = Math.min(100, p.e + 0.5);
+    // Reconversion de poste : progresse chaque jour (pause si « Repos », plus vite en « Intensif »).
+    if (p.rc) {
+      p.rc.left -= [0, 1, 1.6][p.in ?? 1];
+      if (p.rc.left <= 0) {
+        const to = p.rc.to;
+        mail('Reconversion terminée : ' + p.n, p.n + ' joue désormais au poste de ' + POSN[to] + '.');
+        p.p = to;
+        delete p.rc;
+      }
+    }
     const cp = ptCap(p);
     if (p.o >= cp) p.xp = Math.min(p.xp, 100);
     else if (p.xp >= 100) {
@@ -14566,12 +15612,39 @@ function train() {
     }
   });
 }
+// RECONVERSION : un joueur de champ apprend un nouveau poste. Durée selon l'âge ; les gardiens sont exclus.
+const POSN = { GK: 'gardien', DEF: 'défenseur', MID: 'milieu', ATT: 'attaquant' };
+const rcDays = (p) => (p.age <= 21 ? 14 : p.age <= 26 ? 21 : p.age <= 30 ? 28 : 35);
+function startRc(i, to) {
+  const p = me().sq[i];
+  if (!p || p.p == 'GK' || !to || to == 'GK' || to == p.p) return;
+  p.rc = { to, left: rcDays(p), tot: rcDays(p) };
+  save();
+  render();
+}
+function stopRc(i) {
+  const p = me().sq[i];
+  if (p) delete p.rc;
+  save();
+  render();
+}
 // Section « Entraînement » de la fiche d'un joueur.
 function trainSec(p, i) {
   ensure(p);
   const sel = (arr, v, fn) =>
     `<select onchange="${fn}">${arr.map((n, j) => `<option value="${j}" ${v == j ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
-  return `<h2>Entraînement</h2><div class="ctl"><label>Intensité ${sel(['Repos', 'Normal', 'Intensif'], p.in ?? 1, `me().sq[${i}].in=+this.value;save();render()`)}</label><label>Axe ${sel(p.p == 'GK' ? AT.map((n, j) => (j == 1 ? 'Réflexes' : n)) : AT, p.fc ?? 0, `me().sq[${i}].fc=+this.value;save()`)}</label></div><div class="mu" style="margin-top:8px">Progression vers +1 niveau : ${p.o >= ptCap(p) ? (p.o >= 95 ? 'niveau maximum' : 'potentiel atteint, plus de progression') : Math.round(p.xp || 0) + '/100'}</div>${xpB(p, 'w')}<div class="mu" style="margin-top:4px">Intensif = progrès plus rapides mais plus de fatigue.</div>`;
+  return `<h2>Entraînement</h2><div class="ctl"><label>Intensité ${sel(['Repos', 'Normal', 'Intensif'], p.in ?? 1, `me().sq[${i}].in=+this.value;save();render()`)}</label><label>Axe ${sel(p.p == 'GK' ? AT.map((n, j) => (j == 1 ? 'Réflexes' : n)) : AT, p.fc ?? 0, `me().sq[${i}].fc=+this.value;save()`)}</label></div><div class="mu" style="margin-top:8px">Progression vers +1 niveau : ${p.o >= ptCap(p) ? (p.o >= 95 ? 'niveau maximum' : 'potentiel atteint, plus de progression') : Math.round(p.xp || 0) + '/100'}</div>${xpB(p, 'w')}<div class="mu" style="margin-top:4px">Intensif = progrès plus rapides mais plus de fatigue.</div>${rcSec(p, i)}`;
+}
+// Bloc « Reconversion de poste » de la fiche joueur.
+function rcSec(p, i) {
+  if (p.p == 'GK') return '<h3 style="margin:12px 0 4px">Reconversion</h3><div class="mu">Un gardien ne peut pas changer de poste.</div>';
+  const pct = p.rc ? Math.round(100 * (1 - Math.max(0, p.rc.left) / p.rc.tot)) : 0,
+    opts = ['DEF', 'MID', 'ATT'].filter((g) => g != p.p);
+  return `<h3 style="margin:12px 0 4px">Reconversion de poste${hp('rc')}</h3>${
+    p.rc
+      ? `<div class="mu">Il apprend le poste de <b>${POSN[p.rc.to]}</b> : ${pct} % (encore ${Math.max(1, Math.ceil(p.rc.left))} jours à intensité Normal). Au nouveau poste son malus diminue peu à peu ; à son poste actuel il est un peu moins efficace (−5 %).</div><div class="gg2" style="height:8px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden;margin:6px 0"><i style="display:block;height:100%;width:${pct}%;background:#b78bff"></i></div><div class="ctl"><button onclick="stopRc(${i})">Annuler la reconversion</button></div>`
+      : `<div class="ctl"><label>Nouveau poste <select id="rcs${i}">${opts.map((g) => `<option value="${g}">${POSN[g][0].toUpperCase() + POSN[g].slice(1)}</option>`).join('')}</select></label><button class="p" onclick="startRc(${i},document.getElementById('rcs${i}').value)">Lancer (${rcDays(p)} jours)</button></div><div class="mu" style="margin-top:4px">Durée selon l’âge. Le joueur garde son poste jusqu’à la fin.</div>`
+  }`;
 }
 // Convertit un numéro de jour en date.
 const dateOf = (d) => dOf((S && S.ctx) || 'L', d),
@@ -14606,31 +15679,46 @@ function nxI() {
   return m ? [D.teams[m[0]], D.teams[m[1]]] : null;
 }
 // Bouton « Jouer le match ».
+// Mails dont une réponse est attendue (hors contenus cachés, hors mails de plus de 10 jours).
+function mailReq() {
+  if (!S || !S.mail) return [];
+  const r = [];
+  S.mail.forEach((m, i) => {
+    if (m.x || (m.dt != null && (S.day || 0) - m.dt > 10)) return;
+    try {
+      if (m.a && m.a.length) {
+        if (m.a.some((a) => /^(qa|qr|br|nb)/.test(String(a[1])))) return;
+        r.push(i);
+      } else if (reps(m).length) r.push(i);
+    } catch (e) {}
+  });
+  return r;
+}
+// Si une réponse est attendue : redirige vers le mail concerné et bloque la suite de la partie.
+function mailGate() {
+  const r = mailReq();
+  if (!r.length) return false;
+  V.tab = 'mail';
+  V.mf = 'in';
+  V.mq = '';
+  V.ms = [];
+  V.sb = 0;
+  V.mo = r[r.length - 1];
+  S.mail[V.mo].u = 0;
+  try {
+    ntf({ i: 'mail', l: 'Réponse requise', t: S.mail[V.mo].t, s: 'Répondez pour continuer la partie', tp: 'm', go: 'mail' });
+  } catch (e) {}
+  render();
+  return true;
+}
 function playEv() {
+  if (mailGate()) return;
   const e = nextEv();
   if (e && e[0] == 'N') return nbGo();
   ensureCtx();
   startMD();
 }
-// Boutons « Jour suivant », « Jusqu'au match » et « Jouer le match ».
-function dayBtns() {
-  const e = nextEv(),
-    m = e ? e[1] : null,
-    left = m == null ? 0 : m - S.day,
-    cn = e && (S.mode == 'D' || e[0] == 'N') ? ' · ' + compName(e[0]) : '',
-    inf =
-      m != null
-        ? `<div class="mu">Prochain match${cn} le ${fmtDay(m)} ${left > 0 ? '(dans ' + left + ' jour' + (left > 1 ? 's' : '') + ')' : '(aujourd’hui)'}</div>`
-        : '';
-  return (
-    inf +
-    (m == null
-      ? ''
-      : left <= 0
-        ? `<button class="p" style="margin-top:8px" onclick="playEv()">⚽ Jouer la journée</button>`
-        : `<div class="ctl" style="margin-top:8px"><button class="p" onclick="advanceDay()">▶ Jour suivant</button><button onclick="skipDays()">⏩ Jusqu’au match</button></div>`)
-  );
-}
+
 // AVANCE D'UN JOUR : récupération, entraînement, offres, mails…
 function dayTick() {
   S.day++;
@@ -14701,16 +15789,10 @@ function autoCtx() {
     }
   } catch (x) {}
 }
-// Bouton « Jour suivant ».
-function advanceDay() {
-  const e = nextEv();
-  if (e && S.day < e[1]) dayTick();
-  autoCtx();
-  save();
-  render();
-}
+
 // Bouton « Jusqu'au match » : avance jour par jour, s'arrête à un événement important.
 function skipDays() {
+  if (mailGate()) return;
   const n0 = S.mail.length;
   let g = 0,
     e;
@@ -15163,7 +16245,7 @@ function skTick(M) {
     g = M.sc[i],
     c = M.sc[1 - i],
     k = g > c ? 'V' : g < c ? 'D' : 'N';
-  skXp((k == 'V' ? 30 : k == 'N' ? 12 : 6) + (M.dby ? 10 : 0) + (k == 'V' && g - c >= 3 ? 5 : 0));
+  skXp((k == 'V' ? 30 : k == 'N' ? 12 : 6) + (M.dby == 'C' ? 15 : M.dby ? 10 : 0) + (k == 'V' && g - c >= 3 ? 5 : 0));
   const m = skV('v1');
   if (m)
     t.sq.forEach((p) => {
@@ -15207,9 +16289,9 @@ function skView() {
       pt = skBp(b),
       lk = !pt && act.length >= 2,
       tr = skTr(b);
-    return `<div class="skb ${lk ? 'lk' : ''}" style="--bc:${B.c}"><div class="skt"><div class="skav">${B.w[0][0]}</div><div style="min-width:0"><div>${B.e} ${B.n}</div><div class="mu">${B.w[0]} · ${B.w[1]}</div></div></div><div><div class="mu">Confiance de ${B.w[0].split(' ')[0]} : ${pt ? tr + ' %' : '—'}</div><div class="bar" style="width:100%;height:8px;margin:3px 0"><i style="width:${pt ? tr : 0}%;background:var(--bc)"></i></div><div class="mu">${pt ? 'Cadeaux : ' + (K.g[b] || 0) + '/3 (à 30, 60 et 90 %)' : lk ? 'Verrouillée par votre spécialisation' : 'Investissez un point pour la rencontrer'}</div></div>${SKT[b].map((n, i) => (i ? '<div class="skl"></div>' : '') + nodeH(n)).join('')}</div>`;
+    return `<div class="skb ${lk ? 'lk' : ''}" style="--bc:${B.c}"><div class="skt"><div class="skav">${B.w[0][0]}</div><div style="min-width:0"><div>${B.e} ${B.n}</div><div class="mu">${B.w[0]} · ${B.w[1]}</div></div></div><div><div class="mu">Confiance de ${B.w[0].split(' ')[0]}</div><div style="display:flex;justify-content:center">${gg(pt ? tr : 0, { size: 64, fs: 34, c: B.c, tt: 'Confiance de ' + B.w[0].split(' ')[0] })}</div><div class="mu">${pt ? 'Cadeaux : ' + (K.g[b] || 0) + '/3 (à 30, 60 et 90 %)' : lk ? 'Verrouillée par votre spécialisation' : 'Investissez un point pour la rencontrer'}</div></div>${SKT[b].map((n, i) => (i ? '<div class="skl"></div>' : '') + nodeH(n)).join('')}</div>`;
   };
-  return `<div class="card"><div class="ctl" style="justify-content:space-between"><div><b style="font-size:18px">Niveau ${L}</b>${hp('sk')} <span class="mu">· ${K.xp} XP${L < 25 ? ' · prochain niveau à ' + nx : ' · niveau maximal'}</span>${hp('sk_xp')}</div><div class="ctl"><span><b>${P}</b> point${P > 1 ? 's' : ''} à dépenser · Spécialisation <b>${act.length}/2</b></span><button ${act.length ? '' : 'disabled'} onclick="skReset()">${V.skr ? 'Confirmer (−600 crédits)' : '↺ Réinitialiser (600 crédits)'}</button>${V.skr ? '<button onclick="V.skr=0;render()">Annuler</button>' : ''}</div></div><div class="bar" style="width:100%;height:8px;margin:8px 0 0"><i style="width:${pc}%;background:var(--ac)"></i></div>${V.skm ? `<div class="mu" style="margin-top:6px">${V.skm}</div>` : ''}</div><div class="skg">${SKK.map(brH).join('')}</div>`;
+  return `<div class="card"><div class="ctl" style="justify-content:space-between"><div><b style="font-size:18px">Niveau ${L}</b>${hp('sk')} <span class="mu">· ${K.xp} XP${L < 25 ? ' · prochain niveau à ' + nx : ' · niveau maximal'}</span>${hp('sk_xp')}</div><div class="ctl"><span><b>${P}</b> point${P > 1 ? 's' : ''} à dépenser · Spécialisation <b>${act.length}/2</b></span><button ${act.length ? '' : 'disabled'} onclick="skReset()">${V.skr ? 'Confirmer (−600 crédits)' : '↺ Réinitialiser (600 crédits)'}</button>${V.skr ? '<button onclick="V.skr=0;render()">Annuler</button>' : ''}</div></div><div style="display:flex;justify-content:center;margin-top:6px">${gg(pc, { size: 70, fs: 34, c: 'var(--ac)', tt: 'Progression du niveau' })}</div>${V.skm ? `<div class="mu" style="margin-top:6px">${V.skm}</div>` : ''}</div><div class="skg">${SKK.map(brH).join('')}</div>`;
 }
 
 // Éléments de création du manager : couleurs de peau, cheveux, accessoires, prénoms et noms.
@@ -15461,14 +16543,7 @@ function mcView() {
 <h2>Apparence${hp('mc_look')}</h2><div class="mu">Peau</div><div>${sw('sk', MGSK, m.sk)}</div><div class="mu">Coiffure</div><div class="ctl">${ch('hs', MGHS, m.hs)}</div><div class="mu">Couleur de cheveux</div><div>${sw('hc', MGHC, m.hc)}</div><div class="mu">Accessoire</div><div class="ctl">${ch('ac', MGAC, m.ac)}</div><div class="mu">Tenue</div><div>${sw('oc', [tp[0], tp[1], '#2d6a4f', '#e07a1f', '#7b2cbf', '#f1f1f1'], m.oc)}</div></div>
 <div class="card"><h2>Passé${hp('mc_bg')}</h2><div class="mcbg">${BGS.map((x) => `<button class="mcb ${m.bg == x.id ? 'on' : ''}" onclick="mcS('bg','${x.id}')"><b>${x.e} ${x.n}</b><br><span class="mu">${x.b.join(' · ')}</span></button>`).join('')}</div></div></div></div>`;
 }
-// Carte « Votre manager ».
-function mgCard() {
-  if (!S.mg)
-    return `<div class="card"><b>🧑‍💼 Votre manager</b><div class="mu" style="margin:4px 0 8px">Cette partie n’a pas encore de manager personnalisé.</div><button class="p" onclick="V.mc=mcNew();render()">Créer mon manager</button></div>`;
-  const g = S.mg,
-    b = BGS.find((x) => x.id == g.bg) || BGS[0];
-  return `<div class="card" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${mgSvg(g, 84)}<div style="flex:1;min-width:180px"><b style="font-size:17px">${g.fn} ${g.ln}</b><div class="mu">${b.e} ${b.n}</div><ul class="mcl">${b.b.map((x) => `<li>${x}</li>`).join('')}</ul></div></div>`;
-}
+
 // Page « Manager » : compétences et carrière.
 function careerView() {
   const P = skPts(),
@@ -15510,14 +16585,14 @@ function mgOverview() {
         lk = !on && skAct().length >= 2,
         mx = SKT[br].reduce((x, nd) => x + (nd.cap ? 1 : 3), 0),
         got = SKT[br].reduce((x, nd) => x + (K.r[nd.id] || 0), 0);
-      return `<div class="mgt ${on ? 'on' : lk ? 'lk' : ''}" style="--bc:${B.c}"><span class="skav">${B.w[0][0]}</span><b>${B.n}</b><small>${on ? 'Confiance ' + skTr(br) + ' %' : lk ? 'Verrouillée' : 'À débloquer'}</small><span class="mgp"><i style="width:${Math.round((100 * got) / mx)}%"></i></span><small>Déverrouillé ${got}/${mx}</small></div>`;
+      return `<div class="mgt ${on ? 'on' : lk ? 'lk' : ''}" style="--bc:${B.c}"><span class="skav">${B.w[0][0]}</span><b>${B.n}</b><small>${on ? 'Confiance ' + skTr(br) + ' %' : lk ? 'Verrouillée' : 'À débloquer'}</small>${gg(Math.round((100 * got) / mx), { size: 54, fs: 34, c: B.c, tt: 'Déverrouillé ' + got + '/' + mx })}<small>Déverrouillé ${got}/${mx}</small></div>`;
     };
   return `<div class="mgw"><div class="mgl"><div class="card mgc">${
     g
       ? `<div class="mgpt">${mgSvg(g, 150)}</div><b class="mgn">${g.fn} ${g.ln}</b><div class="mu">${b.n}</div><ul class="mcl">${b.b.map((x) => `<li>${x}</li>`).join('')}</ul><div class="mgv"><b>Niveau ${L}</b>${hp('sk')}</div><div class="bar" style="width:100%;height:8px"><i style="width:${pc}%;background:var(--ac)"></i></div><div class="mu">${K.xp} XP${L < 25 ? ' / ' + nx : ' · niveau maximal'}</div><div class="mgpts">${P} point${P > 1 ? 's' : ''} de compétence</div>`
       : `<b>Votre manager</b><div class="mu" style="margin:4px 0 8px">Cette partie n’a pas encore de manager personnalisé.</div><button class="p" onclick="V.mc=mcNew();render()">Créer mon manager</button>`
   }</div><div class="card mgc"><b>Confiance du conseil</b>${hp('car1')}${gg(S.conf, { size: 130, fs: 34, c: S.conf < 25 ? '#d33' : 'var(--ok)', tt: 'Confiance' })}<div class="mu">Objectif : top ${S.obj} · titres : ${S.titles || 0}${S.lc ? ' · dernière chance utilisée' : ''}</div><div class="mgob">${obView()}</div></div></div>
-  <div class="mgm"><div class="mgtop"><div class="card mgc"><div class="fvh"><b>Dossier du manager</b></div><div class="mgdos">${ring(wp, 'var(--ok)')}<div class="mu" style="text-align:center">Pourcentage de victoires</div></div><div class="mgsr">${st('ball', lg.length, 'Joués')}${st('check', w, 'Victoires')}${st('meh', n, 'Nuls')}${st('cross', d, 'Défaites')}${st('trophy', S.titles || 0, 'Trophées')}</div></div>
+  <div class="mgm"><div class="mgtop"><div class="card mgc"><div class="fvh"><b>Dossier du manager</b></div><div class="mgdos">${gg(wp, { size: 130, fs: 34, c: 'var(--ok)', tt: 'Pourcentage de victoires' })}<div class="mu" style="text-align:center">Pourcentage de victoires</div></div><div class="mgsr">${st('ball', lg.length, 'Joués')}${st('check', w, 'Victoires')}${st('meh', n, 'Nuls')}${st('cross', d, 'Défaites')}${st('trophy', S.titles || 0, 'Trophées')}</div></div>
   <div class="card mgc mgdev" role="button" tabindex="0" onclick="V.ct='sk';render()" onkeydown="if(event.key=='Enter')this.click()"><div class="fvh"><b>Développement du manager</b>${hp('sk')}<span class="mu" style="margin-left:auto">${P > 0 ? P + ' point' + (P > 1 ? 's' : '') + ' à dépenser ›' : 'Voir les compétences ›'}</span></div><div class="mgtl">${SKK.map(tile).join('')}</div></div></div>
   <div class="mgbot"><div class="card mgc"><div class="fvh"><b>Trophées et palmarès</b></div><div class="fvth mgph"><span>Saison</span><span>Club</span><span>Rang</span><span>Pts</span><span>Coupe</span></div><div class="fvtb">${
     pal.map((e) => `<div class="fvtr mgph"><span>${e.s}</span><span class="fvcl">${e.club}</span><b style="color:${e.r == 1 ? '#e8a20c' : 'inherit'}">${e.r == 1 ? ic('trophy') + ' ' : ''}${e.r}</b><span>${e.pts}</span><span>${e.cup || '—'}</span></div>`).join('') || '<div class="mu" style="padding:14px 2px;text-align:center">Aucune saison terminée.</div>'
@@ -15528,7 +16603,7 @@ function mgOverview() {
 const MDP = [
     {
       t: 'Interview : avant le match',
-      q: 'Un journaliste de la Galactik Post vous attend à la sortie de l’entraînement : « Comment abordez-vous le match contre @O ? »',
+      q: 'Comment abordez-vous le match contre @O ?',
       o: [
         {
           l: 'Afficher sa confiance : « Nous allons gagner. »',
@@ -15546,7 +16621,7 @@ const MDP = [
     },
     {
       t: 'Interview : l’état du groupe',
-      q: 'La presse vous demande si vos joueurs sont prêts pour affronter @O.',
+      q: 'Vos joueurs sont-ils prêts pour affronter @O ?',
       o: [
         {
           l: 'Féliciter le groupe pour son travail',
@@ -15564,7 +16639,7 @@ const MDP = [
     },
     {
       t: 'Interview : le conseil',
-      q: 'Une journaliste vous interroge sur les attentes du conseil d’administration avant le match contre @O.',
+      q: 'Le conseil d’administration attend-il un résultat précis face à @O ?',
       o: [
         { l: 'Défendre les décisions du conseil', r: 'Le conseil apprécie votre loyauté.', cf: 3, mo: -1 },
         {
@@ -15578,7 +16653,7 @@ const MDP = [
     },
     {
       t: 'Interview : le Fluide',
-      q: 'Le débat sur le Fluide agite les médias avant @O. On vous demande votre avis.',
+      q: 'Le Fluide fait débat avant @O : quel est votre avis ?',
       o: [
         {
           l: 'Défendre le Fluide : « C’est notre force. »',
@@ -15599,7 +16674,7 @@ const MDP = [
   MDW = [
     {
       t: 'Interview : après la victoire',
-      q: 'Victoire contre @O. Le micro est tendu : « À qui dédiez-vous ce succès ? »',
+      q: 'À qui dédiez-vous cette victoire contre @O ?',
       o: [
         { l: 'Aux joueurs', r: 'Le vestiaire savoure.', mo: 4 },
         { l: 'Aux supporters', r: 'Le public est conquis.', cf: 3, mo: 1 },
@@ -15610,7 +16685,7 @@ const MDP = [
   MDN = [
     {
       t: 'Interview : après le nul',
-      q: 'Match nul contre @O. La presse parle d’occasion manquée : « Que s’est-il passé ? »',
+      q: 'Match nul contre @O : que s’est-il passé ?',
       o: [
         { l: 'Rester positif : « On progresse. »', r: 'Un message positif pour le groupe.', mo: 2 },
         { l: 'Faire son autocritique', r: 'Le conseil apprécie votre lucidité.', cf: 2, mo: -1 },
@@ -15621,7 +16696,7 @@ const MDP = [
   MDL = [
     {
       t: 'Interview : après la défaite',
-      q: 'Défaite contre @O. Les caméras attendent vos mots : « Qui est responsable ? »',
+      q: 'Défaite contre @O : qui est responsable ?',
       o: [
         { l: 'Assumer la responsabilité', r: 'Vous prenez la défaite sur vous.', cf: 2, mo: 1 },
         { l: 'Protéger les joueurs', r: 'Le vestiaire vous remercie.', mo: 4, cf: -1 },
@@ -15635,31 +16710,457 @@ const MDP = [
       ],
     },
   ];
-// Envoie un mail d'interview.
-function mdMail(P, o, pre) {
-  const x = P[(Math.random() * P.length) | 0],
-    id = [MDP, MDW, MDN, MDL].find((a) => a === P),
-    n = P.indexOf(x);
-  mail(
-    x.t,
-    x.q.replace('@O', o),
-    x.o.map((z, k) => [z.l, 'md', k]),
-  );
-  const m = S.mail[0];
-  m.o = { g: [MDP, MDW, MDN, MDL].indexOf(P), n };
-  if (pre) m.pmk = 1;
-}
-// Réponse du joueur à une interview.
-function actMd(i, j) {
-  const m = S.mail[i];
-  if (!m.o) {
-    // Réparation d'un mail d'interview sans référence (créé par une version précédente) : on retrouve la question par son titre.
-    const g = [MDP, MDW, MDN, MDL].findIndex((P) => P.some((x) => x.t == m.t));
-    if (g >= 0) m.o = { g, n: [MDP, MDW, MDN, MDL][g].findIndex((x) => x.t == m.t) };
+MDW.push({
+  t: 'Interview : la suite',
+  q: 'Quel est votre objectif pour la suite de la saison ?',
+  o: [
+    { l: 'Viser le titre sans complexe', r: 'Une ambition affichée qui galvanise le vestiaire.', mo: 3, cf: -1, pr: 0 },
+    { l: 'Rester humble : « Match après match. »', r: 'Une réponse mesurée, appréciée du conseil.', cf: 2 },
+    { l: 'Féliciter l’adversaire', r: 'Un beau geste de fair-play.', cf: 1, mo: 1 },
+  ],
+});
+MDN.push({
+  t: 'Interview : le point de vue',
+  q: 'Êtes-vous satisfait du point pris contre @O ?',
+  o: [
+    { l: 'Oui, un point précieux', r: 'Vous dédramatisez : le groupe respire.', mo: 1, cf: 1 },
+    { l: 'Non, on voulait les trois points', r: 'Votre exigence est saluée, mais le groupe sent la pression.', mo: -1, cf: 2 },
+    { l: 'Pas de commentaire', r: 'La journaliste n’insiste pas.' },
+  ],
+});
+MDL.push({
+  t: 'Interview : la réaction',
+  q: 'Comptez-vous changer quelque chose dans votre équipe ?',
+  o: [
+    { l: 'Oui, des changements arrivent', r: 'Le vestiaire se tient sur ses gardes.', mo: -2, cf: 2 },
+    { l: 'Non, je garde ma confiance au groupe', r: 'Les joueurs apprécient votre soutien.', mo: 3, cf: -1 },
+    { l: 'Il faut analyser avant de décider', r: 'Une réponse prudente.', cf: 1 },
+  ],
+});
+// ===== Questions et mails de presse variés, qui citent les joueurs du match =====
+// ne = information nécessaire : sc (buteur), mvp (homme du match), gk (gardien), sub (remplaçant entré), low (joueur en difficulté), star (vedette), inj (blessé).
+// pm = [lettre du joueur, variation de son moral] ; cr = crédits ; mo / cf = moral de l'équipe / confiance du conseil.
+MDP.push(
+  {
+    t: 'Interview : la vedette', ne: 'star',
+    q: '@P est votre joueur le plus en vue : comptez-vous sur lui face à @O ?',
+    o: [
+      { l: 'Oui, c’est notre leader', r: 'Le joueur se sent investi d’une vraie mission.', pm: ['P', 5] },
+      { l: 'Je compte sur tout le groupe', r: 'Un message collectif qui rassure le vestiaire.', mo: 2 },
+      { l: 'Le ménager pour la suite', r: 'Prudent : le conseil apprécie la gestion de la saison.', cf: 2, pm: ['P', -2] },
+    ],
+  },
+  {
+    t: 'Interview : le blessé', ne: 'inj',
+    q: '@J est à l’infirmerie : est-ce un coup dur avant @O ?',
+    o: [
+      { l: 'Le rassurer publiquement', r: 'Le joueur apprécie votre soutien.', pm: ['J', 5] },
+      { l: 'Minimiser : « Le groupe est riche. »', r: 'Vous gardez le contrôle, le conseil acquiesce.', cf: 2 },
+      { l: 'Avouer que c’est une vraie perte', r: 'Honnête, mais le vestiaire s’inquiète un peu.', mo: -1, pm: ['J', 3] },
+    ],
+  },
+  {
+    t: 'Interview : les pronostics',
+    q: 'Les pronostics donnent @O favori. Que répondez-vous ?',
+    o: [
+      { l: 'Tant mieux, on adore l’étiquette d’outsider', r: 'Les joueurs se sentent libérés de la pression.', mo: 3 },
+      { l: 'Les pronostics ne gagnent pas les matchs', r: 'Une réponse classique, jugée très professionnelle.', cf: 2 },
+      { l: 'Les provoquer : « On va leur montrer. »', r: 'Le défi est lancé : les supporters adorent, le conseil un peu moins.', mo: 2, cf: -1 },
+    ],
+  },
+  {
+    t: 'Interview : le style de l’adversaire',
+    q: 'Que pensez-vous du style de jeu de @O ?',
+    o: [
+      { l: 'Un adversaire qui force le respect', r: 'Un fair-play salué par la presse.', cf: 2 },
+      { l: 'Un jeu rugueux, mais on saura y répondre', r: 'Vos joueurs se sentent prévenus et motivés.', mo: 2, cf: -1 },
+      { l: 'Ironiser sur leur manque d’idées', r: 'Une petite pique qui amuse les supporters.', mo: 1, cf: -2 },
+    ],
+  },
+  {
+    t: 'Interview : l’ambiance',
+    q: 'Quelle est l’ambiance dans le vestiaire cette semaine ?',
+    o: [
+      { l: 'Excellente, on se sent invincibles', r: 'Une belle confiance affichée, mais la pression monte.', mo: 2, pr: 0, cf: 1 },
+      { l: 'Sérieuse et concentrée', r: 'Le conseil apprécie la rigueur du groupe.', cf: 2 },
+      { l: 'Tendue : il faut se remettre au travail', r: 'Franc, mais le vestiaire n’aime pas qu’on lave le linge en public.', mo: -2, cf: 1 },
+    ],
+  },
+);
+MDW.push(
+  {
+    t: 'Interview : le buteur', ne: 'sc',
+    q: '@S a marqué contre @O : est-il votre meilleur atout offensif ?',
+    o: [
+      { l: 'Le couvrir d’éloges', r: 'Le buteur savoure, mais le reste du groupe note la différence.', pm: ['S', 6], mo: -1 },
+      { l: 'Souligner l’effort collectif', r: 'Un message d’équipe apprécié de tous.', mo: 3 },
+      { l: 'Lui demander encore plus', r: 'Exigeant : le conseil approuve, le joueur le prend avec philosophie.', cf: 2, pm: ['S', -2] },
+    ],
+  },
+  {
+    t: 'Interview : l’homme du match', ne: 'mvp',
+    q: '@M est élu homme du match : méritait-il ce titre ?',
+    o: [
+      { l: 'Oui, un vrai leader', r: 'Le joueur est touché par vos mots.', pm: ['M', 6], cf: 1 },
+      { l: 'Tout le groupe a brillé', r: 'Le vestiaire vous remercie de partager la lumière.', mo: 3 },
+      { l: 'Plaisanter : « Il va encore réclamer une prime ! »', r: 'La salle de presse rit, le joueur beaucoup moins.', pm: ['M', -3], cf: 1 },
+    ],
+  },
+  {
+    t: 'Interview : le gardien', ne: 'gkw',
+    q: '@K a été précieux dans les buts : un mot sur lui ?',
+    o: [
+      { l: 'Saluer son sang-froid', r: 'Le gardien est ravi de cette reconnaissance.', pm: ['K', 5] },
+      { l: 'Féliciter toute la défense', r: 'Les défenseurs se sentent valorisés.', mo: 3 },
+      { l: 'Rester sobre : « Il fait son travail. »', r: 'Une réponse neutre qui ne fait pas de vagues.' },
+    ],
+  },
+  {
+    t: 'Interview : le remplaçant', ne: 'sub',
+    q: '@X est entré en jeu et a marqué les esprits : une réaction ?',
+    o: [
+      { l: 'Vanter la force de votre banc', r: 'Tout le groupe se sent concerné : la concurrence stimule.', mo: 3 },
+      { l: 'Lui promettre plus de temps de jeu', r: 'Le joueur y croit, les titulaires un peu moins.', pm: ['X', 6], mo: -1 },
+      { l: 'Rester mesuré', r: 'Rien de plus à ajouter.', cf: 1 },
+    ],
+  },
+  {
+    t: 'Interview : le tournant',
+    q: 'Quel a été le tournant du match contre @O ?',
+    o: [
+      { l: 'Un ajustement tactique', r: 'La presse salue votre lecture du jeu.', cf: 3 },
+      { l: 'L’état d’esprit des joueurs', r: 'Le vestiaire se sent mis en avant.', mo: 3 },
+      { l: 'Un peu de réussite', r: 'Une réponse modeste, très appréciée du public.', mo: 1, cf: 1 },
+    ],
+  },
+);
+MDN.push(
+  {
+    t: 'Interview : le buteur du nul', ne: 'sc',
+    q: '@S a marqué, mais le match s’arrête sur un nul : déçu pour lui ?',
+    o: [
+      { l: 'Le féliciter malgré le résultat', r: 'Un joueur reconnaissant.', pm: ['S', 5] },
+      { l: 'Dire qu’on aurait dû finir le travail', r: 'Exigeant : le conseil approuve.', cf: 2, mo: -1 },
+      { l: 'Se féliciter de la performance collective', r: 'Le groupe apprécie.', mo: 2 },
+    ],
+  },
+  {
+    t: 'Interview : la logique du match',
+    q: 'Le résultat est-il logique au vu du match contre @O ?',
+    o: [
+      { l: 'Oui, personne ne méritait de gagner', r: 'Une analyse lucide, saluée.', cf: 2 },
+      { l: 'Non, on méritait mieux', r: 'Vous soutenez vos joueurs, qui se sentent compris.', mo: 3, cf: -1 },
+      { l: 'Ce sont les détails qui ont tranché', r: 'Une réponse sans polémique.', cf: 1 },
+    ],
+  },
+  {
+    t: 'Interview : le gardien du nul', ne: 'gka',
+    q: '@K a évité le pire dans les cages : un mot sur sa prestation ?',
+    o: [
+      { l: 'Il a sauvé le point', r: 'Le gardien est touché de cette reconnaissance.', pm: ['K', 5] },
+      { l: 'La défense doit mieux protéger sa surface', r: 'Un petit rappel à l’ordre.', mo: -1, cf: 2 },
+      { l: 'Ne pas s’exprimer sur un seul joueur', r: 'Vous préservez l’unité du groupe.', mo: 1 },
+    ],
+  },
+);
+MDL.push(
+  {
+    t: 'Interview : le joueur en difficulté', ne: 'low',
+    q: '@L a semblé en difficulté face à @O : va-t-il rester dans l’équipe ?',
+    o: [
+      { l: 'Le défendre : « Il a ma confiance. »', r: 'Le joueur vous en sera reconnaissant.', pm: ['L', 6] },
+      { l: 'Le mettre en garde', r: 'Un message clair, mais pas très populaire.', pm: ['L', -5], cf: 1 },
+      { l: 'Ne citer personne', r: 'Vous évitez de pointer un joueur du doigt.', mo: 1 },
+    ],
+  },
+  {
+    t: 'Interview : le gardien battu', ne: 'gkl',
+    q: '@K a encaissé plusieurs buts : est-ce sa faute ?',
+    o: [
+      { l: 'Non, c’est toute l’équipe', r: 'Le gardien se sent soutenu.', pm: ['K', 5], mo: 1 },
+      { l: 'Il doit faire mieux', r: 'Franc, mais le gardien accuse le coup.', pm: ['K', -4], cf: 1 },
+      { l: 'Je ne parle pas des individualités', r: 'Une position de principe.', mo: 1 },
+    ],
+  },
+  {
+    t: 'Interview : la consolation', ne: 'sc',
+    q: '@S a sauvé l’honneur : est-ce une consolation ?',
+    o: [
+      { l: 'Une bonne note dans une soirée difficile', r: 'Le buteur apprécie un peu de lumière.', pm: ['S', 4] },
+      { l: 'Non, seule la victoire compte', r: 'Un message d’exigence pour tout le vestiaire.', cf: 2, mo: -1 },
+      { l: 'Il faut regarder vers l’avant', r: 'Une réponse tournée vers la suite.', mo: 1, cf: 1 },
+    ],
+  },
+  {
+    t: 'Interview : les supporters',
+    q: 'Les supporters sont déçus : un message pour eux ?',
+    o: [
+      { l: 'Les remercier et s’excuser', r: 'Un geste fort, apprécié des tribunes.', cf: 3 },
+      { l: 'Promettre une réaction dès le prochain match', r: 'Le groupe sent le défi, mais la pression monte.', mo: 2, cf: -1 },
+      { l: 'Demander de la patience', r: 'Le public attend encore des résultats.', cf: 1, mo: 1 },
+    ],
+  },
+);
+// Mails de presse variés (après un match) : chaque mail pose une question différente, avec ses propres réponses.
+const PZ = [
+  {
+    t: 'Presse : le buteur du match', ne: 'sc', k: 'S',
+    b: (f) => `La rédaction de la Galactik Post s’intéresse à ${f.S}, buteur du match. « Est-il le futur visage de votre attaque ? »`,
+    o: [
+      { l: 'Le présenter comme un cadre', r: 'Le joueur gagne en confiance, la presse reprend votre phrase.', pm: ['S', 6] },
+      { l: 'Parler d’un joueur parmi d’autres', r: 'Vous préservez l’équilibre du vestiaire.', mo: 2 },
+      { l: 'Rester évasif', r: 'La rédaction n’insiste pas.', cf: 1 },
+    ],
+  },
+  {
+    t: 'Presse : l’homme du match', ne: 'mvp', k: 'M',
+    b: (f) => `${f.M} a été élu homme du match. La Galactik Post vous demande de le décrire en un mot.`,
+    o: [
+      { l: '« Irremplaçable »', r: 'Le joueur est flatté, ses coéquipiers un peu moins.', pm: ['M', 6], mo: -1 },
+      { l: '« Travailleur »', r: 'Un compliment sobre, bien reçu par tout le vestiaire.', pm: ['M', 3], mo: 1 },
+      { l: '« Il fait ce qu’il doit faire »', r: 'La réponse manque de chaleur.', pm: ['M', -2] },
+    ],
+  },
+  {
+    t: 'Presse : le gardien en lumière', ne: 'gkw', k: 'K',
+    b: (f) => `La presse revient sur la prestation de ${f.K}. « Est-ce le meilleur gardien du championnat ? »`,
+    o: [
+      { l: 'Oui, sans hésiter', r: 'Le gardien se sent porté par le public.', pm: ['K', 6] },
+      { l: 'Il progresse chaque semaine', r: 'Une réponse équilibrée qui motive le joueur.', pm: ['K', 3], cf: 1 },
+      { l: 'Je ne compare pas', r: 'Rien à signaler.' },
+    ],
+  },
+  {
+    t: 'Presse : un remplaçant en vue', ne: 'sub', k: 'X',
+    b: (f) => `${f.X} a fait forte impression en sortant du banc. Les journalistes veulent savoir s’il devient titulaire.`,
+    o: [
+      { l: 'Il aura sa chance', r: 'Le joueur est transcendé, le vestiaire prend note.', pm: ['X', 6] },
+      { l: 'Le groupe est large, tous méritent leur place', r: 'Tout le monde se sent concerné.', mo: 2 },
+      { l: 'Pas question d’en parler', r: 'Le sujet est clos.', cf: 1 },
+    ],
+  },
+  {
+    t: 'Presse : polémique arbitrale', ne: 'nw',
+    b: () => 'Une décision arbitrale fait polémique après la rencontre. La rédaction vous demande votre réaction.',
+    o: [
+      { l: 'Accepter la décision', r: 'Un manager mesuré : le conseil apprécie.', cf: 3 },
+      { l: 'Dénoncer l’arbitrage', r: 'Vos joueurs vous approuvent, la Ligue moins.', mo: 3, cf: -3 },
+      { l: 'Ne pas commenter', r: 'La polémique retombe doucement.', cf: 1 },
+    ],
+  },
+  {
+    t: 'Presse : rumeur de transfert', ne: 'star', k: 'P',
+    b: (f) => `La rumeur court : un grand club s’intéresserait à ${f.P}. Que répondez-vous ?`,
+    o: [
+      { l: 'Il n’est pas à vendre', r: 'Le joueur se sent désiré, le conseil observe.', pm: ['P', 6], cf: -1 },
+      { l: 'Tout le monde a un prix', r: 'Le conseil apprécie le pragmatisme, le joueur beaucoup moins.', pm: ['P', -4], cf: 2 },
+      { l: 'Pas de commentaire', r: 'La rumeur continue de courir.', pm: ['P', 1] },
+    ],
+  },
+  {
+    t: 'Presse : le vestiaire',
+    b: () => 'La Galactik Post prépare un reportage sur l’ambiance du vestiaire et vous propose de vous exprimer.',
+    o: [
+      { l: 'Ouvrir les portes aux caméras', r: 'Une belle image du club : les joueurs sont contents de l’exposition.', mo: 2, cf: 2 },
+      { l: 'Préférer la discrétion', r: 'Le vestiaire reste un sanctuaire.', mo: 1 },
+      { l: 'Refuser poliment', r: 'La rédaction est un peu froissée.', cf: -1 },
+    ],
+  },
+  {
+    t: 'Presse : portrait du manager',
+    b: () => 'Un magazine prépare un portrait de vous. Quelle image souhaitez-vous donner de votre philosophie de jeu ?',
+    o: [
+      { l: 'Un football offensif et spectaculaire', r: 'Les supporters adorent, le conseil attend des résultats.', mo: 2, cf: -1 },
+      { l: 'Un football rigoureux et solide', r: 'Le conseil est séduit par votre sérieux.', cf: 2 },
+      { l: 'Un manager proche de ses joueurs', r: 'Le vestiaire se sent considéré.', mo: 3 },
+    ],
+  },
+];
+// Informations sur le match qui vient de se terminer (buteurs, homme du match, gardien…), pour personnaliser les questions.
+function pcFacts(M) {
+  try {
+    const i = M.t.indexOf(me()),
+      L = (M.rt && M.rt[i]) || [],
+      g = M.sc[i],
+      c = M.sc[1 - i],
+      sc = L.filter((x) => x[3] > 0).sort((a, b) => b[3] - a[3]),
+      gk = L.find((x) => x[1] == 'GK'),
+      sub = L.filter((x) => x[5] == 1).sort((a, b) => b[2] - a[2] + (b[3] - a[3]))[0],
+      low = L.filter((x) => x[2] < 5.6).sort((a, b) => a[2] - b[2])[0],
+      mv = M.mmn && L.find((x) => x[0] == M.mmn),
+      top = me().sq.slice().sort((a, b) => b.o - a.o)[0];
+    const f = { g, c, nw: g <= c ? 1 : 0 };
+    if (sc[0]) f.S = sc[0][0];
+    if (mv) f.M = mv[0];
+    if (gk && gk[2] >= 6.5 && (c <= 1 || gk[2] >= 7)) f.Kw = gk[0];
+    if (gk && (c >= 3 || gk[2] < 5.6)) f.Kl = gk[0];
+    if (gk) f.K = gk[0];
+    if (sub && sub[2] >= 6.5) f.X = sub[0];
+    if (low) f.L = low[0];
+    if (top) f.P = top.n;
+    return f;
+  } catch (e) {
+    return {};
   }
-  const a = m.a[j],
-    z = [MDP, MDW, MDN, MDL][m.o.g][m.o.n].o[a[2]],
-    t = me(),
+}
+// Vérifie qu'une question est possible avec ces informations.
+function pcOk0(Q, f) {
+  const n = Q.ne;
+  if (!n) return true;
+  f = f || {};
+  return n == 'sc' ? !!f.S : n == 'mvp' ? !!f.M : n == 'gkw' ? !!f.Kw : n == 'gkl' ? !!f.Kl : n == 'gka' ? !!(f.Kw || f.Kl) : n == 'sub' ? !!f.X : n == 'low' ? !!f.L : n == 'star' ? !!f.P : n == 'inj' ? !!f.J : n == 'nw' ? !!f.nw : true;
+}
+// Remplace les noms (@O adversaire, @S buteur, @M homme du match, @K gardien, @X remplaçant, @L joueur en difficulté, @P vedette, @J blessé).
+function pcTxt(s, o, f) {
+  f = f || {};
+  return String(s).replace(/@([OSMKXLPJ])/g, (m, x) => (x == 'O' ? o : f[x] || '…'));
+}
+// ===== CONFÉRENCE DE PRESSE (avant et après chaque match) : fenêtre avec la journaliste Callie Mystic =====
+const KALI = 'Callie Mystic';
+// Ouvre la conférence de presse : 2 questions tirées au hasard dans la liste de la situation.
+function pcOpen(kind, o, k, sc, f) {
+  if (typeof V == 'undefined' || !V || V.pc) return;
+  const P = kind == 'pre' ? MDP : k == 'V' ? MDW : k == 'D' ? MDL : MDN,
+    idx = P.map((x, i) => i).filter((i) => pcOk0(P[i], f)).sort(() => Math.random() - 0.5).slice(0, 2),
+    g = [MDP, MDW, MDN, MDL].indexOf(P);
+  V.pc = { kind, o, sc, f: f || {}, qs: idx.map((n) => ({ g, n })), i: 0, sel: -1, res: null };
+}
+// Réponse choisie (avant validation).
+function pcSel(j) {
+  if (V.pc && !V.pc.res) {
+    V.pc.sel = j;
+    render();
+  }
+}
+// Valide la réponse : applique les effets et affiche la réaction.
+function pcOk(skip) {
+  const c = V.pc;
+  if (!c || c.res) return;
+  const q = c.qs[c.i],
+    Q = [MDP, MDW, MDN, MDL][q.g][q.n],
+    z = skip ? { l: 'Décliner de répondre', r: 'Vous quittez la question sans un mot. La journaliste note votre silence.', cf: -1 } : Q.o[c.sel];
+  if (!z) return;
+  c.res = { l: pcTxt(z.l, c.o, c.f), r: pcTxt(z.r, c.o, c.f), fx: mdEff(z, c.f) };
+  skXp(2);
+  save();
+  render();
+}
+// Question suivante, ou retour au jeu.
+function pcNext() {
+  const c = V.pc;
+  if (!c) return;
+  if (c.i + 1 < c.qs.length) {
+    c.i++;
+    c.sel = -1;
+    c.res = null;
+  } else V.pc = null;
+  render();
+}
+// Portrait de la journaliste : place pour l'image « img/callie_mystic.jpg » (si elle est ajoutée), sinon silhouette d'origine.
+function kaliAv() {
+  return `<div class="pcav"><svg viewBox="0 0 100 130" aria-hidden="true"><defs><linearGradient id="pcg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a5cff"/><stop offset="1" stop-color="#2b2f6b"/></linearGradient></defs><rect width="100" height="130" fill="url(#pcg)"/><circle cx="50" cy="48" r="20" fill="#e8c9b0"/><path d="M28 50c0-24 16-30 24-30s22 8 22 30c-4-12-10-16-22-16s-18 4-24 16z" fill="#3a2a5c"/><path d="M12 130c2-28 18-44 38-44s36 16 38 44z" fill="#f2f2f8"/><rect x="66" y="84" width="7" height="22" rx="3.5" fill="#222"/><circle cx="69.500" cy="80" r="7" fill="#ff8a3b"/></svg><img src="img/callie_mystic.jpg" alt="${KALI}" onerror="this.remove()"></div>`;
+}
+// Fenêtre « équipe adverse » : composition probable et cartes des joueurs (cliquer pour ouvrir la fiche).
+function opOpen(n) {
+  V.opw = n;
+  render();
+}
+function opClose() {
+  V.opw = null;
+  render();
+}
+// Fiche de scouting d'un club (utilisée par la fenêtre adverse et l'onglet Adversaires).
+function scoutBody(t, modal) {
+  try {
+    if (!t.lu || t.lu.length != slots(t.form).length) autoLU(t);
+  } catch (e) {}
+  const sl = slots(t.form),
+    col = (q) => ({ GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' })[q] || '#888',
+    card = (p) => pc(p, '', 'prof(\'nm\',this.dataset.n)').replace('<div class="pc ', `<div data-n="${mkEsc(p.n)}" class="pc `).replace(/onclick="event\.stopPropagation\(\);prof\('sq',\d+\)"/, `data-n="${mkEsc(p.n)}" onclick="event.stopPropagation();prof('nm',this.dataset.n)"`),
+    line = (q) =>
+      `<div class="opl">${sl
+        .map((x, k) => (x == q ? t.sq[t.lu[k]] : null))
+        .filter(Boolean)
+        .map((p) => `<span class="opp" data-n="${mkEsc(p.n)}" onclick="prof('nm',this.dataset.n)" style="border-color:${col(p.p)}"><b>${p.o}</b><span>${p.n}</span></span>`)
+        .join('')}</div>`,
+    xi = new Set(t.lu.map((i) => t.sq[i]).filter(Boolean)),
+    bench = t.sq.filter((p) => p && !xi.has(p));
+  const avg = Math.round(t.lu.reduce((a, i) => a + ((t.sq[i] || {}).o || 0), 0) / Math.max(1, t.lu.length));
+  const rk = S.teams
+      .map((x) => x)
+      .sort((a, b) => b.pts - a.pts || b.gf - b.ga - (a.gf - a.ga) || b.gf - a.gf),
+    pos = rk.indexOf(t) + 1,
+    PRL = ['Bas', 'Moyen', 'Haut'],
+    sty = TSTY[t.sty || 0] || TSTY[0],
+    fs = fsOf(t);
+  let nx = null,
+    lst = null;
+  try {
+    const cl = calList().filter((e) => e.opp === t && e.c != 'N');
+    nx = cl.find((e) => !e.played);
+    lst = cl.filter((e) => e.played && e.my != null).pop();
+  } catch (e) {}
+  const key = t.lu
+      .map((i) => t.sq[i])
+      .filter(Boolean)
+      .sort((a, b) => b.o - a.o)
+      .slice(0, 3),
+    sc = t.sq
+      .filter((p) => p && (p.g || 0) > 0)
+      .sort((a, b) => (b.g || 0) - (a.g || 0))
+      .slice(0, 3),
+    ch = (p, x) =>
+      `<span class="opp" data-n="${mkEsc(p.n)}" onclick="prof('nm',this.dataset.n)" style="border-color:${col(p.p)}"><b>${p.o}</b><span>${p.n}${x ? ' · ' + x : ''}</span></span>`,
+    kv = (k, v) => `<div class="scv"><span>${k}</span><b>${v}</b></div>`,
+    ins = INS.filter((i) => INS_MAIN.includes(i.k))
+      .map((i) => kv(i.l.replace(/ \(.*\)/, ''), i.o[tiV(t, i.k)]))
+      .join('');
+  return `<div class="ctl" style="justify-content:space-between;align-items:flex-start"><div><b style="font-size:20px">${t.em} ${t.name}</b><div class="mu">${pos}${pos == 1 ? 'er' : 'e'} · ${t.pts} pts (${t.w || 0}V ${t.d || 0}N ${t.l || 0}D) · diff. ${t.gf - t.ga > 0 ? '+' : ''}${t.gf - t.ga} · note moyenne du onze ${avg} ${chForm(t)}</div></div>${modal ? '<button onclick="opClose()">✕ Fermer</button>' : ''}</div><div class="scm">${nx ? `<span>📅 Prochaine rencontre : <b>${fmtDay(nx.day)}</b> (${nx.h ? 'à domicile' : 'à l’extérieur'}, ${nx.c == 'C' ? 'Cup' : 'Ligue'})</span>` : '<span class="mu">Plus de rencontre prévue.</span>'}${lst ? `<span>Dernier duel : ${lst.my}-${lst.op}</span>` : ''}</div><h3 style="margin:12px 0 6px">Tactique ${hp('scout')}</h3><div class="scg">${kv('Formation', t.form)}${kv('Sans le ballon', fs)}${kv('Mentalité', MENT[t.m ?? 1])}${kv('Pressing', PRL[t.pr ?? 1])}${kv('Style', sty.n)}${ins}</div><h3 style="margin:12px 0 6px">Joueurs à surveiller</h3><div class="opl" style="justify-content:flex-start">${key.map((p) => ch(p, p.p)).join('')}${sc.map((p) => ch(p, p.g + ' but' + (p.g > 1 ? 's' : ''))).join('')}</div><h3 style="margin:12px 0 6px">Composition probable</h3><div class="opf">${['ATT', 'MID', 'DEF', 'GK'].map(line).join('')}</div><h3 style="margin:14px 0 6px">Joueurs (touchez une carte pour ouvrir sa fiche)</h3><div class="pg${V.vw == 'l' ? ' l' : ''}">${[...xi, ...bench].map(card).join('')}</div>`;
+}
+function opBox() {
+  if (!V || !V.opw || V.pf || !S) return '';
+  const t = (S.teams || []).find((x) => x.name == V.opw);
+  if (!t) return '';
+  return `<div class="mo opm" onclick="if(event.target===this)opClose()"><div class="card opc2">${scoutBody(t, 1)}</div></div>`;
+}
+// Onglet « Adversaires » : recherche de clubs et de joueurs, fiche complète avec tactiques, à tout moment.
+function advView() {
+  const q = (V.adq || '').trim().toLowerCase(),
+    rk = S.teams
+      .map((t, i) => [t, i])
+      .sort((a, b) => b[0].pts - a[0].pts || b[0].gf - b[0].ga - (a[0].gf - a[0].ga) || b[0].gf - a[0].gf),
+    my = me();
+  let nx = null;
+  try {
+    nx = calList().find((e) => !e.played && e.c != 'N');
+  } catch (e) {}
+  const L = rk
+    .map(([t], k) => ({ t, k, hit: q ? t.sq.filter((p) => p && p.n.toLowerCase().includes(q)).map((p) => p.n) : [] }))
+    .filter((r) => r.t !== my && (!q || r.t.name.toLowerCase().includes(q) || r.hit.length));
+  let sel = S.teams.find((x) => x.name == V.adt && x !== my);
+  if (!sel) sel = (nx && nx.opp && nx.opp !== my && S.teams.includes(nx.opp) ? nx.opp : null) || (L[0] && L[0].t);
+  const rows =
+    L.map(
+      (r) =>
+        `<div class="adr ${sel === r.t ? 'sel' : ''}" onclick="V.adt=this.dataset.n;render()" data-n="${mkEsc(r.t.name)}"><span class="chnu">${r.k + 1}</span><span class="adn">${r.t.em} <b>${r.t.name}</b>${nx && nx.opp === r.t ? ' <small class="mreq">Prochain</small>' : ''}${r.hit.length ? `<small class="mu"> → ${r.hit.slice(0, 3).join(', ')}</small>` : ''}</span><span class="mu">${r.t.pts} pts</span>${chForm(r.t)}</div>`,
+    ).join('') || '<div class="mu" style="padding:14px">Aucun club ni joueur ne correspond.</div>';
+  return `<div class="fvw"><div class="adg"><div class="card adl"><div class="ctl" style="justify-content:space-between"><b>🔎 Adversaires ${hp('adv')}</b></div><input class="adq" placeholder="🔍 Club ou joueur…" value="${mkEsc(V.adq || '')}" onchange="V.adq=this.value;render()"><div class="adrs">${rows}</div></div><div class="card adc">${sel ? scoutBody(sel, 0) : '<div class="mu">Aucun club.</div>'}</div></div></div>`;
+}
+function pcBox() {
+  const c = typeof V != 'undefined' && V && V.pc;
+  if (!c || !S) return '';
+  const q = c.qs[c.i],
+    Q = [MDP, MDW, MDN, MDL][q.g][q.n],
+    last = c.i + 1 >= c.qs.length,
+    qt = pcTxt(Q.q, c.o, c.f);
+  const body = c.res
+    ? `<div class="pcyou"><small>Votre réponse</small>${c.res.l}</div><div class="pcr"><b>${KALI}</b> ${c.res.r}</div>${c.res.fx.length ? `<div class="pcfx">${c.res.fx.map((f) => `<span>${f}</span>`).join('')}</div>` : '<div class="mu" style="margin:6px 0">Aucun effet notable.</div>'}<div class="ctl" style="justify-content:flex-end;margin-top:10px"><button class="p" onclick="pcNext()">${last ? 'Retour au jeu' : 'Question suivante'}</button></div>`
+    : `<div class="pco">${Q.o.map((z, j) => `<button class="${c.sel == j ? 'on' : ''}" onclick="pcSel(${j})">${pcTxt(z.l, c.o, c.f)}</button>`).join('')}</div><div class="ctl" style="justify-content:space-between;margin-top:10px"><button onclick="pcOk(1)" title="Ne pas répondre (−1 de confiance du conseil)">Décliner</button><button class="p" onclick="pcOk()" ${c.sel < 0 ? 'disabled' : ''}>Valider la réponse</button></div>`;
+  return `<div class="mo pcm"><div class="card pcc"><div class="pch"><b>🎙️ Conférence de presse</b><span class="mu">${c.kind == 'pre' ? 'Avant le match' : 'Après le match'} contre ${c.o}${c.sc ? ' (' + c.sc + ')' : ''} · Galactik Post · question ${c.i + 1}/${c.qs.length}</span></div><div class="pcb">${kaliAv()}<div class="pcq"><div class="pcn">${KALI}<small>Journaliste · Galactik Post</small></div><div class="pcbb">${qt}</div></div></div>${body}</div></div>`;
+}
+// Applique les effets d'une réponse d'interview (moral, confiance du conseil, pari) et renvoie leur liste lisible.
+function mdEff(z, f) {
+  const t = me(),
     fx = [],
     bz = mgb('iv'),
     zm = z.mo > 0 ? z.mo + bz : z.mo,
@@ -15672,13 +17173,63 @@ function actMd(i, j) {
     S.conf = Math.max(0, Math.min(100, S.conf + zc));
     fx.push('Confiance du conseil ' + (zc > 0 ? '+' : '') + zc);
   }
+  if (z.pm && f) {
+    const nm = f[z.pm[0]],
+      pp = nm && t.sq.find((x) => x.n == nm);
+    if (pp) {
+      const d = z.pm[1] > 0 ? z.pm[1] + bz : z.pm[1];
+      pp.mo = Math.max(0, Math.min(100, (pp.mo ?? 60) + d));
+      fx.push('Moral de ' + pp.n + ' ' + (d > 0 ? '+' : '') + d);
+    }
+  }
   if (z.pr) {
     S.pm = 1;
     fx.push('Pari sur la victoire');
   }
+  return fx;
+}
+// Réponse du joueur à une interview.
+function actMd(i, j) {
+  const m = S.mail[i];
+  if (!m.o) {
+    // Réparation d'un mail d'interview sans référence (créé par une version précédente) : on retrouve la question par son titre.
+    const g = [MDP, MDW, MDN, MDL].findIndex((P) => P.some((x) => x.t == m.t));
+    if (g >= 0) m.o = { g, n: [MDP, MDW, MDN, MDL][g].findIndex((x) => x.t == m.t) };
+  }
+  const a = m.a[j],
+    z = [MDP, MDW, MDN, MDL][m.o.g][m.o.n].o[a[2]],
+    fx = mdEff(z);
   m.b += '\n\n→ ' + z.r + (fx.length ? ' (' + fx.join(' · ') + ')' : '');
   m.a = null;
   skXp(2);
+  save();
+  render();
+}
+// Envoie, après un match, un mail de presse (parfois) choisi parmi des sujets variés.
+function pzMail(k, f) {
+  try {
+    if (Math.random() > 0.55) return;
+    const P = PZ.filter((x) => pcOk0(x, f) && !S.mail.slice(0, 6).some((m) => m.t == x.t));
+    if (!P.length) return;
+    const x = P[Math.floor(Math.random() * P.length)],
+      who = x.k ? f[x.k] || '' : '';
+    mail(x.t, x.b(f), x.o.map((z, j) => [z.l, 'pz', PZ.indexOf(x), j, who]));
+  } catch (e) {}
+}
+// Réponse du joueur à un mail de presse varié.
+function actPz(i, j) {
+  const m = S.mail[i],
+    a = m.a[j],
+    X = PZ[a[2]],
+    z = X && X.o[a[3]];
+  if (!z) return;
+  const f = {};
+  if (X.k) f[X.k] = a[4];
+  const fx = mdEff(z, f);
+  m.b += '\n\n→ ' + z.r + (fx.length ? ' (' + fx.join(' · ') + ')' : '');
+  m.a = null;
+  m.r = 1;
+  skXp(1);
   save();
   render();
 }
@@ -15687,13 +17238,15 @@ function mdPre() {
   const e = nextEv();
   if (!e || e[0] == 'N' || S.day != e[1] - 1 || S.pmd === e[1]) return;
   S.pmd = e[1];
-  if (Math.random() > 0.5) return;
   const m = nxI(),
     o = m ? (m.find((x) => x.name != me().name) || m[1]).name : 'l’adversaire';
-  mdMail(MDP, o, 1);
+  const t = me(),
+    st = t.sq.slice().sort((a, b) => b.o - a.o)[0],
+    ij = t.sq.filter((p) => p.inj > 0).sort((a, b) => b.o - a.o)[0];
+  pcOpen('pre', o, null, null, { P: st && st.n, J: ij && ij.n });
 }
 // Conséquences d'une interview après le match.
-function mdPost(k, g, c, o) {
+function mdPost(k, g, c, o, f) {
   S.mail.forEach((m) => {
     if (m.pmk && m.a) {
       m.a = null;
@@ -15722,7 +17275,9 @@ function mdPost(k, g, c, o) {
       );
     }
   }
-  if (Math.random() < (Math.abs(g - c) >= 3 ? 0.8 : 0.5)) mdMail(k == 'V' ? MDW : k == 'D' ? MDL : MDN, o, 0);
+  // La conférence d'après-match s'ouvre quand le manager clique sur « Continuer » (pas pendant le match).
+  S.pcw = { o, k, sc: g + ' - ' + c, f: f || {} };
+  pzMail(k, f || {});
 }
 // Phrase d'objectif de classement.
 function obRk() {
@@ -15816,7 +17371,7 @@ function obView() {
   const o = S.ob,
     rk = stdg(grpOf(me())).indexOf(me()) + 1,
     R = (ok, t, v, p) =>
-      `<div style="margin:6px 0"><div class="row"><span class="nm">${ok ? '✔' : '○'} ${t}</span><span class="mu">${v}</span></div><div class="bar" style="width:100%;height:6px"><i style="width:${Math.min(100, Math.round(p * 100))}%"></i></div></div>`;
+      `<div style="margin:6px 0"><div class="row"><span class="nm">${ok ? '✔' : '○'} ${t}</span><span class="mu">${v}</span>${gg(Math.min(100, Math.round(p * 100)), { size: 48, fs: 34, c: ok ? 'var(--ok)' : '#e0a526' })}</div></div>`;
   return `<h2>Objectifs du conseil ${hp('obj')}</h2><div class="card"><div class="mu" style="margin-bottom:4px">Fixés par Odile Marchand, présidente du conseil · profil du club : ${{ A: 'ambitieux', B: 'ambitieux modéré', C: 'outsider' }[o.tr]}</div>${R(rk <= S.obj, obRk()[0].toUpperCase() + obRk().slice(1), 'actuellement ' + rk + 'e', Math.min(1, S.obj / rk))}${o.subs.map((x) => R(obVal(x) >= x.n, x.t, x.k == 'cash' ? S.cash + ' / ' + x.n : x.k == 'cf' ? S.conf + ' / ' + x.n + ' %' : obVal(x) + ' / ' + x.n, obVal(x) / Math.max(1, x.n))).join('')}</div>`;
 }
 // Ancienne page Carrière, encore utilisée comme contenu de l'onglet Carrière.
@@ -15824,7 +17379,7 @@ function careerViewOld() {
   const a = S.ach || {},
     pal = S.pal || [];
   return (
-    `<div class="card"><b>Confiance du conseil : ${S.conf} %</b>${hp('car1')}<div class="bar" style="width:100%;height:10px;margin-top:6px"><i style="width:${S.conf}%;background:${S.conf < 25 ? '#d33' : 'var(--ok)'}"></i></div><div class="mu" style="margin-top:6px">Objectif : top ${S.obj} · titres : ${S.titles || 0}${S.lc ? ' · dernière chance utilisée' : ''}</div></div>${obView()}<h2>Palmarès</h2><div class="card">${pal.length ? '<table><tr><th>Saison</th><th>Club</th><th>Rang</th><th>Pts</th><th>Coupe</th></tr>' + pal.map((e) => `<tr><td>${e.s}</td><td>${e.club}</td><td>${e.r}</td><td>${e.pts}</td><td>${e.cup || '—'}</td></tr>`).join('') + '</table>' : '<div class="mu">Aucune saison terminée.</div>'}</div><h2>Succès (${Object.keys(a).length}/${Object.keys(ACH).length})</h2><div class="card">` +
+    `<div class="card"><b>Confiance du conseil</b>${hp('car1')}<div style="display:flex;justify-content:center;margin-top:4px">${gg(S.conf, { size: 130, fs: 34, c: S.conf < 25 ? '#d33' : 'var(--ok)' })}</div><div class="mu" style="margin-top:6px">Objectif : top ${S.obj} · titres : ${S.titles || 0}${S.lc ? ' · dernière chance utilisée' : ''}</div></div>${obView()}<h2>Palmarès</h2><div class="card">${pal.length ? '<table><tr><th>Saison</th><th>Club</th><th>Rang</th><th>Pts</th><th>Coupe</th></tr>' + pal.map((e) => `<tr><td>${e.s}</td><td>${e.club}</td><td>${e.r}</td><td>${e.pts}</td><td>${e.cup || '—'}</td></tr>`).join('') + '</table>' : '<div class="mu">Aucune saison terminée.</div>'}</div><h2>Succès (${Object.keys(a).length}/${Object.keys(ACH).length})</h2><div class="card">` +
     Object.keys(ACH)
       .map((k) => `<div class="row"><span class="nm">${a[k] ? '🏆' : '🔒'} ${ACH[k]}</span></div>`)
       .join('') +
@@ -15841,7 +17396,7 @@ const sbTog = () => {
     render();
   },
   go2 = (k) => {
-    if (V.m && !V.m.done && V.tab == 'match') return; // mode match : pas d'autres menus
+    if (V.m && V.tab == 'match') return; // mode match : pas d'autres menus avant « Continuer »
     V.tab = k;
     V.sb = 0;
     render();
@@ -15850,7 +17405,9 @@ const sbTog = () => {
     const e = nextEv();
     return V.m && !V.m.done
       ? '⚽ Match en cours'
-      : !e
+      : !V.m && mailReq().length
+        ? '✉️ Répondre au mail (' + mailReq().length + ')'
+        : !e
         ? '🏆 Fin de saison'
         : S.day >= e[1]
           ? (e[0] == 'N' ? '🌑 Soirée nocturne' : '⚽ Jouer le match') +
@@ -15893,7 +17450,7 @@ function shell(c) {
       [
         'Général',
         [
-          ['ov', '🏠', 'Aperçu'],
+          ['ov', '🧭', 'Aperçu'],
           ['mail', '✉️', 'Boîte de réception'],
           ['tac', '📋', 'Tactique'],
           ['club', '👥', 'Équipe'],
@@ -15912,6 +17469,7 @@ function shell(c) {
           .concat([
             ['fin', '💰', 'Finances'],
             ['stat', '📊', 'Statistiques'],
+          ['adv', '🔎', 'Adversaires'],
             ['gal', '🏅', 'Galerie'],
           ])
           .concat(NBU() ? [['nb', '🌑', NB]] : []),
@@ -15935,10 +17493,10 @@ function shell(c) {
           )
           .join(''),
     ).join('');
-  const foc = V.tab == 'match' && V.m && !V.m.done; // MODE MATCH : plein écran, sans menus
+  const foc = V.tab == 'match' && V.m; // MODE MATCH : plein écran, sans menus, jusqu'au bouton « Continuer »
   if (foc)
-    return `<div class="sh foc"><div class="mn"><div class="tb"><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt=""><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span style="flex:1"></span><button onclick="stop();V.menu=1;render()" title="Met le match en pause et ouvre le menu principal.">🏠 Menu</button></div><div class="ct">${c}</div></div></div>`;
-  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button></aside><div class="mn"><div class="tb"><button class="hb" onclick="V.sb=!V.sb;render()">☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()" ${seasonOver() ? 'disabled title="La saison est terminée : lancez une nouvelle saison depuis le Championnat."' : ''}>${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
+    return `<div class="sh foc"><div class="mn"><div class="tb"><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt=""><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span style="flex:1"></span>${V.m.done ? '' : `<button onclick="stop();V.menu=1;render()" title="Met le match en pause et ouvre le menu principal.">🏠 Menu</button>`}</div><div class="ct">${c}</div></div></div>`;
+  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div></aside><div class="mn"><div class="tb"><button class="hb" onclick="V.sb=!V.sb;render()">☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()" ${seasonOver() ? 'disabled title="La saison est terminée : lancez une nouvelle saison depuis le Championnat."' : ''}>${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
 }
 // Dessine une jauge en arc (confiance, moral, note globale…).
 function gg(v, o = {}) {
@@ -15953,8 +17511,10 @@ function gg(v, o = {}) {
         q = pt(b);
       return `M${p[0].toFixed(2)} ${p[1].toFixed(2)}A${R} ${R} 0 ${b - a > 180 ? 1 : 0} 1 ${q[0].toFixed(2)} ${q[1].toFixed(2)}`;
     },
-    c = o.c || (f < 0.34 ? '#c9363f' : f < 0.67 ? '#e0a526' : 'var(--ok)');
-  return `<div class="gg" style="width:${o.size || 110}px"${o.tt ? ` title="${o.tt}"` : ''}><svg viewBox="0 8 100 62" aria-hidden="true"><path d="${arc(A0, A0 + SP)}" fill="none" stroke="var(--gt,#4a5578)" stroke-width="8" stroke-linecap="round"/>${f > 0.004 ? `<path d="${arc(A0, A0 + Math.max(1, SP * f))}" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round"/>` : ''}<text x="50" y="58" text-anchor="middle" font-size="${o.fs || 23}" font-weight="800" fill="currentColor">${o.t != null ? o.t : Math.round(v)}</text></svg>${o.l ? `<div class="ggl">${o.l}</div>` : ''}</div>`;
+    c = o.c || (f < 0.34 ? '#c9363f' : f < 0.67 ? '#e0a526' : 'var(--ok)'),
+    // Jauge en pourcentage : le signe % est ajouté quand la jauge est assez grande pour l'afficher.
+    pc = o.t == null && !o.max && (o.size || 110) >= 40 && o.pc !== 0;
+  return `<div class="gg" style="width:${o.size || 110}px"${o.tt ? ` title="${o.tt}"` : ''}><svg viewBox="0 8 100 62" aria-hidden="true"><path d="${arc(A0, A0 + SP)}" fill="none" stroke="var(--gt,#4a5578)" stroke-width="8" stroke-linecap="round"/>${f > 0.004 ? `<path d="${arc(A0, A0 + Math.max(1, SP * f))}" fill="none" stroke="${c}" stroke-width="8" stroke-linecap="round"/>` : ''}<text x="50" y="58" text-anchor="middle" font-size="${Math.round((o.fs || 23))}" font-weight="800" fill="currentColor">${o.t != null ? o.t : Math.round(v)}</text></svg>${o.l ? `<div class="ggl">${o.l}</div>` : ''}</div>`;
 }
 // Note globale d'une équipe (moyenne des lignes).
 const tRate = (x) => {
@@ -16052,7 +17612,7 @@ function ovView() {
           );
         }
       }
-    nxt = `<div class="mu" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px"><span>${(S.mode == 'D' && ev[0] != 'N') || S.ctx == 'C' ? compName(ev[0]) : ev[0] == 'N' ? 'Soirée nocturne' : compName(ev[0])}</span><span>${ev[0] == 'N' ? 'Duel' : 'Journée ' + (D.md + 1) + '/' + D.fx.length}</span><span>${fmtDay(ev[1])}</span>${ev[0] == 'N' ? '' : `<span class="nxh ${nm[0] === me() ? 'dm' : 'ex'}">${nm[0] === me() ? 'À domicile' : 'À l’extérieur'}</span>`}</div><div class="nxw"><div class="nxm"><div class="nxt"><div class="cr">${nm[0].em}</div>${rc(r0, r1)}<b>${nm[0].name}</b></div><div class="nxv">${isDerby(nm[0].name, nm[1].name) ? '<span class="mu">Derby</span><br>' : ''}VS</div><div class="nxt"><div class="cr">${nm[1].em}</div>${rc(r1, r0)}<b>${nm[1].name}</b></div></div>${up.length ? `<div class="nxu"><div class="mu" style="text-transform:uppercase;font-size:11px">Prochains adversaires</div>${up.join('')}</div>` : ''}</div>`;
+    nxt = `<div class="mu" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px"><span>${(S.mode == 'D' && ev[0] != 'N') || S.ctx == 'C' ? compName(ev[0]) : ev[0] == 'N' ? 'Soirée nocturne' : compName(ev[0])}</span><span>${ev[0] == 'N' ? 'Duel' : 'Journée ' + (D.md + 1) + '/' + D.fx.length}</span><span>${fmtDay(ev[1])}</span>${ev[0] == 'N' ? '' : `<span class="nxh ${nm[0] === me() ? 'dm' : 'ex'}">${nm[0] === me() ? 'À domicile' : 'À l’extérieur'}</span>`}</div><div class="nxw"><div class="nxm"><div class="nxt${nm[0] !== me() ? ' opc' : ''}"${nm[0] !== me() ? ` data-n="${mkEsc(nm[0].name)}" onclick="opOpen(this.dataset.n)" role="button" title="Voir la composition de ${nm[0].name}"` : ''}><div class="cr">${nm[0].em}</div>${rc(r0, r1)}<b>${nm[0].name}</b></div><div class="nxv">${isDerby(nm[0].name, nm[1].name) ? '<span class="mu">Derby</span><br>' : ''}VS</div><div class="nxt${nm[1] !== me() ? ' opc' : ''}"${nm[1] !== me() ? ` data-n="${mkEsc(nm[1].name)}" onclick="opOpen(this.dataset.n)" role="button" title="Voir la composition de ${nm[1].name}"` : ''}><div class="cr">${nm[1].em}</div>${rc(r1, r0)}<b>${nm[1].name}</b></div></div>${up.length ? `<div class="nxu"><div class="mu" style="text-transform:uppercase;font-size:11px">Prochains adversaires</div>${up.join('')}</div>` : ''}</div>`;
   } else nxt = '<div class="mu">Saison terminée : consultez le classement et lancez la Coupe.</div>';
   const inst = [
       ['Stade', S.st + '/5', S.st / 5],
@@ -16122,6 +17682,13 @@ const ACC = {
   'Vortex': '#e4338f',
   Technodroids: '#a9bccf',
   'Comet': '#d65cff',
+  Quasars: '#ffc83d',
+  Echoes: '#c58bff',
+  Nocturnes: '#7c8cff',
+  Cumulus: '#9fb4d9',
+  Magmas: '#ff7a1f',
+  Titans: '#d98a45',
+  Mirage: '#e8b04a',
 };
 // COULEURS DES MAILLOTS de chaque équipe : [couleur principale, couleur secondaire]. Modifier ici
 // pour changer les couleurs d'une équipe.
@@ -16140,6 +17707,13 @@ const PAL = {
     Cyclopes: ['#ffffff', '#d71921'],
     Technodroids: ['#07242e', '#ceb524'],
     'Comet': ['#5b2fc9', '#ffb703'],
+    Quasars: ['#12122b', '#ffc83d'],
+    Echoes: ['#6a45c8', '#ff8fd0'],
+    Nocturnes: ['#2a1b4a', '#c9ccd8'],
+    Cumulus: ['#5f6b82', '#ffd23f'],
+    Magmas: ['#1c1612', '#ff7a1f'],
+    Titans: ['#5a5f6b', '#c97a3a'],
+    Mirage: ['#d9a441', '#7a3b1d'],
   },
   hx = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)),
   rh = (a) =>
@@ -16198,6 +17772,7 @@ function palette(P) {
     '--onac2':
       cr(ens(cand[1][0], sb, 3), '#0b0f1a') > cr(ens(cand[1][0], sb, 3), '#ffffff') ? '#0b0f1a' : '#ffffff',
     '--ok': '#3ddc97',
+    '--bgg': `linear-gradient(135deg, ${mx(base, '#05070d', 0.8)} 0%, ${bg} 55%, ${bg} 72%, ${mx(base === D ? X : D, '#05070d', 0.84)} 100%)`,
   };
 }
 // Applique le thème de couleurs et la taille du texte à la page.
@@ -16222,6 +17797,7 @@ function theme() {
         '--ok',
         '--ac2',
         '--onac2',
+        '--bgg',
       ],
       P =
         S && S.teams && !V.menu && !V.ed && !V.hv && !V.nth ? PAL[me().name] || ['#4b3fd9', '#ffb703'] : null;
@@ -16248,21 +17824,32 @@ const PL = {
     'Vortex': 'Kaldor',
     Lightnings: 'Xzion',
     Wambas: 'Wamba Prime',
-    Rykers: 'Rykhar',
-    Xenons: 'Xéna',
+    Rykers: 'Unadar',
+    Xenons: 'Archipel Xenon',
     Pirates: 'Pirates',
-    Elektras: 'Électra',
-    Cyclopes: 'Cyclos',
+    Elektras: 'Hektonïa',
+    Cyclopes: 'Cyclopia',
     Technodroids: 'Technoïd',
     'Comet': 'Vega',
+    Quasars: 'Hélion',
+    Echoes: 'Lyrrhia',
+    Nocturnes: 'Ombra',
+    Cumulus: 'Xzion',
+    Magmas: 'Unadar',
+    Titans: 'Kéthros',
+    Mirage: 'Sahélis',
   },
   planet = (n) => PL[n] || n;
 // COMPATIBILITÉ FLUIDE entre un joueur et une équipe (1 = parfaite).
 // Particularités de Fluide selon l'origine : « multi » = Paradisia (le multifluide, composant de tous les
 // fluides : compatible à 100 % avec tout), « none » = Pirates (aucun fluide, donc aucune compatibilité).
+// Le Souffle d'Akillian s'éveille chez les Tigres Rouges à partir de la saison 2.
+const trSouffle = () => ((typeof S == 'object' && S && S.season) || 1) >= 2,
+  fxOf = (n) => (n == 'Tigres Rouges' && trSouffle() && FX['Snow Kids'] ? FX['Snow Kids'] : FX[n]);
 function fluK(p) {
   try {
     const pl = planet(p.og || '');
+    if (p.og == 'Tigres Rouges' && !trSouffle()) return 'none';
     return pl == 'Paradisia' ? 'multi' : pl == 'Pirates' ? 'none' : '';
   } catch (e) {
     return '';
@@ -16271,8 +17858,10 @@ function fluK(p) {
 function compat(p, tn) {
   const og = p.og || tn;
   if (fluK(p) == 'multi') return 100;
+  if (og == 'Tigres Rouges' && tn != 'Tigres Rouges' && !trSouffle()) return 0;
+  if (og == 'Tigres Rouges' && trSouffle() && planet(tn) == 'Akillian') return 100;
   if (fluK(p) == 'none') return planet(og) == planet(tn) ? 100 : 0;
-  if (og == tn || (TN.some((x) => x[0] == tn) && planet(og) == planet(tn))) return 100;
+  if (og == tn || ((TN.some((x) => x[0] == tn) || NEWT.some((x) => x.n == tn)) && planet(og) == planet(tn))) return 100;
   if (p.cp && p.cp[tn] != null) return p.cp[tn];
   let h = 0;
   for (const c of p.n + tn) h = (h * 31 + c.charCodeAt(0)) % 997;
@@ -16335,10 +17924,10 @@ function join(p, t) {
 function fluSec(p, t) {
   const og = p.og || (t ? t.name : '?');
   return (
-    `<h2>Origine et Fluide</h2><div>Planète : <b>${planet(og)}</b> · Fluide d’origine : <b>${fluK(p) == 'multi' ? 'Multifluide (compatible avec tous les Fluides)' : fluK(p) == 'none' ? 'Aucun (les Pirates n’ont pas de Fluide ; compensés par plus de physique, d’endurance et de détermination)' : (FX[og] || {}).n || '—'}</b></div>${p.nz ? `<div style="color:#d33"><b>${p.nz.x ? '🛌 Rejet sévère' : '🤢 Nausées'}</b> : rejet du Fluide de l’équipe${p.nz.x && p.inj ? ', incapable de jouer encore ' + p.inj + ' match(s)' : ''}, adaptation dans ~${Math.ceil(p.nz.l)} match(s)</div>` : '<div class="mu">État : 🙂 à l’aise avec le Fluide de son équipe</div>'}<details class="dd" style="margin-top:4px"><summary class="mu">▸ Compatibilité avec chaque Fluide (votre équipe : ${t ? compat(p, t.name) + ' %' : '—'})</summary><div class="fc">` +
+    `<h2>Origine et Fluide</h2><div>Planète : <b>${planet(og)}</b> · Fluide d’origine : <b>${fluK(p) == 'multi' ? 'Multifluide (compatible avec tous les Fluides)' : fluK(p) == 'none' ? (p.og == 'Tigres Rouges' ? 'Aucun (le Souffle d’Akillian ne se manifeste pas encore chez les Tigres Rouges ; compensé par leurs bottes cybernétiques)' : 'Aucun (les Pirates n’ont pas de Fluide ; compensés par plus de physique, d’endurance et de détermination)') : (FX[og] || {}).n || '—'}</b></div>${p.nz ? `<div style="color:#d33"><b>${p.nz.x ? '🛌 Rejet sévère' : '🤢 Nausées'}</b> : rejet du Fluide de l’équipe${p.nz.x && p.inj ? ', incapable de jouer encore ' + p.inj + ' match(s)' : ''}, adaptation dans ~${Math.ceil(p.nz.l)} match(s)</div>` : '<div class="mu">État : 🙂 à l’aise avec le Fluide de son équipe</div>'}<details class="dd" style="margin-top:4px"><summary class="mu">▸ Compatibilité avec chaque Fluide (votre équipe : ${t ? compat(p, t.name) + ' %' : '—'})</summary><div class="fc">` +
     T.map((x) => {
       const c = compat(p, x[0]);
-      return `<div class="row" style="padding:2px 0;${t && x[0] == t.name ? 'font-weight:800' : ''}"><span class="nm">${x[2]} ${(FX[x[0]] || {}).n || x[0]}</span><span class="bar" style="width:60px"><i style="width:${c}%"></i></span><b style="width:38px;text-align:right">${c}%</b></div>`;
+      return `<div class="row" style="padding:2px 0;${t && x[0] == t.name ? 'font-weight:800' : ''}"><span class="nm">${x[2]} ${(fxOf(x[0]) || {}).n || x[0]}</span>${gg(c, { size: 44, fs: 34, c: '#b78bff', tt: 'Compatibilité : ' + c + ' %' })}</div>`;
     }).join('') +
     '</div></details>'
   );
@@ -16399,7 +17988,7 @@ function pfTrend(p) {
 function profBox() {
   const f = V.pf;
   if (!f) return '';
-  const p = f.k == 'sq' ? me().sq[f.i] : f.k == 'mk' ? S.mkt[f.i] : f.k == 'lo' ? lop(f.i) : f.k == 'nm' ? plIndex().get(f.i) : f.k == 'lt' ? (() => { const [a, n] = String(f.i).slice(1).split('|'); return ((S.teams[+a] || {}).sq || []).find((x) => x.n == n); })() : f.k == 'db' ? (dbPool().find(([x]) => x.n == f.i) || [])[0] : V.ep[f.i];
+  const p = f.k == 'sq' ? me().sq[f.i] : f.k == 'mk' ? S.mkt[f.i] : f.k == 'nv' ? NAV[f.i] : f.k == 'lo' ? lop(f.i) : f.k == 'nm' ? plIndex().get(f.i) : f.k == 'lt' ? (() => { const [a, n] = String(f.i).slice(1).split('|'); return ((S.teams[+a] || {}).sq || []).find((x) => x.n == n); })() : V.ep[f.i];
   if (!p) return '';
   ensure(p);
   const at = attrs(p),
@@ -16431,9 +18020,9 @@ function profBox() {
     tile(
       'Disponibilité',
       'pfsu',
-      `<div class="pfcd"><i class="cy"></i><i class="cr2"></i></div>`,
+      `<div class="pfcd"><i class="cy" style="background:#ff8a3b"></i></div>`,
       avail,
-      `<div class="pfl mu">${yc} jaune${yc > 1 ? 's' : ''} · ${rc} rouge${rc > 1 ? 's' : ''}</div>`,
+      `<div class="pfl mu">${yc + rc + (st.ex || 0)} exclusion${yc + rc + (st.ex || 0) > 1 ? 's' : ''}</div>`,
     ) +
     `</div>`;
   const attrCard = `<div class="pk"><div class="pkt"><b>Attributs</b>${hp('pfa')}</div><div class="pfa3">${grp('Technique', [1, 2, 3, 5])}${grp('Physique', [0, 6, 8])}${grp('Mental', [4, 7])}</div></div>`;
@@ -16468,9 +18057,9 @@ function profBox() {
     p.age <= 21 ? 'Jeune talent' : p.age <= PTA ? 'En développement' : p.age <= 30 ? 'Au sommet' : 'Vers le déclin',
     trend = `<div class="pk"><div class="pkt"><b>Tendance de développement</b>${hp('pfd')}</div><div class="pfgw">${pfTrend(p)}<div class="pf2c"><div><span class="mu">Développement</span><b>${dev}</b></div><div><span class="mu">Note actuelle</span><b>${p.o}</b></div><div><span class="mu">Potentiel</span><b>${p.pt && p.age <= 26 ? p.o + ' – ' + Math.max(p.pt, p.o) : '—'}</b></div></div></div></div>`;
   const mg = (h) => (sq && h ? `<div class="pk pfm3">${h}</div>` : ''),
-    mgT = mg(trainSec(p, f.i)),
-    mgR = mg(roleSec(p, f.i)),
-    mgC = mg(capSec(p, f));
+    mgT = sq ? mg(trainSec(p, f.i)) : '',
+    mgR = sq ? mg(roleSec(p, f.i)) : '',
+    mgC = sq ? mg(capSec(p, f)) : '';
   const fl = `<details class="pk dd" open><summary><b>Origine et Fluide : compatibilité avec chaque équipe</b></summary>${fluSec(p, f.k == 'ed' ? null : me())}</details>`;
   // Colonne de gauche.
   const r1 = rolePick(p, 're'),
@@ -16486,7 +18075,7 @@ function profBox() {
     ic = (n, l, v) => `<div class="pfs">${pfIc(n)}<span>${l}</span><b>${v}</b></div>`,
     stats =
       `<div class="pk"><div class="pkt"><b>Perfs récentes</b>${hp('pfp')}</div><div class="pfrp">${[0, 1, 2, 3, 4].map((i) => `<span class="${rp[i] != null ? 'ok' : ''}">${rp[i] != null ? rp[i].toFixed(1) : '–'}</span>`).join('')}</div><div class="pfl">Note moyenne : <b>${avg ?? '–'}</b></div></div>` +
-      `<div class="pk"><div class="pkt"><b>Statistiques de la saison</b>${hp('pfs')}</div>${ic('team', 'Apparitions', p.mp || 0)}${ic('ball', 'Buts', p.g || 0)}${ic('swap', 'Passes décisives', st.a || 0)}${ic('target', 'Tirs cadrés', (st.ot || 0) + ' / ' + (st.sh || 0))}${p.p == 'GK' ? ic('glove', 'Arrêts', st.sv || 0) : ''}${p.p == 'GK' || p.p == 'DEF' ? ic('shield', 'Sans but encaissé', st.cs || 0) : ''}${ic('medal', 'Homme du match', st.mm || 0)}<div class="pfs"><i class="pfcc cy"></i><span>Cartons jaunes</span><b>${yc}</b></div><div class="pfs"><i class="pfcc cr2"></i><span>Cartons rouges</span><b>${rc}</b></div></div>` +
+      `<div class="pk"><div class="pkt"><b>Statistiques de la saison</b>${hp('pfs')}</div>${ic('team', 'Apparitions', p.mp || 0)}${ic('ball', 'Buts', p.g || 0)}${ic('swap', 'Passes décisives', st.a || 0)}${ic('target', 'Tirs cadrés', (st.ot || 0) + ' / ' + (st.sh || 0))}${p.p == 'GK' ? ic('glove', 'Arrêts', st.sv || 0) : ''}${p.p == 'GK' || p.p == 'DEF' ? ic('shield', 'Sans but encaissé', st.cs || 0) : ''}${ic('medal', 'Homme du match', st.mm || 0)}<div class="pfs"><i class="pfcc cy" style="background:#ff8a3b"></i><span>Exclusions</span><b>${yc + rc + (st.ex || 0)}</b></div></div>` +
       (tt ? `<div class="pk">${tt.replace(/^<h2>Titres<\/h2>/, '<div class="pkt"><b>Titres</b></div>')}</div>` : '');
   const shirt = `<div class="pk pfsh">${jersey(kitOf(T0), pnum(T0, p), p.n, 110)}<div class="pfl">Numéro de maillot : <b>${pnum(T0, p)}</b></div></div>`;
   return `<div class="pfm" onclick="V.pf=null;render()"><div class="pfc${p.pr ? ' prs' : p.c ? ' chr' : ''}" style="--pc:${pcol}" onclick="event.stopPropagation()"><div class="pfh">${photo(p)}<div style="flex:1 1 auto;min-width:0"><div class="pfn">${p.c ? '★ ' : ''}<span class="${p.pr ? 'prn' : p.c ? 'chn' : ''}">${p.n}</span>${fp(p)}${p.nz ? ' ' + pfIc('sick') : ''}</div><div class="pfch"><span class="chp" style="background:var(--pc);color:#071016">${PN}</span>${tm ? `<span class="chp">${tm.name}</span>` : ''}<span class="chp" title="${FTN[foot(p)]}">${footIc(p)}${FTN[foot(p)]}</span><span class="chp">${p.age} ans</span><span class="chp">${planet(og)}</span>${p.inj ? `<span class="chp" style="background:#d33;color:#fff">${pfIc('warn')}indisponible ${p.inj} j.</span>` : ''}${p.ln ? `<span class="chp">${pfIc('loan')}prêt</span>` : ''}</div></div>${tm ? `<div class="pft" title="${tm.name}">${tm.em}</div>` : ''}<div class="pfv"><span>${pfIc('coin')}${price(p)}</span><span class="mu">${sal(p)} / match · ${p.ct} an${p.ct > 1 ? 's' : ''}</span></div><div class="pfrg"><div><span>Général</span><div class="pfo">${p.o}</div>${xpB(p, 'h')}</div><div><span>Potentiel</span><div class="pfo pt">${p.pt && p.age <= 26 ? p.pt : '—'}</div></div></div><button class="pfx" onclick="V.pf=null;V.pn='';render()" aria-label="Fermer">✕</button></div><div class="pfsc"><div class="pf2"><div class="pc1">${left}${mgT}${mgC}</div><div class="pc2">${tiles}${attrCard}<div class="pf2r"><div class="pc2s">${infoCard}${trend}</div><div class="pc2s">${contrat}${fl}</div></div></div><div class="pc3">${stats}${shirt}${mgR}</div></div>${V.pn ? `<div style="margin:8px 18px 0"><b>${V.pn}</b></div>` : ''}</div></div></div>`;
@@ -16601,8 +18190,8 @@ function snd(t, b) {
     L = 'galactikleague.gal',
     P = (n, e, i, k) => ({ n, e, i, k });
   let m;
-  if (/Derby/.test(t)) return P('Ligue Galactique · Sécurité', 'securite@' + L, '🔥', '#d33');
-  if (t[0] == '\u200b') return P('Inconnu', 'anonyme@ombre-mail.gal', '❓', '#555');
+  if (/Derby|Classico/.test(t)) return P('Ligue Galactique · Sécurité', 'securite@' + L, '🔥', '#d33');
+  if (t[0] == '\u200b') return P('Monsieur Nether', 'monsieur.nether@ombre-mail.gal', '❓', '#555');
   if (/Offre suspecte/.test(t)) return P('Expéditeur inconnu', 'anonyme@ombre-mail.gal', '❓', '#555');
   if (/Scandale|Amende/.test(t)) return P('Commission de discipline', 'discipline@' + L, '⚖️', '#7a4dd8');
   if (/^Interview/.test(t))
@@ -16642,11 +18231,11 @@ function mSig(s) {
     c = me().name;
   let r,
     tm = null;
-  if (/^Inconnu|^Expéditeur inconnu/.test(n)) return '';
+  if (/^Inconnu|^Monsieur Nether|^Expéditeur inconnu/.test(n)) return '';
   if (/^Conseil d/.test(n)) r = ['Odile Marchand', 'Présidente du conseil d’administration · ' + c];
   else if (/^Service médical/.test(n)) r = ['Dr Haru Okamoto', 'Médecin du club · ' + c];
   else if (/^Centre de formation/.test(n)) r = ['Tiana Roux', 'Directrice de l’académie · ' + c];
-  else if (/Interview/.test(n)) r = ['Léa Vasquez', 'Journaliste sportive · Galactik Post'];
+  else if (/Interview/.test(n)) r = ['Callie Mystic', 'Journaliste · Galactik Post'];
   else if (/^Galactik Post/.test(n)) r = ['La rédaction', 'Galactik Post'];
   else if (/Sécurité/.test(n)) r = ['Direction de la sécurité', 'Ligue Galactique'];
   else if (/^Commission de discipline/.test(n))
@@ -16714,6 +18303,23 @@ function prn(k) {
   V.pn = '';
   render();
 }
+// Sépare le texte d'un mail de ses « résultats » (réponses et décisions ajoutées à la fin).
+function mailSplit(b) {
+  const P = String(b).split(/\n\n(?=→|↩️ Votre réponse)/);
+  return { main: P[0], res: P.slice(1) };
+}
+// Encadré bien visible : choix du joueur et résultat obtenu (vert = favorable, rouge = défavorable).
+function mailRes(t) {
+  const bad = /refus|impossible|insuffisant|retourne|pas répondu|retire son offre|indisponible|complet/i.test(t) || (/[−-]\d/.test(t) && !/\+\d/.test(t));
+  let ch = '',
+    rs = t.replace(/^→ ?/, '');
+  const m = /^↩️ Votre réponse : ([^\n]*)\n([\s\S]*)$/.exec(t);
+  if (m) {
+    ch = m[1];
+    rs = m[2];
+  }
+  return `<div class="mres ${bad ? 'bad' : 'ok'}"><div class="mresh"><span class="mresi">${bad ? '✖' : '✔'}</span><b>Résultat de votre décision</b></div>${ch ? `<div class="mresc"><small>Votre choix</small><span>${ch}</span></div>` : ''}<div class="mresr">${rs}</div></div>`;
+}
 function mailView() {
   const f = V.mf || 'in',
     q = (V.mq || '').toLowerCase(),
@@ -16729,37 +18335,35 @@ function mailView() {
     L = all.filter(
       ([m]) => fl[f](m) && (!q || (m.t + ' ' + F(m).n + ' ' + F(m).e + ' ' + m.b).toLowerCase().includes(q)),
     ),
-    PS = innerHeight < 900 ? 7 : 11,
-    pg = Math.min(V.mp || 0, Math.max(0, Math.ceil(L.length / PS) - 1)),
-    sh = L.slice(pg * PS, pg * PS + PS),
+    sh = L,
     ids = new Set(L.map(([, i]) => i)),
     sel = (V.ms || []).filter((i) => ids.has(i)),
     shIds = sh.map(([, i]) => i),
+    RQ = mailReq(),
+    unrN = all.filter(([m]) => m.u && !m.x).length,
     allOn = shIds.length && shIds.every((i) => sel.includes(i));
-  const side = [
-    ['in', '📥', 'Boîte de réception'],
-    ['unr', '✉️', 'Non lus'],
-    ['star', '⭐', 'Suivis'],
-    ['act', '⚡', 'À traiter'],
-    ['trash', '🗑️', 'Corbeille'],
+  const side = `<select class="mfs" title="Dossier" onchange="V.mf=this.value;V.mp=0;V.ms=[];V.mo=-1;render()">${[
+    ['in', '📥 Boîte de réception'],
+    ['unr', '✉️ Non lus'],
+    ['star', '⭐ Suivis'],
+    ['act', '⚡ À traiter'],
+    ['trash', '🗑️ Corbeille'],
   ]
-    .map(
-      ([k, i, n]) =>
-        `<button class="mf ${f == k ? 'on' : ''}" onclick="V.mf='${k}';V.mp=0;V.ms=[];render()"><span>${i} ${n}</span><b>${cnt(k) || ''}</b></button>`,
-    )
-    .join('');
+    .map(([k, n]) => `<option value="${k}" ${f == k ? 'selected' : ''}>${n}${cnt(k) ? ' (' + cnt(k) + ')' : ''}</option>`)
+    .join('')}</select>`;
   const rows =
     sh
       .map(([m, i]) => {
         const s = F(m);
-        return `<div class="mr ${m.u ? 'u' : ''} ${V.mo === i ? 'sel' : ''} ${sel.includes(i) ? 'chk' : ''}" onclick="mOpen(${i})"><span class="mck ${sel.includes(i) ? 'on' : ''}" onclick="event.stopPropagation();mTog(${i})">${sel.includes(i) ? '✓' : ''}</span><span class="av" style="background:${s.k}">${s.i}</span><div class="mt"><div class="ms"><b>${s.n}</b><span class="mu">${fmtDay(m.dt || 0)}</span></div><div class="mj">${m.u ? '<b>' + m.t + '</b>' : m.t}${m.a ? ' ⚡' : ''}</div><div class="mu mp">${m.b.replace(/\n/g, ' ').slice(0, 70)}</div></div><span class="stz" onclick="event.stopPropagation();mStar(${i})">${m.s ? '⭐' : '☆'}</span></div>`;
+        return `<div class="mr ${m.u ? 'u' : ''} ${V.mo === i ? 'sel' : ''} ${sel.includes(i) ? 'chk' : ''}" onclick="mOpen(${i})"><span class="mdot ${m.u ? 'u' : ''}" title="${m.u ? 'Non lu' : 'Lu'}"></span><span class="mck ${sel.includes(i) ? 'on' : ''}" onclick="event.stopPropagation();mTog(${i})">${sel.includes(i) ? '✓' : ''}</span><span class="av" style="background:${s.k}">${s.i}</span><div class="mt"><div class="ms"><b>${s.n}</b><span class="mu">${fmtDay(m.dt || 0)}</span></div><div class="mj">${m.u ? '<b>' + m.t + '</b>' : m.t}${m.a ? ' ⚡' : ''}${RQ.includes(i) ? ' <span class="mreq">Réponse requise</span>' : ''}${/\n\n(→|↩️ Votre réponse)/.test(m.b) ? ' <span class="mrd">✓ Répondu</span>' : ''}</div><div class="mu mp">${mailSplit(m.b).main.replace(/\n/g, ' ').slice(0, 70)}</div></div><span class="stz" onclick="event.stopPropagation();mStar(${i})">${m.s ? '⭐' : '☆'}</span></div>`;
       })
       .join('') || '<div class="mu" style="padding:16px">Aucun message.</div>';
   const m = S.mail[V.mo],
     s = m && F(m),
-    MN = m ? mailNames(m.b) : { h: '', L: [] },
+    MB = m ? mailSplit(m.b) : { main: '', res: [] },
+    MN = m ? mailNames(MB.main) : { h: '', L: [] },
     pane = m
-      ? `<div class="ctl" style="justify-content:space-between"><button class="mb" onclick="V.mo=-1;render()">← Retour</button><span><button onclick="mUnread(${V.mo})">✉️ Non lu</button> <button onclick="mStar(${V.mo})">${m.s ? '⭐' : '☆'}</button> ${m.x ? `<button onclick="mRestore(${V.mo})">↩ Restaurer</button> <button onclick="mPurge(${V.mo})">❌ Supprimer définitivement</button>` : `<button onclick="mDel(${V.mo})">🗑</button>`}</span></div><h3 style="margin:10px 0 6px;font-size:18px">${m.t}</h3><div class="ctl" style="gap:10px;flex-wrap:nowrap"><span class="av" style="background:${s.k}">${s.i}</span><div><b>${s.n}</b> <span class="mu">&lt;${s.e}&gt;</span><div class="mu">à ${me().name} · ${fmtDay(m.dt || 0)} · J${m.d}</div></div></div><div style="white-space:pre-line;margin:12px 0 8px;line-height:1.5">${MN.h}</div>${MN.L.length ? `<div class="mpl"><div class="mu" style="margin-bottom:4px">${MN.L.length > 1 ? 'Joueurs cités' : 'Joueur cité'}</div><div class="pg${V.vw == 'l' ? ' l' : ''}">${MN.L.map((p, k) => pc(p, '', 'prn(' + k + ')').replace(/prof\('(?:ed|sq|mk|lo)',[^)]*\)/g, 'prn(' + k + ')')).join('')}</div></div>` : ''}${mSig(s)}${m.a ? `<div class="ctl">${m.a.map((a, j) => `<button class="p" onclick="act(${V.mo},${j})">${a[0]}</button>`).join('')}</div>` : ''}${
+      ? `<div class="ctl" style="justify-content:space-between"><button class="mb" onclick="V.mo=-1;render()">← Retour</button><span><button onclick="mUnread(${V.mo})">✉️ Non lu</button> <button onclick="mStar(${V.mo})">${m.s ? '⭐' : '☆'}</button> ${m.x ? `<button onclick="mRestore(${V.mo})">↩ Restaurer</button> <button onclick="mPurge(${V.mo})">❌ Supprimer définitivement</button>` : `<button onclick="mDel(${V.mo})">🗑</button>`}</span></div><h3 style="margin:10px 0 6px;font-size:18px">${m.t}</h3><div class="ctl" style="gap:10px;flex-wrap:nowrap"><span class="av" style="background:${s.k}">${s.i}</span><div><b>${s.n}</b> <span class="mu">&lt;${s.e}&gt;</span><div class="mu">à ${me().name} · ${fmtDay(m.dt || 0)} · J${m.d}</div></div></div><div style="white-space:pre-line;margin:12px 0 8px;line-height:1.5">${MN.h}</div>${MB.res.map(mailRes).join('')}${MN.L.length ? `<div class="mpl"><div class="mu" style="margin-bottom:4px">${MN.L.length > 1 ? 'Joueurs cités' : 'Joueur cité'}</div><div class="pg${V.vw == 'l' ? ' l' : ''}">${MN.L.map((p, k) => pc(p, '', 'prn(' + k + ')').replace(/prof\('(?:ed|sq|mk|lo)',[^)]*\)/g, 'prn(' + k + ')')).join('')}</div></div>` : ''}${mSig(s)}${m.a ? `<div class="ctl">${m.a.map((a, j) => `<button class="p" onclick="act(${V.mo},${j})">${a[0]}</button>`).join('')}</div>` : ''}${
           reps(m).length
             ? `<div class="mu" style="margin-top:10px">↩️ Répondre :</div><div class="ctl">${reps(m)
                 .map(([l, k]) => `<button onclick="reply(${V.mo},'${k}')">${l}</button>`)
@@ -16767,7 +18371,7 @@ function mailView() {
             : ''
         }`
       : '<div class="mu" style="padding:30px;text-align:center">📬 Sélectionnez un message pour le lire.</div>';
-  return `<div class="card wide mbox ${m ? 'open' : ''}"><div class="mtop"><b>📥 Messagerie ${hp('mbox')}</b><input placeholder="🔍 Rechercher dans les messages" value="${V.mq || ''}" onchange="V.mq=this.value;V.mp=0;V.ms=[];render()"><span class="mck ${allOn ? 'on' : ''}" title="Tout sélectionner (page)" onclick="mTogAll([${shIds}])">${allOn ? '✓' : ''}</span>${sel.length ? `<span class="mu"><b>${sel.length}</b> sélectionné${sel.length > 1 ? 's' : ''}</span>${f == 'trash' ? `<button onclick="mSelRestore()">Restaurer (${sel.length})</button><button onclick="mSelPurge()">Supprimer définitivement (${sel.length})</button>` : `<button class="p" onclick="mSelDel()">Supprimer (${sel.length})</button>`}<button onclick="V.ms=[];render()">Annuler</button>` : ''}<span class="mu">${L.length ? pg * PS + 1 + '–' + Math.min(L.length, pg * PS + PS) + ' sur ' + L.length : '0'}</span><button ${pg ? '' : 'disabled'} onclick="V.mp=${pg - 1};V.ms=[];render()">‹</button><button ${(pg + 1) * PS < L.length ? '' : 'disabled'} onclick="V.mp=${pg + 1};V.ms=[];render()">›</button><button onclick="mReadAll()">Tout marquer comme lu</button>${f == 'trash' ? '<button onclick="mEmpty()">Vider la corbeille</button>' : ''}</div><div class="mgrid"><div class="mside">${side}</div><div class="mlist">${rows}</div><div class="mpane">${pane}</div></div></div>`;
+  return `<div class="card wide mbox ${m ? 'open' : ''}">${RQ.length ? `<div class="mgate">✉️ <b>Réponse requise</b> : répondez ${RQ.length > 1 ? 'aux ' + RQ.length + ' mails marqués' : 'au mail marqué'} « Réponse requise » pour pouvoir continuer la partie.</div>` : ''}<div class="mtop"><b>📥 Messagerie ${hp('mbox')}</b>${side}<input placeholder="🔍 Rechercher dans les messages" value="${V.mq || ''}" onchange="V.mq=this.value;V.mp=0;V.ms=[];render()"><span class="mck ${allOn ? 'on' : ''}" title="Tout sélectionner" onclick="mTogAll([${shIds}])">${allOn ? '✓' : ''}</span>${sel.length ? `<span class="mu"><b>${sel.length}</b> sélectionné${sel.length > 1 ? 's' : ''}</span>${f == 'trash' ? `<button onclick="mSelRestore()">Restaurer (${sel.length})</button><button onclick="mSelPurge()">Supprimer définitivement (${sel.length})</button>` : `<button class="p" onclick="mSelDel()">Supprimer (${sel.length})</button>`}<button onclick="V.ms=[];render()">Annuler</button>` : ''}<span class="mu">${L.length} message${L.length > 1 ? 's' : ''}${unrN ? ' · <b class="mnb">' + unrN + ' non lu' + (unrN > 1 ? 's' : '') + '</b>' : ''}</span><button onclick="mReadAll()">Tout marquer comme lu</button>${f == 'trash' ? '<button onclick="mEmpty()">Vider la corbeille</button>' : ''}</div><div class="mgrid"><div class="mlist">${rows}</div><div class="mpane">${pane}</div></div></div>`;
 }
 // Ouvre un message.
 function mOpen(i) {
@@ -16809,7 +18413,10 @@ function mSel() {
 }
 // Met les messages cochés à la corbeille.
 function mSelDel() {
-  mSel().forEach((i) => (S.mail[i].x = 1));
+  const rq = mailReq();
+  mSel().forEach((i) => {
+    if (!rq.includes(i)) S.mail[i].x = 1;
+  });
   V.ms = [];
   V.mo = -1;
   save();
@@ -16834,6 +18441,7 @@ function mSelPurge() {
 }
 // Met un message à la corbeille.
 function mDel(i) {
+  if (mailReq().includes(i)) return;
   S.mail[i].x = 1;
   V.ms = [];
   V.mo = -1;
@@ -16904,11 +18512,36 @@ function reps(m) {
         ['Laisser faire', 'm0'],
       ];
   }
-  if (n == 'Galactik Post' && /^Presse/.test(t))
+  if (n == 'Galactik Post' && /^Presse/.test(t)) {
+    if (PZ.some((x) => x.t == t)) return [];
+    if (/^Presse : démonstration/.test(t))
+      return [
+        ['Rester humble', 'p1'],
+        ['Dédier la victoire aux supporters', 'p3'],
+        ['Afficher ses ambitions', 'p4'],
+      ];
+    if (/^Presse : déroute/.test(t))
+      return [
+        ['Assumer la défaite', 'p5'],
+        ['Protéger les joueurs', 'p6'],
+        ['Contre-attaquer', 'p2'],
+      ];
+    if (/^Presse : promesse tenue/.test(t))
+      return [
+        ['Rester humble', 'p1'],
+        ['Promettre de nouveau la victoire', 'p7'],
+      ];
+    if (/^Presse : promesse non tenue/.test(t))
+      return [
+        ['Assumer son erreur', 'p5'],
+        ['Promettre de se rattraper', 'p8'],
+        ['Contre-attaquer', 'p2'],
+      ];
     return [
       ['Rester diplomate', 'p1'],
       ['Contre-attaquer', 'p2'],
     ];
+  }
   if (n == 'Centre de formation' && /^Centre/.test(t))
     return [
       ['Demander une recrue de plus (300 cr.)', 'f1'],
@@ -16966,6 +18599,27 @@ function reply(i, k) {
       S.conf = Math.max(0, S.conf - 3);
       a = 'La sortie se retourne contre vous : polémique.';
     }
+  } else if (k == 'p3') {
+    S.conf = Math.min(100, S.conf + 1);
+    me().sq.forEach((p) => (p.mo = Math.min(100, (p.mo ?? 60) + 2)));
+    a = 'Les tribunes adorent votre dédicace : l’ambiance est au beau fixe. (Moral +2 · Confiance du conseil +1)';
+  } else if (k == 'p4') {
+    me().sq.forEach((p) => (p.mo = Math.min(100, (p.mo ?? 60) + 3)));
+    S.conf = Math.max(0, S.conf - 1);
+    a = 'Vos ambitions galvanisent le vestiaire, mais le conseil attend désormais des résultats. (Moral +3 · Confiance du conseil −1)';
+  } else if (k == 'p5') {
+    S.conf = Math.min(100, S.conf + 2);
+    a = 'Vous assumez : le conseil apprécie votre lucidité. (Confiance du conseil +2)';
+  } else if (k == 'p6') {
+    me().sq.forEach((p) => (p.mo = Math.min(100, (p.mo ?? 60) + 3)));
+    a = 'Le vestiaire apprécie que vous preniez sa défense. (Moral +3)';
+  } else if (k == 'p7') {
+    S.pm = 1;
+    me().sq.forEach((p) => (p.mo = Math.min(100, (p.mo ?? 60) + 1)));
+    a = 'Nouveau pari : vous promettez encore la victoire au prochain match. (Pari sur la victoire · Moral +1)';
+  } else if (k == 'p8') {
+    me().sq.forEach((p) => (p.mo = Math.min(100, (p.mo ?? 60) + 2)));
+    a = 'Vous promettez de vous rattraper : le groupe se remobilise. (Moral +2)';
   } else if (k == 'f1') {
     if (sqN(me()) >= 15) a = 'Effectif complet (15 joueurs).';
     else if (S.cash >= 300) {
@@ -16989,17 +18643,8 @@ function mReadAll() {
 function menuView() {
   const au = slotMeta('gmauto'),
     has = !!S;
-  const hero = `<div class="mc hero" onclick="${has ? 'V.menu=0;render()' : 'menuNew()'}"><div class="tx"><h2>${has ? 'Continuer la carrière' : 'Commencer une nouvelle carrière'}${hp(has ? 'm_cont' : 'm_new')}</h2><p>${has ? me().em + ' ' + me().name + ' · saison ' + S.season + ' · journée ' + Math.min(S.md + 1, S.fx.length) + '/' + S.fx.length : 'Dirigez un club de la Galactik League, la sélection d’une planète dans la Galactik Cup, ou les deux.'}</p></div></div>`;
-  const ban = has
-    ? `<div class="bn" onclick="menuNew()"><div><b>🆕 Nouvelle carrière</b><div style="opacity:.85;font-size:14px">Votre partie en cours est sauvegardée automatiquement.</div></div><b>›</b></div>`
-    : au
-      ? `<div class="bn" onclick="slotAct('l',0)"><div><b>▶ Reprendre la sauvegarde auto</b><div style="opacity:.85;font-size:14px">${au.t} · saison ${au.sn} · journée ${au.md + 1} · ${au.dt}</div></div><b>›</b></div>`
-      : `<div class="bn" style="cursor:default"><div><b>🌌 ${mkU() ? '15 clubs · 30' : '14 clubs · 26'} journées · Coupe de la Ligue</b><div style="opacity:.85;font-size:14px">Fluides, prêts, mercato, sponsors, débats du conseil…</div></div></div>`;
-  const pr = V.pr
-    ? `<div class="mo" onclick="V.pr=0;render()"><div class="card" style="max-width:440px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">⚙️ Préférences</b><div class="row"><span class="nm">Affichage des joueurs</span><select onchange="V.vw=this.value;try{localStorage.setItem('gmvw',V.vw)}catch(e){}render()"><option value="c" ${V.vw != 'l' ? 'selected' : ''}>Cartes</option><option value="l" ${V.vw == 'l' ? 'selected' : ''}>Liste</option></select></div><div class="row"><span class="nm">Événements de scénario (nouvelles parties)</span><input type="checkbox" ${V.evt !== 0 ? 'checked' : ''} onchange="V.evt=this.checked?1:0"></div><div class="row"><span class="nm">Difficulté (nouvelles parties)</span><select onchange="V.df=+this.value">${['Facile', 'Normal', 'Difficile'].map((n, i) => `<option value="${i}" ${(V.df ?? 1) == i ? 'selected' : ''}>${n}</option>`).join('')}</select></div><div class="row"><span class="nm">Interface aux couleurs du club</span><input type="checkbox" ${V.nth ? '' : 'checked'} onchange="V.nth=!this.checked;theme()"></div><div class="ctl" style="margin-top:10px"><button class="p" onclick="V.pr=0;render()">Fermer</button></div></div></div>`
-    : '';
   const nw = V.nw
-    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Tactique en match</b> : le bouton « ⚙ Tactique » ouvre, pendant la pause, le terrain, les remplaçants, les instructions et les rôles. Vous réorganisez l’équipe avant de relancer le match.</li><li><b>Réserve</b> : jusqu’à 15 joueurs en plus de l’effectif, ni titulaires ni remplaçants, absents des matchs. Ils se placent comme titulaires ou remplaçants dans la tactique hors match et peuvent être prêtés.</li><li><b>Base de joueurs</b> : un moteur de recherche dans Transferts pour consulter la fiche de n’importe quel joueur de la partie (nom, poste, origine, club, note). Consultation seule, aucun achat.</li><li><b>Match plus lisible</b> : le commentaire est limité à 7 lignes (les anciens messages disparaissent un par un) et le bouton « Gérer l’équipe » mène aux joueurs à tout moment. Le pressing devient la « ligne d’engagement du pressing ».</li><li><b>Succès expliqués</b> : au survol, les balles, titres et décorations de maillot indiquent comment les débloquer.</li><li><b>Fluides propres à chaque origine</b> : les joueurs de Paradisia ont le multifluide, composant de tous les Fluides, et sont donc compatibles à 100 % avec toutes les équipes. Les Pirates n’ont aucun Fluide : pas de rejet ni de nausées, mais aucune compatibilité avec les autres Fluides. Pour compenser, ils sont plus physiques, plus endurants et plus déterminés, et jouent avec un peu plus de rage.</li><li><b>Notifications en couleurs</b> : chaque type de notification a sa couleur (mails, musique, déblocages, manager, sauvegarde automatique, système).</li><li><b>Portraits réactivés</b> : les photos de profil de toutes les planètes sont de retour, et les écrans de but, d’arrêt et de Fluide retrouvent leur grande taille.</li><li><b>Hauteur et côté</b> : chaque joueur de champ se place plus haut ou plus bas (deux crans) et légèrement à gauche ou à droite (un cran), avec un vrai effet sur le match.</li><li><b>7 formations</b> : toutes les répartitions de 6 joueurs de champ, avec au moins 1 et au plus 3 joueurs par poste.</li><li><b>Sélection plus simple</b> : un clic dans le vide ou la touche Échap désélectionne le joueur.</li><li><b>Sponsors et mails</b> : un contrat ne dépasse plus sa durée et la liste des mails n’a plus de lignes superposées.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
+    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Gestion du club en page web</b> : l’onglet est présenté comme un site : barre d’adresse, bandeau aux couleurs et au logo de votre club, puis les rubriques Match (stade, prix du billet), Sponsors et Boutique, chacune avec ses illustrations. Les coûts et les revenus ne changent pas.</li><li><b>Boutique aux couleurs du club</b> : maillots, écharpes, mugs et posters reprennent les couleurs du maillot et le logo de votre club. Le fond des images est noir, ou clair si le club porte du noir.</li><li><b>Logos des sponsors</b> : les 8 sponsors (Nova Corp, Technoid Inc., Comet Cola, Orion Bank, Zéta Motors, Vega Foods, Plasma Drinks, Akillian Dairy) ont chacun leur logo, dans vos sponsors et dans les offres du moment.</li><li><b>Staff en encadrés</b> : dans Transferts, l’onglet Staff sépare Entraîneur, Kiné, Analyste et Centre de formation, chacun avec son pictogramme, sa jauge de niveau et son bouton d’amélioration. Le bouton « Améliorer le centre » de la Formation y mène directement.</li><li><b>Historique des offres</b> : l’encadré Historique de l’onglet Offres a une hauteur limitée et défile à l’intérieur.</li><li><b>Menu principal compact</b> : les tuiles s’adaptent à la hauteur de l’écran (PC, tablette, mobile) : plus besoin de défiler. Les pastilles (clubs, planètes…) et la mention de projet de fans tiennent sur une seule ligne.</li><li><b>Contraste élevé activé par défaut</b> : les textes secondaires et les bordures sont renforcés dès le départ ; vous pouvez le couper dans les Paramètres.</li><li><b>Correction</b> : les cartes de joueurs affichées dans les mails (« Joueur cité ») s’affichent de nouveau correctement.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
     : '';
   const ins = V.ins
     ? `<div class="mo" onclick="V.ins=0;render()"><div class="card" style="max-width:460px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">📥 Télécharger et installer sur PC</b><p class="mu">Deux façons de jouer hors du navigateur par défaut :</p><p><b>1. Télécharger</b> : un dossier à extraire, avec un lanceur Windows.</p><div class="ctl"><button class="p" onclick="pcDl()">⬇ Télécharger pour PC (.zip)</button>${PWA ? '<button onclick="pwaI();V.ins=0;render()">Installer maintenant</button>' : ''}</div><p class="mu">${V.pcm || 'Le dossier contient le jeu et un lanceur Windows qui l’ouvre dans sa propre fenêtre (Edge ou Chrome), sans toucher à votre navigateur par défaut.'}</p><p><b>2. Installer comme application</b> :</p><ol style="line-height:1.5;padding-left:20px"><li>Ouvrez le jeu dans <b>Chrome</b> ou <b>Edge</b>, directement depuis son lien.</li><li>Cliquez sur l’icône d’installation à droite de la barre d’adresse, ou sur le menu ⋮ puis <b>« Installer Galactik Manager »</b>.</li></ol><p class="mu">Si l’option n’apparaît pas, le navigateur ne la propose pas pour cette page. Firefox et Safari ne permettent pas cette installation sur PC.</p><button onclick="V.ins=0;V.pcm='';render()">Fermer</button></div></div>`
@@ -17010,14 +18655,20 @@ function menuView() {
   const bye = V.bye
     ? `<div class="mo" style="background:#000d"><div class="card" style="max-width:420px;text-align:center"><div style="font-size:44px">👋</div><b style="font-size:20px">À bientôt, manager !</b><p class="mu">${has ? 'Votre partie a été sauvegardée automatiquement. ' : ''}Vous pouvez fermer cet onglet.</p><button class="p" onclick="V.bye=0;render()">Retour au menu</button></div></div>`
     : '';
-  const R = (c, ic, t, d, on, hk) =>
-      `<div class="gxr ${c}" role="button" tabindex="0" onclick="${on}" onkeydown="if(event.key=='Enter')this.click()"><span class="gxo">${ic}</span><span class="gxt"><b>${t}</b>${hk ? hp(hk) : ''}<small>${d}</small></span><span class="gxa">›</span></div>`,
-    main = has
-      ? `<div class="gxp" role="button" tabindex="0" onclick="V.menu=0;render()"><span class="gxs">▶</span><span><b>Continuer la carrière${hp('m_cont')}</b><small>${me().em} ${me().name} · saison ${S.season} · journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length}</small></span></div>`
+  // Tuile du menu : classe de couleur, contenu décoratif, titre, sous-titre, action, aide.
+  const T = (c, x, t, d, on, hk) =>
+      `<div class="gt ${c}" role="button" tabindex="0" onclick="${on}" onkeydown="if(event.key=='Enter')this.click()">${x}<b>${t}${hk ? hp(hk) : ''}</b><small>${d}</small></div>`,
+    O = (ic, t, d, on, hk) =>
+      `<div class="gt gb" role="button" tabindex="0" onclick="${on}" onkeydown="if(event.key=='Enter')this.click()"><span class="gbo">${ic}</span><b>${t}${hk ? hp(hk) : ''}</b><small>${d}</small></div>`,
+    PH = '<span class="ph"></span>',
+    rq = has ? mailReq().length : 0,
+    ur = has ? S.mail.filter((m) => m.u && !m.x).length : 0,
+    cont = has
+      ? T('m c1', `${PH}<span class="bd">${me().em}</span>`, 'Continuer la carrière', `${me().name} · saison ${S.season} · journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length}${rq ? `<br>${rq} mail${rq > 1 ? 's' : ''} à traiter` : ur ? `<br>${ur} non lu${ur > 1 ? 's' : ''}` : ''}`, 'V.menu=0;render()', 'm_cont')
       : au
-        ? `<div class="gxp" role="button" tabindex="0" onclick="slotAct('l',0)"><span class="gxs">▶</span><span><b>Reprendre la sauvegarde auto${hp('m_cont')}</b><small>${au.t} · saison ${au.sn} · journée ${au.md + 1} · ${au.dt}</small></span></div>`
-        : `<div class="gxp" role="button" tabindex="0" onclick="menuNew()"><span class="gxs">★</span><span><b>Nouvelle carrière${hp('m_new')}</b><small>Club de League, sélection de la Cup, ou les deux.</small></span></div>`;
-  return `<div class="mm"><div class="mbg"></div><div class="mw gx"><div class="mh"><h1>GFM</h1><small class="gv">${GV}</small><span class="gxi">${[['V.nw=1', '✨', 'Les nouveautés', 'm_news'], ['V.rm=1', '🚀', 'Roadmap', 'm_road'], ['V.fb=1', '💬', 'Signaler un bug / une idée', 'm_fb'], ...(PWAS() || !PCON ? [] : [['pwaI()', '📥', 'Télécharger / installer sur PC', 'm_inst']]), ['V.stp=1', '⚙️', 'Paramètres', 'm_pref'], ['quit()', '⏻', 'Quitter', 'm_quit']].map(([f, ic, t, k]) => `<button class="gxb" onclick="${f};render()" title="${t}" aria-label="${t}">${ic}<span>${t}</span></button>`).join('')}</span></div>${main}<div class="gxl">${has || au ? R('c0', '🆕', 'Nouvelle carrière', 'Votre partie en cours est sauvegardée automatiquement.', 'menuNew()', 'm_new') : ''}${R('c1', '📂', 'Charger une partie', 'Vos 5 emplacements et la sauvegarde automatique.', "V.sv=1;V.sn='';render()", 'm_load')}${R('c2', '🛠️', 'Éditeur de mods', 'Équipes, joueurs, Fluides, couleurs et compétitions.', 'V.menu=0;V.ed=1;V.et=null;render()', 'm_ed')}${R('c3', '❓', 'Tutoriel', 'Effectif, tactique, Fluides, finances.', 'V.hv=1;render()', 'm_tuto')}${R('c4', '🎓', 'Visite guidée', '14 étapes pour découvrir l’interface.', 'menuTour()', 'm_tour')}${R('c5', '🎬', 'Découvrir la série', 'Nouveau dans l’univers ? Vidéo de @andsboy (14 min, YouTube) pour tout comprendre.', "window.open('https://www.youtube.com/watch?v=3w1j_jVfzYE','_blank','noopener')", 'm_vid')}</div><div class="gxc"><span>${mkU() ? 15 : 14} clubs</span><span>${mkU() ? 15 : 14} planètes</span><span>2 compétitions</span><span>7 contre 7</span></div><div class="gxw"><b>Projet de fans non officiel</b> · gratuit et sans aucun but lucratif · non affilié aux ayants droit de « Galactik Football ».</div><div class="gxf">${legLinks()}</div></div>${V.pr ? '' : ''}${nw}${rmb}${ins}${bye}</div>`;
+        ? T('m c1', `${PH}<span class="bd">▶</span>`, 'Reprendre la sauvegarde auto', `${au.t} · saison ${au.sn} · journée ${au.md + 1} · ${au.dt}`, "slotAct('l',0)", 'm_cont')
+        : T('m c1 off', `${PH}<span class="bd">–</span>`, 'Continuer la carrière', 'Aucune partie en cours. Lancez une nouvelle carrière.', '', 'm_cont');
+  return `<div class="mm"><div class="mbg"></div><div class="mw gx gxa2"><div class="mh"><h1>GFM</h1><small class="gv">${GV}</small><span class="gxi">${[['V.nw=1', '✨', 'Les nouveautés', 'm_news'], ['V.rm=1', '🚀', 'Roadmap', 'm_road'], ['V.fb=1', '💬', 'Signaler un bug / une idée', 'm_fb'], ...(PWAS() || !PCON ? [] : [['pwaI()', '📥', 'Télécharger / installer sur PC', 'm_inst']]), ['V.stp=1', '⚙️', 'Paramètres', 'm_pref'], ['quit()', '⏻', 'Quitter', 'm_quit']].map(([f, ic, t, k]) => `<button class="gxb" onclick="${f};render()" title="${t}" aria-label="${t}">${ic}<span>${t}</span></button>`).join('')}</span></div><div class="mtg">${cont}${T('m c2', `${PH}<span class="bd">+</span>`, 'Nouvelle carrière', mkU() ? '15 clubs · 15 planètes' : '14 clubs · 14 planètes', 'menuNew()', 'm_new')}${T('m ch', '', 'Charger une partie', '5 emplacements et sauvegarde automatique', "V.sv=1;V.sn='';render()", 'm_load')}${T('n md', '', 'Éditeur de mods', 'Équipes, joueurs, Fluides, couleurs', 'V.menu=0;V.ed=1;V.et=null;render()', 'm_ed')}${T('n tu', '', 'Tutoriel', 'Effectif, tactique, Fluides, finances', 'V.hv=1;render()', 'm_tuto')}${T('n v', '', 'Visite guidée', TOUR.length + ' étapes avec Clamp', 'menuTour()', 'm_tour')}${O('▶', 'Découvrir la série', 'Vidéo de @andsboy · 14 min · YouTube', "window.open('https://www.youtube.com/watch?v=3w1j_jVfzYE','_blank','noopener')", 'm_vid')}${O('⚙️', 'Paramètres', '', 'V.stp=1;render()', 'm_pref')}${O('⏻', 'Quitter', '', 'quit()', 'm_quit')}</div><div class="gxz"><div class="gxc"><span>${mkU() ? 15 : 14} clubs</span><span>${mkU() ? 15 : 14} planètes</span><span>2 compétitions</span><span>7 contre 7</span></div><div class="gxw"><b>Projet de fans non officiel</b> · gratuit et sans aucun but lucratif · non affilié aux ayants droit de « Galactik Football ».</div><div class="gxf">${legLinks()}</div></div></div>${nw}${rmb}${ins}${bye}</div>`;
 }
 // Bouton « Quitter » : sauvegarde automatique puis message d'au revoir.
 function quit() {
