@@ -2454,7 +2454,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.45.0.0';
+  GV = '1.45.0.3';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -5612,6 +5612,7 @@ const RMP = [
     'Affronter un autre joueur en match 1 contre 1 : votre équipe de sauvegarde contre l’équipe de la sauvegarde d’un autre joueur.',
     'À venir',
   ],
+  ['Onglet Entraînement', 'Un onglet dédié pour organiser l’entraînement de l’équipe et de chaque joueur.', 'À venir'],
   ['Création du manager améliorée', 'Plus d’options pour créer et personnaliser son manager.', 'À venir'],
   ['Intégration Twitch', 'Lier le jeu à Twitch (détails à venir).', 'À venir'],
 ];
@@ -7531,6 +7532,8 @@ function render() {
       const mn0 = document.querySelector('#app .mn'),
         sy = mn0 ? mn0.scrollTop : 0,
         wy = window.scrollY,
+        LS = '.mkl, .mlist, .hscr, .fvtb, .rpev, .tvbd, .pfsc',
+        ls = [...document.querySelectorAll('#app ' + LS.split(', ').join(', #app '))].map((e) => e.scrollTop),
         sk = V.tab + '|' + (V.mo ?? '') + '|' + (V.menu ? 'M' : '');
       $('app').innerHTML = lgR(
         addHelp(v) + svBox() + fwBox() + ttBox() + ldBox() + pcBox() + opBox() + frBox() + mgBox() + fbBox() + legBox(),
@@ -7539,6 +7542,10 @@ function render() {
         const mn1 = document.querySelector('#app .mn');
         if (mn1 && sy) mn1.scrollTop = sy;
         if (wy) window.scrollTo(0, wy);
+        // Listes défilantes internes (recherche de joueurs, historique…) : on reste à la même position.
+        document.querySelectorAll('#app ' + LS.split(', ').join(', #app ')).forEach((e, i) => {
+          if (ls[i]) e.scrollTop = ls[i];
+        });
       }
       V._sk = sk;
       theme();
@@ -15790,16 +15797,11 @@ function autoCtx() {
   } catch (x) {}
 }
 
-// Bouton « Jusqu'au match » : avance jour par jour, s'arrête à un événement important.
+// Bouton « Continuer » : fait passer UN jour à la fois (un clic = un jour), jusqu'au jour du match.
 function skipDays() {
   if (mailGate()) return;
-  const n0 = S.mail.length;
-  let g = 0,
-    e;
-  while ((e = nextEv()) && S.day < e[1] && g++ < 30) {
-    dayTick();
-    if (S.mail.length > n0 && S.mail[0].a) break;
-  }
+  const e = nextEv();
+  if (e && S.day < e[1]) dayTick();
   autoCtx();
   save();
   render();
@@ -17968,7 +17970,7 @@ function pfPitch(p) {
 }
 // Courbe de progression : de la note actuelle vers le potentiel.
 function pfTrend(p) {
-  const prog = p.pt && p.age <= PTA,
+  const prog = p.pt && p.age <= PTA && p.pt > p.o,
     a0 = p.age,
     a1 = prog ? Math.max(a0 + 3, 27) : Math.max(a0 + 3, 30),
     v0 = p.o,
@@ -18054,8 +18056,8 @@ function profBox() {
       : '') +
     `</div>`;
   const dev =
-    p.age <= 21 ? 'Jeune talent' : p.age <= PTA ? 'En développement' : p.age <= 30 ? 'Au sommet' : 'Vers le déclin',
-    trend = `<div class="pk"><div class="pkt"><b>Tendance de développement</b>${hp('pfd')}</div><div class="pfgw">${pfTrend(p)}<div class="pf2c"><div><span class="mu">Développement</span><b>${dev}</b></div><div><span class="mu">Note actuelle</span><b>${p.o}</b></div><div><span class="mu">Potentiel</span><b>${p.pt && p.age <= 26 ? p.o + ' – ' + Math.max(p.pt, p.o) : '—'}</b></div></div></div></div>`;
+    p.pt && p.age <= PTA && p.pt <= p.o ? 'Au sommet' : p.age <= 21 ? 'Jeune talent' : p.age <= PTA ? 'En développement' : p.age <= 30 ? 'Au sommet' : 'Vers le déclin',
+    trend = `<div class="pk"><div class="pkt"><b>Tendance de développement</b>${hp('pfd')}</div><div class="pfgw">${pfTrend(p)}<div class="pf2c"><div><span class="mu">Développement</span><b>${dev}</b></div><div><span class="mu">Note actuelle</span><b>${p.o}</b></div><div><span class="mu">Potentiel</span><b>${p.pt && p.age <= 26 ? (p.pt > p.o ? p.o + ' – ' + p.pt : p.o + ' (atteint)') : '—'}</b></div></div></div></div>`;
   const mg = (h) => (sq && h ? `<div class="pk pfm3">${h}</div>` : ''),
     mgT = sq ? mg(trainSec(p, f.i)) : '',
     mgR = sq ? mg(roleSec(p, f.i)) : '',
