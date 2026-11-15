@@ -3,7 +3,7 @@
 Jeu de gestion **7 contre 7** inspiré de *Galactik Football*. Dirigez un club de la Galactik League, la sélection d’une planète dans la Galactik Cup, ou les deux.
 
 > **Projet de fan, gratuit et sans but lucratif.** Non affilié aux ayants droit de la série.
-> Version actuelle : **1.46.0.0 (bêta)**
+> Version actuelle : **1.48.0.0 (bêta)**
 
 > **Avertissement** : Galactik Manager est un **projet de fans non officiel**, entièrement **gratuit et sans aucun but lucratif**. Il n’est ni affilié, ni approuvé, ni sponsorisé par les ayants droit de « Galactik Football », dont les noms, personnages et univers restent la propriété de leurs titulaires. Pour toute demande de modification ou de retrait, contactez l’auteur.
 
@@ -55,7 +55,7 @@ Consultable dans le jeu (bouton Roadmap) : logos personnalisés pour toutes les 
 
 ## Hébergement (pour le mainteneur)
 
-Fichiers du dépôt : `index.html` (page), `css/` (apparence), `js/` (le jeu), `img/`, `music/`, `version.json`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`, `.nojekyll`.
+Fichiers du dépôt : `index.html` (page), `css/` (apparence), `js/` (le jeu), `img/`, `music/`, `mods/` (équipes supplémentaires, voir mods/LISEZ-MOI.txt), `version.json`, `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png`, `.nojekyll`.
 1. *Settings → Pages* → source : branche `main`, dossier `/ (root)`.
 2. Pour mettre à jour : remplacer les fichiers modifiés (en gardant les dossiers) et valider (*commit*). Le dossier `music/` est géré à part.
 3. Après une mise à jour, un rechargement forcé (Ctrl+F5) peut être nécessaire pour voir la nouvelle version.

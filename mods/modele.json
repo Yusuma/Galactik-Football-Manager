@@ -1,0 +1,26 @@
+{
+  "gfm": "mod",
+  "nom": "Exemple de mod (modèle à copier)",
+  "teams": [
+    {
+      "name": "Les Exemples",
+      "l": 12,
+      "em": "🦊",
+      "k": "smog",
+      "fn": "Brume d'exemple",
+      "fd": "Description du pouvoir spécial de l'équipe.",
+      "c1": "#e8743b",
+      "c2": "#1b1f47",
+      "pl": [
+        { "n": "Alix Modèle", "p": "GK", "o": 62 },
+        { "n": "Bao Test", "p": "DEF", "o": 60 },
+        { "n": "Cléo Essai", "p": "DEF", "o": 58 },
+        { "n": "Dax Démo", "p": "MID", "o": 64 },
+        { "n": "Éli Brouillon", "p": "MID", "o": 61 },
+        { "n": "Fay Exemple", "p": "MID", "o": 59 },
+        { "n": "Gaël Prototype", "p": "ATT", "o": 66 },
+        { "n": "Hana Maquette", "p": "ATT", "o": 63 }
+      ]
+    }
+  ]
+}

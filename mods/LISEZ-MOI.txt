@@ -1,0 +1,16 @@
+DOSSIER « mods » — équipes supplémentaires pour Galactik Manager
+
+1. Dans le jeu : Menu > Éditeur de mods. Créez vos équipes, puis cliquez sur
+   « Télécharger mes équipes (fichier du mod) » : vous obtenez un fichier .json.
+2. Placez ce fichier dans ce dossier (mods).
+3. Ajoutez son nom dans le fichier index.json, par exemple :
+       { "mods": ["mon-mod.json"] }
+4. Rechargez le jeu : les équipes du fichier apparaissent dans le choix des clubs
+   d'une nouvelle carrière (planète de l'équipe = son propre nom, niveau, Fluide, joueurs).
+
+Notes :
+- modele.json est un modèle de fichier à copier : il n'est pas chargé tant qu'il n'est pas listé dans index.json.
+- Le jeu doit être ouvert depuis son lien (hébergement) : depuis un simple fichier local, le dossier n'est pas lu.
+- Une équipe créée dans l'éditeur avec le même nom que celle d'un fichier la remplace.
+- Une partie déjà commencée ne reçoit pas les nouvelles équipes : lancez une nouvelle carrière.
+- Une sauvegarde qui utilise une équipe de mod ne se recharge que si le fichier de ce mod est toujours dans le dossier.

@@ -76,14 +76,6 @@ try {
 } catch (e) {}
 // Contraste élevé : activé par défaut (tant que le joueur n'a pas fait son choix).
 if (A.hc === undefined) A.hc = 1;
-// Active ou désactive une astuce, puis la sauvegarde dans le navigateur.
-const setA = (k) => {
-  A[k] = !A[k];
-  try {
-    localStorage.setItem('gm_a', JSON.stringify(A));
-  } catch (e) {}
-  render();
-};
 
 /* ===== Paramètres ===== */
 
@@ -254,7 +246,7 @@ function musTone(f, t, d, type, v, fc) {
     g = c.createGain();
   o.type = type;
   o.frequency.value = f;
-  let n = g;
+  
   if (fc) {
     const b = c.createBiquadFilter();
     b.type = 'lowpass';
@@ -873,8 +865,7 @@ function sbeClk() {
 // Fin de saison : attribue les titres aux joueurs (meilleur buteur, meilleur passeur…) selon leurs
 // statistiques.
 function rwSeason(teams, K, mine, cx, X) {
-  const R = RW(),
-    y = YR(),
+  const y = YR(),
     ps = [];
   teams.forEach((t) => (t.sq || []).filter(Boolean).forEach((p) => ps.push([p, t])));
   const give = (p, t, k, c) => {
@@ -1658,34 +1649,10 @@ function ballCols(id) {
   return PC ? [mixc(PC[0], 0.35), PC[0]] : BCOL[id];
 }
 function ballSvg(id, s) {
-  const mixc = (h, k) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(h.slice(i, i + 2), 16) * (1 - k) + 255 * k).toString(16).padStart(2, '0')).join(''),
-    TB = TBL[id],
+  const TB = TBL[id],
     PC = TB && (TB[3] || PAL[TB[0]]),
     C = ballCols(id) || ['#fff', '#ccc'],
     u = 'bl' + id + s,
-    pg = (cx, cy, r, rot) =>
-      Array.from({ length: 5 }, (_, i) => {
-        const a = rot + (i * 2 * Math.PI) / 5;
-        return (cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1);
-      }).join(' '),
-    pents = (f) =>
-      `<polygon points="${pg(50, 50, 15, -Math.PI / 2)}" fill="${f}"/>` +
-      [0, 1, 2, 3, 4]
-        .map((i) => {
-          const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5 + Math.PI / 5;
-          return `<polygon points="${pg(50 + 41 * Math.cos(a), 50 + 41 * Math.sin(a), 13, a + Math.PI)}" fill="${f}"/>`;
-        })
-        .join('') +
-      [0, 1, 2, 3, 4]
-        .map((i) => {
-          const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-          const x1 = 50 + 15 * Math.cos(a),
-            y1 = 50 + 15 * Math.sin(a),
-            x2 = 50 + 28 * Math.cos(a),
-            y2 = 50 + 28 * Math.sin(a);
-          return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${f}" stroke-width="2"/>`;
-        })
-        .join(''),
     star = (x, y, r, f) =>
       `<polygon fill="${f}" points="${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         .map((i) => {
@@ -2025,91 +1992,13 @@ const recoT = () => {
 // Bibliothèque d'icônes dessinées en SVG. Pour ajouter une icône : ajouter un <symbol> ici et son
 // emoji dans la table EMJ.
 const SPR =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute"><defs><linearGradient id="gy" gradientUnits="userSpaceOnUse" x1="2" y1="1" x2="22" y2="23"><stop offset="0" style="stop-color:var(--ac,#7c5cff)"/><stop offset="1" style="stop-color:var(--ac2,#e4338f)"/></linearGradient></defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M12 2.5 1.5 12H5v9h5.5v-6h3v6H19v-9h3.5z"/></symbol><symbol id="i-dash" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="8.5" height="10.5" rx="2"/><rect x="13" y="2.5" width="8.5" height="6" rx="2"/><rect x="13" y="10.5" width="8.5" height="11" rx="2"/><rect x="2.5" y="15" width="8.5" height="6.5" rx="2"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5"/><path d="M3 7.5l9 6.5 9-6.5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-clip" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="18" rx="3.5"/><rect x="8" y="1.5" width="8" height="4.5" rx="2"/><path d="M8 12h8M8 16h5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4.2"/><path d="M1 21.5c0-5 3.2-8 8-8s8 3 8 8z"/><circle cx="18" cy="9" r="3" opacity=".7"/><path d="M18.5 14c3 .3 4.8 2.600 4.800 7.500H19c0-3-.4-5.500-1.600-7.200z" opacity=".7"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="17.500" rx="3.5"/><rect x="6.500" y="1.500" width="3" height="5.500" rx="1.500"/><rect x="14.500" y="1.500" width="3" height="5.500" rx="1.500"/><path d="M2.500 10h19" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/><rect x="12.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M2 7.500 7.500 2v3.500H21v4H7.500V13z"/><path d="M22 16.500 16.500 22v-3.500H3v-4h13.500V11z" opacity=".75"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.800"/><path d="M2.500 22c0-6 4-9.500 9.500-9.500S21.500 16 21.500 22z"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 2.500h10v6.500a5 5 0 0 1-10 0z"/><path d="M2.500 4h4v2.200h-1.800c.2 1.800 1 2.800 2.300 3.300V12C4.200 11.400 2.500 8.800 2.500 4zM21.500 4h-4v2.200h1.800c-.2 1.800-1 2.800-2.300 3.300V12c2.800-.6 4.500-3.200 4.500-8z"/><rect x="10.500" y="14" width="3" height="4.500"/><rect x="6.500" y="18" width="11" height="3.500" rx="1.700"/></symbol><symbol id="i-stadium" viewBox="0 0 24 24"><path d="M1.500 10c0-3 4.500-5 10.500-5s10.500 2 10.500 5v8c0 1.500-4.500 3.500-10.500 3.500S1.500 19.500 1.500 18z"/><ellipse cx="12" cy="10.500" rx="6.500" ry="2.600" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M14.800 8.800c-.4-1.200-1.500-1.800-2.800-1.800-1.600 0-2.800.8-2.800 2.100 0 3 5.800 1.500 5.800 4.600 0 1.400-1.300 2.300-3 2.300-1.400 0-2.600-.7-3-2M12 5.500V7M12 17v1.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500" style="fill:#f2f5fa"/><path d="M12 7.200l4 2.900-1.500 4.700h-5L8 10.100z" fill="rgba(0,0,0,.42)"/><path d="M12 7.200V2M16 10.100l5-1.600M14.500 14.800l3 4.200M9.500 14.800l-3 4.200M8 10.100 3 8.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M9 9.500a3 3 0 1 1 4.600 2.500c-1 .7-1.600 1.200-1.600 2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.700" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M3.500 2.500h13l4 4v15h-17z"/><rect x="7" y="2.500" width="9" height="6" fill="rgba(0,0,0,.42)"/><rect x="7" y="13" width="10" height="8.500" rx="1.200" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.800l8.500 3.200v6.200c0 5.200-3.600 9.200-8.500 11-4.900-1.800-8.500-5.800-8.500-11V5z"/><path d="M8 11.800l2.800 2.800L16 9.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bank" viewBox="0 0 24 24"><path d="M12 1.500 1.500 7.500v2.500h21V7.500z"/><rect x="3.500" y="11.500" width="3.500" height="7"/><rect x="10.250" y="11.500" width="3.500" height="7"/><rect x="17" y="11.500" width="3.500" height="7"/><rect x="1.500" y="19.800" width="21" height="3" rx="1.200"/></symbol><symbol id="i-textsz" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 21 9 3h2.200l7 18h-2.600l-1.500-4H6.100L4.600 21zM7 15h5.600L9.800 7.500z"/><path d="M19 8h3M20.500 6.500v3" stroke="rgba(0,0,0,.42)" stroke-width="0" /></symbol><symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M12 1.500a10.500 10.500 0 0 0 0 21z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2.500a7.500 7.500 0 1 0 4.500 13.500l5.200 5.200 2-2-5.200-5.200A7.500 7.500 0 0 0 10 2.500zm0 2.600a4.900 4.900 0 1 1 0 9.800 4.900 4.900 0 0 1 0-9.800z"/></symbol><symbol id="i-import" viewBox="0 0 24 24"><path d="M9.800 2h4.400v7.200h4L12 16 5.800 9.200h4z"/><path d="M2.500 14.500h3.200v4.800h12.600v-4.800h3.200v8H2.500z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M9.800 2.500h4.400v7.300h7.300v4.400h-7.300v7.300H9.800v-7.300H2.500V9.800h7.300z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M5.500 2.500 21 12 5.500 21.500z"/></symbol><symbol id="i-ff" viewBox="0 0 24 24"><path d="M1.500 4 11.500 12 1.500 20zM12 4 22.500 12 12 20z"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="4.500" y="3" width="5.500" height="18" rx="1.800"/><rect x="14" y="3" width="5.500" height="18" rx="1.800"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 1.500c4.200 2.200 6.300 6.200 6.300 11.500l-3 3.200H8.700L5.700 13C5.700 7.700 7.800 3.700 12 1.500z"/><circle cx="12" cy="9.500" r="2.200" fill="rgba(0,0,0,.42)"/><path d="M5.700 13.500 2 18l4.500-1zM18.300 13.500 22 18l-4.500-1zM9.800 18h4.400L12 22.500z" opacity=".8"/></symbol><symbol id="i-fluid" viewBox="0 0 24 24"><path d="M12 2.500a9.500 9.500 0 1 0 9.500 9.500h-3.200A6.300 6.300 0 1 1 12 5.700z"/><path d="M12 8a4 4 0 1 0 4 4h-2.300A1.700 1.700 0 1 1 12 10.300z" opacity=".7"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.800l3.100 6.600 7.200.9-5.300 4.900 1.400 7.100L12 17.800l-6.400 3.500 1.400-7.100L1.700 9.300l7.200-.9z"/></symbol><symbol id="i-band" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="0.500" y="7.500" width="23" height="9" rx="4.500"/><rect x="8" y="7.500" width="8" height="9" fill="rgba(255,255,255,.45)"/><circle cx="11" cy="10.500" r=".9" fill="rgba(0,0,0,.42)"/><circle cx="13" cy="13.500" r=".9" fill="rgba(0,0,0,.42)"/></g></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 1.500c1 4.200 6.500 6.300 6.500 12.300a6.500 6.500 0 0 1-13 0c0-3.200 1.800-4.500 3.300-7.300 1 1 1.400 2.200 1.200 3.600 2-1.800 2.200-5.200 2-8.600z"/></symbol><symbol id="i-footr" viewBox="0 0 24 24"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></symbol><symbol id="i-footl" viewBox="0 0 24 24"><g transform="translate(24 0) scale(-1 1)"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></g></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 3v12.500A3.500 3.500 0 1 0 11 18.500V8l8-2v7.500A3.500 3.500 0 1 0 21 16.500V2z"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="2.500" y="9" width="19" height="12.500" rx="2.500"/><path d="M2.500 4.500 19 2l1.300 4.200L3.800 8.800z"/></symbol><symbol id="i-loan" viewBox="0 0 24 24"><path d="M3.500 12A8.500 8.500 0 0 1 18 6l2.500-2.500v7.500h-7.500l2.700-2.700A5.300 5.300 0 0 0 6.700 12z"/><path d="M20.500 12A8.500 8.500 0 0 1 6 18l-2.500 2.500V13H11l-2.700 2.700A5.300 5.300 0 0 0 17.300 12z" opacity=".75"/></symbol><symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 2h3c0 5 9 6 9 11.500V22h-3c0-5.500-9-6-9-11.500zM18 2h-3c0 5-9 6-9 11.500V22h3c0-5.500 9-6 9-11.500z" fill-rule="evenodd" opacity=".95"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(0 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(135 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(180 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(225 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(270 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.500 1.500 4 14h6.200l-1.200 8.500L20 10h-6.200z"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 1.500c.8 5.500 3.800 8.500 10.500 10.500-6.700 2-9.700 5-10.500 10.500C11.200 17 8.200 14 1.500 12 8.200 10 11.200 7 12 1.500z"/></symbol><symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.800"/><path class="s" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20.500 6.500C23 9 20 15.500 12 19.500 5 23 0.800 21 3.500 17.500"/><ellipse cx="12" cy="12" rx="11" ry="4.200" transform="rotate(-28 12 12)" class="s" stroke-width="1.700"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M7 12.500l3.500 3.500 6.500-7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-cross" viewBox="0 0 24 24"><path d="M4.500 2.500 12 10l7.500-7.500 2 2L14 12l7.500 7.500-2 2L12 14l-7.500 7.500-2-2L10 12 2.500 4.500z"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 2h6l1 2h5v2.500H3V4h5z"/><path d="M4.800 8h14.400l-1 13.500H5.800z"/><path d="M10 11.500v7M14 11.500v7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M2 5.500A2.500 2.500 0 0 1 4.500 3h5l2.500 3h7.500A2.500 2.500 0 0 1 22 8.500v10a2.500 2.500 0 0 1-2.500 2.500h-15A2.500 2.500 0 0 1 2 18.500z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.500" width="16" height="11.500" rx="3"/><path d="M7.500 10.500V7.500a4.500 4.500 0 0 1 9 0v3" class="s" stroke-width="2.600" stroke-linecap="round"/><circle cx="12" cy="16" r="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.200 22.800 21H1.200z" stroke-linejoin="round"/><path d="M12 9v5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.600" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4.500"/><path d="M6 8l4.500 4.500 3-3 4.500 5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-build" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20.500" rx="2.500"/><rect x="7.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M2.500 9.500v5.500h4l9 5.500V4L6.500 9.500z"/><path class="s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" d="M18.500 8.500c2.200 2.200 2.200 5.800 0 8"/></symbol><symbol id="i-case" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14.500" rx="3"/><path d="M8.500 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" class="s" stroke-width="2"/><path d="M2 13h20" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-siren" viewBox="0 0 24 24"><path d="M5.500 18A6.500 6.500 0 0 1 18.500 18z"/><rect x="3.500" y="18" width="17" height="3.500" rx="1.400"/><path class="s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.500v3M3.800 5.200l2 2M20.200 5.200l-2 2"/></symbol><symbol id="i-cross2" viewBox="0 0 24 24"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><rect x="2.500" y="3.500" width="19" height="17" rx="3"/><path d="M6.500 8.500h11M6.500 12.500h11M6.500 16.500h6.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9.500 4.500 2.500 11l7 6.500v-4c5.500 0 9 1.300 11.500 6 0-7-3.800-12.500-11.500-12.500z"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M7.500 14.500c1 2.800 3 4 4.500 4s3.500-1.200 4.500-4" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 15.500c1.200 1.600 2.600 2.200 4 2.200s2.800-.6 4-2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-meh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 16.200h8" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-angry" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.500 7.200l4 2M17.500 7.200l-4 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.600" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="15.400" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><path d="M8 17c1-1.500 2.300-2.200 4-2.200s3 .7 4 2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-sick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.800 9.500l3 1.200-3 1.200M17.200 9.500l-3 1.200 3 1.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.500 16.200c1-1 1.800-1 2.800 0s1.800 1 2.800 0 1.800-1 2.800 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-snow" viewBox="0 0 24 24"><path class="s" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.800v20.400M3.200 6.900l17.600 10.200M3.200 17.100 20.800 6.900M8.800 3.800 12 6l3.200-2.200M8.800 20.200 12 18l3.200 2.200"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.500 14.800A9.500 9.500 0 0 1 9.200 3.500 9.500 9.500 0 1 0 20.500 14.800z"/></symbol><symbol id="i-robot" viewBox="0 0 24 24"><rect x="3.500" y="7.500" width="17" height="13.500" rx="4.500"/><rect x="11" y="3" width="2" height="4.500"/><circle cx="12" cy="2.800" r="1.700"/><circle cx="8.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><path d="M9 18h6" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-palm" viewBox="0 0 24 24"><path d="M11 22.500c0-6.500 1-10 2.200-13.500h1.200c-1.100 3.500-1.800 7-1.800 13.500z"/><path d="M12.800 9C8.800 4.500 4.500 5 2 8.500c3-1 6 0 10.800.5zM12.800 9c0-5.500 4-7.700 8.500-6.500-3.200 1-5.500 3.200-6.500 7zM12.800 9c4-3 8.500-1.500 10 3-3-1.500-6-1.300-9.500.2zM12.800 9c-3.500 1.500-5 5-4 8.500 1.200-3.500 2.700-5.800 5-7.300z"/></symbol><symbol id="i-rock" viewBox="0 0 24 24"><path d="M2.500 18.500 6.800 8l5.200-4.500 6.500 3 3 8.500-4.300 5.500H6.500z"/><path d="M7 9.500l5 3 6-5M12 12.500v7.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-alien" viewBox="0 0 24 24"><path d="M12 2c5.500 0 9.500 4.200 9.500 9.500 0 5.500-4.200 10.500-9.500 10.500S2.500 17 2.500 11.500C2.500 6.200 6.500 2 12 2z"/><ellipse cx="8" cy="11" rx="2.600" ry="1.500" transform="rotate(20 8 11)" fill="rgba(0,0,0,.42)"/><ellipse cx="16" cy="11" rx="2.600" ry="1.500" transform="rotate(-20 16 11)" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-tiger" viewBox="0 0 24 24"><path d="M2.500 3 8 6.200h8L21.500 3v9.500c0 5.500-4 9.500-9.500 9.500S2.500 18 2.500 12.500z"/><path d="M12 7v3M7 8.500l1.500 2M17 8.500l-1.500 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.300" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><circle cx="15.700" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><path d="M10 17.500c1 .8 3 .8 4 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 1.800a9.500 9.500 0 0 0-5.500 17.200v2.700h11V19A9.500 9.500 0 0 0 12 1.800z"/><circle cx="8.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><path d="M10 17.500v2.500M14 17.500v2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-battery" viewBox="0 0 24 24"><rect x="1.500" y="6.500" width="18.500" height="11" rx="3"/><rect x="20.800" y="9.800" width="2" height="4.400" rx="1"/><path d="M12 8.200 8.300 12.500h3l-.8 3.500 3.700-4.500h-3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M0.800 12C3.800 6 7.800 3.800 12 3.800s8.200 2.200 11.200 8.200c-3 6-7 8.200-11.200 8.200S3.800 18 0.800 12z"/><circle cx="12" cy="12" r="4.400" fill="rgba(0,0,0,.42)"/><circle cx="13.200" cy="10.800" r="1.400" fill="#fff"/></symbol><symbol id="i-comet" viewBox="0 0 24 24"><circle cx="16.500" cy="7.500" r="5.500"/><path d="M12.500 10.500 1.800 17.800l4-.8-.9 4.300z" opacity=".85"/><path d="M11.200 12.500 5 22l1-5z" opacity=".5"/></symbol><symbol id="i-cap" viewBox="0 0 24 24"><path d="M12 3 1 9l11 6 9-4.900V17h2V9z"/><path d="M5.500 13v4c0 2 3 4 6.500 4s6.500-2 6.500-4v-4l-6.500 3.500z" opacity=".8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M3 3.500h18V16H10.500L5.500 20.500V16H3z"/><circle cx="8" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="16" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-medal" viewBox="0 0 24 24"><path d="M6.500 1.500h4l1.500 6-3.500 1.500zM17.500 1.500h-4L12 7.500l3.500 1.500z" opacity=".75"/><circle cx="12" cy="15" r="6.500"/><path d="m12 11.300 1.100 2.300 2.500.3-1.800 1.700.5 2.500-2.300-1.300-2.300 1.300.5-2.500-1.800-1.700 2.500-.3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="12" r="7" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="3.800"/><circle cx="12" cy="12" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-glove" viewBox="0 0 24 24"><path d="M6 22v-7.500L3.500 10a1.700 1.700 0 0 1 3-1.600L8 10.500V4.500a1.500 1.500 0 0 1 3 0V3.500a1.500 1.500 0 0 1 3 0V4.500a1.500 1.500 0 0 1 3 0V12l1.200-1.800a1.700 1.700 0 0 1 2.800 1.900L19 17.500V22z"/><path d="M6 19h13" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.600" stroke-linecap="round"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.500 3.500 4.800v6.500c0 5.200 3.600 9.600 8.500 11.200 4.900-1.600 8.500-6 8.500-11.200V4.800z"/><path d="m8.200 12 2.800 2.800 4.800-5.300" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><rect x="2.500" y="12" width="5" height="9.500" rx="1.200"/><rect x="9.500" y="2.500" width="5" height="19" rx="1.200"/><rect x="16.500" y="7.500" width="5" height="14" rx="1.200"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 1.800 2.800 12H8v10h8V12h5.200z"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="8" y="1.500" width="8" height="13" rx="4"/><path d="M4.500 11a7.500 7.500 0 0 0 15 0M12 18.500v3.500M8 22h8" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.500 5.500h11a5 5 0 0 1 5 4.500l.9 5.500a3.300 3.300 0 0 1-5.800 2.600L16.200 16H7.800l-1.400 2.100A3.300 3.300 0 0 1 .6 15.500L1.500 10a5 5 0 0 1 5-4.500z"/><path d="M7.500 8.800v4.400M5.300 11h4.400" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.800" stroke-linecap="round"/><circle cx="16" cy="10" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="18.700" cy="12.300" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dice" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="7.800" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="7.800" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.800 3 12.800A5.800 5.800 0 0 1 12 5.800a5.800 5.800 0 0 1 9 7z"/></symbol><symbol id="i-speaker" viewBox="0 0 24 24"><path d="M2 8.800h4.800L13 3.500v17l-6.200-5.300H2z"/><path d="M16.500 8.300a5 5 0 0 1 0 7.400M19.800 5a9.500 9.500 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="1.500" y="3" width="21" height="14" rx="2.800"/><path d="M8 21h8M12 17.500V21" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bed" viewBox="0 0 24 24"><path d="M1.500 4h2.500v8h16.500a2.500 2.500 0 0 1 2.500 2.500V19h-2.500v-2.500H4V19H1.500z"/><rect x="5.500" y="6.500" width="5.500" height="3.800" rx="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 22.200 2.800 12H8V2h8v10h5.200z"/></symbol></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute"><defs><linearGradient id="gy" gradientUnits="userSpaceOnUse" x1="2" y1="1" x2="22" y2="23"><stop offset="0" style="stop-color:var(--ac,#7c5cff)"/><stop offset="1" style="stop-color:var(--ac2,#e4338f)"/></linearGradient></defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M12 2.5 1.5 12H5v9h5.5v-6h3v6H19v-9h3.5z"/></symbol><symbol id="i-dash" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="8.5" height="10.5" rx="2"/><rect x="13" y="2.5" width="8.5" height="6" rx="2"/><rect x="13" y="10.5" width="8.5" height="11" rx="2"/><rect x="2.5" y="15" width="8.5" height="6.5" rx="2"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5"/><path d="M3 7.5l9 6.5 9-6.5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-clip" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="18" rx="3.5"/><rect x="8" y="1.5" width="8" height="4.5" rx="2"/><path d="M8 12h8M8 16h5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4.2"/><path d="M1 21.5c0-5 3.2-8 8-8s8 3 8 8z"/><circle cx="18" cy="9" r="3" opacity=".7"/><path d="M18.5 14c3 .3 4.8 2.600 4.800 7.500H19c0-3-.4-5.500-1.600-7.200z" opacity=".7"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="17.500" rx="3.5"/><rect x="6.500" y="1.500" width="3" height="5.500" rx="1.500"/><rect x="14.500" y="1.500" width="3" height="5.500" rx="1.500"/><path d="M2.500 10h19" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/><rect x="12.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M2 7.500 7.500 2v3.500H21v4H7.500V13z"/><path d="M22 16.500 16.500 22v-3.500H3v-4h13.500V11z" opacity=".75"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.800"/><path d="M2.500 22c0-6 4-9.500 9.500-9.500S21.500 16 21.500 22z"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 2.500h10v6.500a5 5 0 0 1-10 0z"/><path d="M2.500 4h4v2.200h-1.800c.2 1.800 1 2.800 2.300 3.300V12C4.200 11.400 2.500 8.800 2.500 4zM21.500 4h-4v2.200h1.800c-.2 1.800-1 2.800-2.300 3.300V12c2.800-.6 4.500-3.200 4.500-8z"/><rect x="10.500" y="14" width="3" height="4.500"/><rect x="6.500" y="18" width="11" height="3.500" rx="1.700"/></symbol><symbol id="i-stadium" viewBox="0 0 24 24"><path d="M1.500 10c0-3 4.500-5 10.500-5s10.500 2 10.500 5v8c0 1.500-4.500 3.500-10.500 3.500S1.500 19.500 1.500 18z"/><ellipse cx="12" cy="10.500" rx="6.500" ry="2.600" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M14.800 8.800c-.4-1.200-1.500-1.800-2.800-1.800-1.600 0-2.800.8-2.800 2.100 0 3 5.800 1.500 5.800 4.600 0 1.400-1.300 2.300-3 2.300-1.400 0-2.600-.7-3-2M12 5.500V7M12 17v1.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500" style="fill:#f2f5fa"/><path d="M12 7.200l4 2.900-1.500 4.700h-5L8 10.100z" fill="rgba(0,0,0,.42)"/><path d="M12 7.200V2M16 10.100l5-1.600M14.500 14.800l3 4.200M9.500 14.800l-3 4.200M8 10.100 3 8.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M9 9.500a3 3 0 1 1 4.600 2.500c-1 .7-1.600 1.200-1.600 2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.700" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M3.500 2.500h13l4 4v15h-17z"/><rect x="7" y="2.500" width="9" height="6" fill="rgba(0,0,0,.42)"/><rect x="7" y="13" width="10" height="8.500" rx="1.200" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.800l8.500 3.200v6.200c0 5.200-3.600 9.200-8.500 11-4.900-1.800-8.500-5.800-8.500-11V5z"/><path d="M8 11.800l2.800 2.800L16 9.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bank" viewBox="0 0 24 24"><path d="M12 1.500 1.500 7.500v2.500h21V7.500z"/><rect x="3.500" y="11.500" width="3.500" height="7"/><rect x="10.250" y="11.500" width="3.500" height="7"/><rect x="17" y="11.500" width="3.500" height="7"/><rect x="1.500" y="19.800" width="21" height="3" rx="1.200"/></symbol><symbol id="i-textsz" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 21 9 3h2.200l7 18h-2.600l-1.500-4H6.100L4.600 21zM7 15h5.600L9.800 7.500z"/><path d="M19 8h3M20.500 6.500v3" stroke="rgba(0,0,0,.42)" stroke-width="0" /></symbol><symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M12 1.500a10.500 10.500 0 0 0 0 21z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2.500a7.500 7.500 0 1 0 4.500 13.500l5.200 5.200 2-2-5.200-5.200A7.500 7.500 0 0 0 10 2.500zm0 2.600a4.900 4.900 0 1 1 0 9.800 4.900 4.900 0 0 1 0-9.800z"/></symbol><symbol id="i-import" viewBox="0 0 24 24"><path d="M9.800 2h4.400v7.200h4L12 16 5.800 9.200h4z"/><path d="M2.500 14.500h3.200v4.800h12.600v-4.800h3.200v8H2.500z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M9.800 2.500h4.400v7.300h7.300v4.400h-7.300v7.300H9.800v-7.300H2.500V9.800h7.300z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M5.500 2.500 21 12 5.500 21.500z"/></symbol><symbol id="i-ff" viewBox="0 0 24 24"><path d="M1.500 4 11.500 12 1.500 20zM12 4 22.500 12 12 20z"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="4.500" y="3" width="5.500" height="18" rx="1.800"/><rect x="14" y="3" width="5.500" height="18" rx="1.800"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 1.500c4.200 2.200 6.300 6.200 6.300 11.500l-3 3.200H8.700L5.700 13C5.700 7.700 7.800 3.700 12 1.500z"/><circle cx="12" cy="9.500" r="2.200" fill="rgba(0,0,0,.42)"/><path d="M5.700 13.500 2 18l4.500-1zM18.300 13.500 22 18l-4.500-1zM9.800 18h4.400L12 22.500z" opacity=".8"/></symbol><symbol id="i-fluid" viewBox="0 0 24 24"><path d="M12 2.500a9.500 9.500 0 1 0 9.500 9.500h-3.200A6.300 6.300 0 1 1 12 5.700z"/><path d="M12 8a4 4 0 1 0 4 4h-2.300A1.700 1.700 0 1 1 12 10.300z" opacity=".7"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.800l3.100 6.600 7.200.9-5.300 4.900 1.400 7.100L12 17.800l-6.400 3.500 1.400-7.100L1.700 9.300l7.200-.9z"/></symbol><symbol id="i-band" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="0.500" y="7.500" width="23" height="9" rx="4.500"/><rect x="8" y="7.500" width="8" height="9" fill="rgba(255,255,255,.45)"/><circle cx="11" cy="10.500" r=".9" fill="rgba(0,0,0,.42)"/><circle cx="13" cy="13.500" r=".9" fill="rgba(0,0,0,.42)"/></g></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 1.500c1 4.200 6.500 6.300 6.500 12.300a6.500 6.500 0 0 1-13 0c0-3.200 1.800-4.500 3.300-7.300 1 1 1.400 2.200 1.200 3.600 2-1.800 2.200-5.200 2-8.600z"/></symbol><symbol id="i-footr" viewBox="0 0 24 24"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></symbol><symbol id="i-footl" viewBox="0 0 24 24"><g transform="translate(24 0) scale(-1 1)"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></g></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 3v12.500A3.500 3.500 0 1 0 11 18.500V8l8-2v7.500A3.500 3.500 0 1 0 21 16.500V2z"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="2.500" y="9" width="19" height="12.500" rx="2.500"/><path d="M2.500 4.500 19 2l1.300 4.200L3.800 8.800z"/></symbol><symbol id="i-loan" viewBox="0 0 24 24"><path d="M3.500 12A8.500 8.500 0 0 1 18 6l2.500-2.500v7.500h-7.500l2.700-2.700A5.300 5.300 0 0 0 6.700 12z"/><path d="M20.500 12A8.500 8.500 0 0 1 6 18l-2.500 2.500V13H11l-2.700 2.700A5.300 5.300 0 0 0 17.300 12z" opacity=".75"/></symbol><symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 2h3c0 5 9 6 9 11.500V22h-3c0-5.500-9-6-9-11.500zM18 2h-3c0 5-9 6-9 11.500V22h3c0-5.500 9-6 9-11.500z" fill-rule="evenodd" opacity=".95"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(0 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(135 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(180 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(225 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(270 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.500 1.500 4 14h6.200l-1.200 8.500L20 10h-6.200z"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 1.500c.8 5.500 3.800 8.500 10.500 10.500-6.700 2-9.700 5-10.500 10.500C11.200 17 8.200 14 1.500 12 8.200 10 11.200 7 12 1.500z"/></symbol><symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.800"/><path class="s" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20.500 6.500C23 9 20 15.500 12 19.500 5 23 0.800 21 3.500 17.500"/><ellipse cx="12" cy="12" rx="11" ry="4.200" transform="rotate(-28 12 12)" class="s" stroke-width="1.700"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M7 12.500l3.500 3.500 6.500-7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-cross" viewBox="0 0 24 24"><path d="M4.500 2.500 12 10l7.500-7.500 2 2L14 12l7.500 7.500-2 2L12 14l-7.500 7.500-2-2L10 12 2.500 4.500z"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 2h6l1 2h5v2.500H3V4h5z"/><path d="M4.800 8h14.400l-1 13.500H5.800z"/><path d="M10 11.500v7M14 11.500v7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M2 5.500A2.500 2.500 0 0 1 4.500 3h5l2.500 3h7.500A2.500 2.500 0 0 1 22 8.500v10a2.500 2.500 0 0 1-2.500 2.500h-15A2.500 2.500 0 0 1 2 18.500z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.500" width="16" height="11.500" rx="3"/><path d="M7.500 10.500V7.500a4.500 4.500 0 0 1 9 0v3" class="s" stroke-width="2.600" stroke-linecap="round"/><circle cx="12" cy="16" r="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.200 22.800 21H1.200z" stroke-linejoin="round"/><path d="M12 9v5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.600" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4.500"/><path d="M6 8l4.500 4.500 3-3 4.500 5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-build" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20.500" rx="2.500"/><rect x="7.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M2.500 9.500v5.500h4l9 5.500V4L6.500 9.500z"/><path class="s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" d="M18.500 8.500c2.200 2.200 2.200 5.800 0 8"/></symbol><symbol id="i-case" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14.500" rx="3"/><path d="M8.500 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" class="s" stroke-width="2"/><path d="M2 13h20" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-siren" viewBox="0 0 24 24"><path d="M5.500 18A6.500 6.500 0 0 1 18.500 18z"/><rect x="3.500" y="18" width="17" height="3.500" rx="1.400"/><path class="s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.500v3M3.800 5.200l2 2M20.200 5.200l-2 2"/></symbol><symbol id="i-cross2" viewBox="0 0 24 24"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><rect x="2.500" y="3.500" width="19" height="17" rx="3"/><path d="M6.500 8.500h11M6.500 12.500h11M6.500 16.500h6.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9.500 4.500 2.500 11l7 6.500v-4c5.500 0 9 1.300 11.500 6 0-7-3.800-12.500-11.500-12.500z"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M7.500 14.500c1 2.800 3 4 4.500 4s3.500-1.200 4.500-4" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 15.500c1.200 1.600 2.600 2.200 4 2.200s2.800-.6 4-2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-meh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 16.200h8" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-angry" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.500 7.200l4 2M17.500 7.200l-4 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.600" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="15.400" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><path d="M8 17c1-1.500 2.300-2.200 4-2.200s3 .7 4 2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-sick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.800 9.500l3 1.200-3 1.200M17.200 9.500l-3 1.200 3 1.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.500 16.200c1-1 1.800-1 2.800 0s1.800 1 2.800 0 1.800-1 2.800 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-snow" viewBox="0 0 24 24"><path class="s" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.800v20.400M3.200 6.900l17.600 10.200M3.200 17.100 20.800 6.900M8.800 3.800 12 6l3.200-2.200M8.800 20.200 12 18l3.200 2.200"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.500 14.800A9.500 9.500 0 0 1 9.200 3.500 9.500 9.500 0 1 0 20.500 14.800z"/></symbol><symbol id="i-robot" viewBox="0 0 24 24"><rect x="3.500" y="7.500" width="17" height="13.500" rx="4.500"/><rect x="11" y="3" width="2" height="4.500"/><circle cx="12" cy="2.800" r="1.700"/><circle cx="8.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><path d="M9 18h6" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-palm" viewBox="0 0 24 24"><path d="M11 22.500c0-6.500 1-10 2.200-13.500h1.200c-1.100 3.500-1.800 7-1.800 13.500z"/><path d="M12.800 9C8.800 4.500 4.500 5 2 8.500c3-1 6 0 10.800.5zM12.800 9c0-5.500 4-7.700 8.500-6.500-3.200 1-5.500 3.200-6.500 7zM12.800 9c4-3 8.500-1.500 10 3-3-1.500-6-1.300-9.500.2zM12.800 9c-3.500 1.500-5 5-4 8.500 1.200-3.500 2.700-5.800 5-7.300z"/></symbol><symbol id="i-rock" viewBox="0 0 24 24"><path d="M2.500 18.500 6.800 8l5.200-4.500 6.500 3 3 8.500-4.300 5.500H6.500z"/><path d="M7 9.500l5 3 6-5M12 12.500v7.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-alien" viewBox="0 0 24 24"><path d="M12 2c5.500 0 9.500 4.200 9.500 9.500 0 5.500-4.200 10.500-9.500 10.500S2.500 17 2.500 11.500C2.500 6.200 6.500 2 12 2z"/><ellipse cx="8" cy="11" rx="2.600" ry="1.500" transform="rotate(20 8 11)" fill="rgba(0,0,0,.42)"/><ellipse cx="16" cy="11" rx="2.600" ry="1.500" transform="rotate(-20 16 11)" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-tiger" viewBox="0 0 24 24"><path d="M2.500 3 8 6.200h8L21.500 3v9.500c0 5.500-4 9.500-9.500 9.500S2.500 18 2.500 12.500z"/><path d="M12 7v3M7 8.500l1.500 2M17 8.500l-1.500 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.300" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><circle cx="15.700" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><path d="M10 17.500c1 .8 3 .8 4 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 1.800a9.500 9.500 0 0 0-5.500 17.200v2.700h11V19A9.500 9.500 0 0 0 12 1.800z"/><circle cx="8.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><path d="M10 17.500v2.500M14 17.500v2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-battery" viewBox="0 0 24 24"><rect x="1.500" y="6.500" width="18.500" height="11" rx="3"/><rect x="20.800" y="9.800" width="2" height="4.400" rx="1"/><path d="M12 8.200 8.300 12.500h3l-.8 3.500 3.700-4.500h-3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M0.800 12C3.800 6 7.800 3.800 12 3.800s8.200 2.200 11.200 8.200c-3 6-7 8.200-11.200 8.200S3.800 18 0.800 12z"/><circle cx="12" cy="12" r="4.400" fill="rgba(0,0,0,.42)"/><circle cx="13.200" cy="10.800" r="1.400" fill="#fff"/></symbol><symbol id="i-comet" viewBox="0 0 24 24"><circle cx="16.500" cy="7.500" r="5.500"/><path d="M12.500 10.500 1.800 17.800l4-.8-.9 4.300z" opacity=".85"/><path d="M11.200 12.500 5 22l1-5z" opacity=".5"/></symbol><symbol id="i-cap" viewBox="0 0 24 24"><path d="M12 3 1 9l11 6 9-4.900V17h2V9z"/><path d="M5.500 13v4c0 2 3 4 6.500 4s6.500-2 6.500-4v-4l-6.500 3.500z" opacity=".8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M3 3.500h18V16H10.500L5.500 20.500V16H3z"/><circle cx="8" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="16" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-medal" viewBox="0 0 24 24"><path d="M6.500 1.500h4l1.500 6-3.500 1.500zM17.500 1.500h-4L12 7.500l3.500 1.500z" opacity=".75"/><circle cx="12" cy="15" r="6.500"/><path d="m12 11.300 1.100 2.300 2.500.3-1.800 1.700.5 2.500-2.300-1.300-2.300 1.300.5-2.500-1.800-1.700 2.500-.3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="12" r="7" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="3.800"/><circle cx="12" cy="12" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-glove" viewBox="0 0 24 24"><path d="M6 22v-7.500L3.500 10a1.700 1.700 0 0 1 3-1.600L8 10.500V4.500a1.500 1.500 0 0 1 3 0V3.500a1.500 1.500 0 0 1 3 0V4.500a1.500 1.500 0 0 1 3 0V12l1.200-1.800a1.700 1.700 0 0 1 2.800 1.900L19 17.500V22z"/><path d="M6 19h13" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.600" stroke-linecap="round"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.500 3.500 4.800v6.500c0 5.200 3.600 9.600 8.500 11.200 4.900-1.600 8.500-6 8.500-11.200V4.800z"/><path d="m8.200 12 2.800 2.800 4.800-5.300" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><rect x="2.500" y="12" width="5" height="9.500" rx="1.200"/><rect x="9.500" y="2.500" width="5" height="19" rx="1.200"/><rect x="16.500" y="7.500" width="5" height="14" rx="1.200"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 1.800 2.800 12H8v10h8V12h5.200z"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="8" y="1.500" width="8" height="13" rx="4"/><path d="M4.500 11a7.500 7.500 0 0 0 15 0M12 18.500v3.500M8 22h8" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.500 5.500h11a5 5 0 0 1 5 4.500l.9 5.500a3.300 3.300 0 0 1-5.800 2.600L16.200 16H7.800l-1.400 2.100A3.300 3.300 0 0 1 .6 15.500L1.500 10a5 5 0 0 1 5-4.500z"/><path d="M7.500 8.800v4.400M5.300 11h4.400" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.800" stroke-linecap="round"/><circle cx="16" cy="10" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="18.700" cy="12.300" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dice" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="7.800" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="7.800" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.800 3 12.800A5.800 5.800 0 0 1 12 5.800a5.800 5.800 0 0 1 9 7z"/></symbol><symbol id="i-speaker" viewBox="0 0 24 24"><path d="M2 8.800h4.800L13 3.500v17l-6.200-5.300H2z"/><path d="M16.500 8.300a5 5 0 0 1 0 7.400M19.800 5a9.500 9.500 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="1.500" y="3" width="21" height="14" rx="2.800"/><path d="M8 21h8M12 17.500V21" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bed" viewBox="0 0 24 24"><path d="M1.500 4h2.500v8h16.500a2.500 2.500 0 0 1 2.500 2.500V19h-2.500v-2.500H4V19H1.500z"/><rect x="5.500" y="6.500" width="5.500" height="3.800" rx="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dumb" viewBox="0 0 24 24"><rect x="1.500" y="8" width="3.500" height="8" rx="1"/><rect x="4.500" y="5.500" width="3.500" height="13" rx="1.200"/><rect x="8" y="10.800" width="8" height="2.400"/><rect x="16" y="5.500" width="3.500" height="13" rx="1.200"/><rect x="19" y="8" width="3.500" height="8" rx="1"/></symbol><symbol id="i-seed" viewBox="0 0 24 24"><path d="M11 22V12h2v10z"/><path d="M12 12C12 6 8 3.500 2.500 4c0 5 3.500 8 9.500 8z"/><path d="M13 14c0-5 3.500-8 8.500-7.500 0 4.500-3 7.500-8.500 7.500z" opacity=".75"/></symbol><symbol id="i-apple" viewBox="0 0 24 24"><path d="M12 7c2-1.800 5-1.500 6.700.7 2 2.700 1 8-1.500 11.300-1.300 1.700-2.500 2-3.300 1.500-.9-.5-1.700-.5-2.600 0-.8.500-2 .2-3.300-1.500C5.500 16.200 4.500 10.900 6.500 8.200 8.200 5.500 10.800 5.200 12 7z"/><path d="M12 7c0-2.300 1-3.700 3-4.500 0 2.300-1 3.800-3 4.500z" opacity=".75"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><rect x="11" y="3" width="2" height="16" rx="1"/><rect x="6" y="19" width="12" height="2.500" rx="1.200"/><rect x="3" y="5.800" width="18" height="2" rx="1"/><path d="M1.500 13.500 5 7.500l3.500 6c0 1.800-1.600 3-3.500 3s-3.500-1.200-3.500-3zM15.500 13.500l3.500-6 3.500 6c0 1.800-1.600 3-3.500 3s-3.500-1.200-3.500-3z"/></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M16.500 7.500 13.500 13.500 7.500 16.500 10.500 10.500z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M7 11V5.500a1.500 1.500 0 0 1 3 0V10h.5V3.500a1.500 1.500 0 0 1 3 0V10h.5V4.500a1.500 1.500 0 0 1 3 0V11h.5V7.500a1.500 1.500 0 0 1 3 0V15c0 4.500-3 7.500-7.500 7.500-3.500 0-5.500-1.800-7-4.500L2.700 13.500c-.6-1.200.9-2.500 2-1.500z"/></symbol><symbol id="i-lizard" viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="6" ry="3.500"/><circle cx="18.500" cy="10.500" r="2.800"/><path d="M5.500 14C3 15 2 17.500 1.500 21c2-2.500 4-3.500 6.500-4z"/><path class="s" d="M8 15.500l-2 4M14 15.500l2 4M9 10.500 7 7M14 10.500l1.500-3.500" stroke-width="2" stroke-linecap="round"/></symbol><symbol id="i-lion" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="13" r="5.500" fill="rgba(255,255,255,.45)"/><circle cx="9.800" cy="12" r="1" fill="rgba(0,0,0,.42)"/><circle cx="14.200" cy="12" r="1" fill="rgba(0,0,0,.42)"/><path d="M10.800 15h2.400l-1.200 1.500z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-power" viewBox="0 0 24 24"><path class="s" d="M12 3v8M6.300 6.500a8 8 0 1 0 11.400 0" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="2.800" rx="1.400"/><rect x="3" y="10.600" width="18" height="2.800" rx="1.400"/><rect x="3" y="16.200" width="18" height="2.800" rx="1.400"/></symbol><symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 22.200 2.800 12H8V2h8v10h5.200z"/></symbol></svg>',
   EMJ = {
+    '💰': 'coin',
     '🏆': 'trophy',
     '⚽': 'ball',
     '🩹': 'band',
     '⭐': 'star',
-    '✉': 'mail',
-    '📬': 'mail',
-    '🤢': 'sick',
-    '🌀': 'fluid',
-    '🏟': 'stadium',
-    '🛠': 'gear',
-    '🔥': 'flame',
-    '🎓': 'cap',
-    '🔁': 'loan',
-    '❓': 'help',
-    '⚡': 'bolt',
-    '✨': 'sparkle',
-    '🌌': 'orbit',
-    '🪐': 'orbit',
-    '📥': 'import',
-    '💰': 'coin',
-    '💾': 'save',
-    '🏠': 'home',
-    '🧭': 'dash',
-    '🔄': 'swap',
-    '⚙': 'gear',
-    '⏸': 'pause',
-    '📂': 'folder',
-    '⏩': 'ff',
-    '🧬': 'dna',
-    '😀': 'smile',
-    '😠': 'angry',
-    '🙂': 'ok',
-    '😐': 'meh',
-    '❌': 'cross',
-    '🔍': 'search',
-    '🗑': 'trash',
-    '📅': 'cal',
-    '🏛': 'bank',
-    '📋': 'clip',
-    '👥': 'team',
-    '🧑‍💼': 'person',
-    '👤': 'person',
-    '🔠': 'textsz',
-    '🚀': 'rocket',
-    '🎬': 'film',
-    '✅': 'check',
-    '🔒': 'lock',
-    '⚠': 'warn',
-    '📉': 'down',
-    '🏢': 'build',
-    '📣': 'mega',
-    '💼': 'case',
-    '🤝': 'team',
-    '🚨': 'siren',
-    '🩺': 'cross2',
-    '📰': 'news',
-    '↩': 'undo',
-    '❄': 'snow',
-    '🌑': 'moon',
-    '🤖': 'robot',
-    '🌴': 'palm',
-    '🪨': 'rock',
-    '🦎': 'alien',
-    '🐯': 'tiger',
-    '🏴‍☠': 'skull',
-    '🔋': 'battery',
-    '👁': 'eye',
-    '☄': 'comet',
-    '🆕': 'plus',
-    '🎙': 'mic',
-    '🎵': 'music',
-    '🎤': 'mic',
-    '🎮': 'pad',
-    '🎲': 'dice',
-    '👋': 'smile',
-    '🙏': 'heart',
-    '🔊': 'speaker',
-    '🖥': 'screen',
-    '🗂': 'folder',
-    '🛌': 'bed',
-    '⚖': 'bank',
-    '✔': 'check',
-    '⬇': 'dl',
     '💬': 'chat',
     '🏅': 'medal',
     '🎯': 'target',
@@ -2119,6 +2008,108 @@ const SPR =
     '⬆': 'up',
     '🔎': 'search',
     '◐': 'contrast',
+    '🔥': 'flame',
+    '✨': 'sparkle',
+    '⚠': 'warn',
+    '✉': 'mail',
+    '📬': 'mail',
+    '📋': 'clip',
+    '📄': 'clip',
+    '📝': 'clip',
+    '🤢': 'sick',
+    '😵': 'sick',
+    '🎓': 'cap',
+    '⚡': 'bolt',
+    '🌀': 'fluid',
+    '🫧': 'fluid',
+    '🌑': 'moon',
+    '🏟': 'stadium',
+    '📥': 'import',
+    '📲': 'import',
+    '⬇': 'dl',
+    '🏠': 'home',
+    '🧬': 'dna',
+    '🧑\u200d💼': 'person',
+    '👤': 'person',
+    '👥': 'team',
+    '✔': 'check',
+    '✓': 'check',
+    '✅': 'check',
+    '↩': 'undo',
+    '⚙': 'gear',
+    '🛠': 'gear',
+    '🎚': 'gear',
+    '🔁': 'swap',
+    '🔄': 'swap',
+    '↺': 'swap',
+    '⇄': 'swap',
+    '❓': 'help',
+    '💾': 'save',
+    '⏸': 'pause',
+    '▶': 'play',
+    '⏩': 'ff',
+    '📅': 'cal',
+    '📣': 'mega',
+    '💼': 'case',
+    '🏢': 'build',
+    '🏛': 'bank',
+    '🔍': 'search',
+    '✕': 'cross',
+    '✘': 'cross',
+    '✖': 'cross',
+    '❌': 'cross',
+    '📂': 'folder',
+    '📁': 'folder',
+    '🗂': 'folder',
+    '🗑': 'trash',
+    '🚀': 'rocket',
+    '🔒': 'lock',
+    '🤝': 'loan',
+    '🩺': 'cross2',
+    '🎲': 'dice',
+    '☰': 'menu',
+    '⚖': 'scale',
+    '🎵': 'music',
+    '🎶': 'music',
+    '🔊': 'speaker',
+    '🎮': 'pad',
+    '🌌': 'orbit',
+    '🪐': 'orbit',
+    '🧭': 'compass',
+    '😀': 'smile',
+    '🙂': 'ok',
+    '😐': 'meh',
+    '😠': 'angry',
+    '😴': 'bed',
+    '🛌': 'bed',
+    '💤': 'bed',
+    '🎬': 'film',
+    '📉': 'down',
+    '🚨': 'siren',
+    '📰': 'news',
+    '🤖': 'robot',
+    '🎤': 'mic',
+    '🎙': 'mic',
+    '👋': 'hand',
+    '🙏': 'hand',
+    '🏋': 'dumb',
+    '⏻': 'power',
+    '🖥': 'screen',
+    '🔠': 'textsz',
+    '❄': 'snow',
+    '🌴': 'palm',
+    '🪨': 'rock',
+    '🦎': 'lizard',
+    '🐯': 'tiger',
+    '🦁': 'lion',
+    '🏴\u200d☠': 'skull',
+    '☠': 'skull',
+    '🔋': 'battery',
+    '👁': 'eye',
+    '☄': 'comet',
+    '🆕': 'sparkle',
+    '🌱': 'seed',
+    '🍎': 'apple',
   };
 // Expression qui repère les emojis dans le texte pour les remplacer par les icônes du jeu.
 const EMRE = new RegExp(
@@ -2143,12 +2134,9 @@ function icoFix() {
     }
     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
         acceptNode: (n) =>
-          /^(OPTION|TEXTAREA|SCRIPT|STYLE|SELECT|TITLE)$/.test(n.parentNode.nodeName) ||
-          n.parentNode.closest('#spr')
+          !EMT.test(n.nodeValue) || /^(OPTION|TEXTAREA|SCRIPT|STYLE|SELECT|TITLE)$/.test(n.parentNode.nodeName) || n.parentNode.closest('#spr')
             ? 2
-            : EMT.test(n.nodeValue)
-              ? 1
-              : 2,
+            : 1,
       }),
       L = [];
     while (w.nextNode()) L.push(w.currentNode);
@@ -2426,11 +2414,7 @@ function buildNat(ni) {
       w: 0,
       d: 0,
       l: 0,
-    })),
-    rk =
-      TN.map((t) => t[1])
-        .sort((a, b) => b - a)
-        .indexOf(TN[ni][1]) + 1;
+    }));
   tm.forEach((t) => natSync(t));
   assignG(tm);
   return {
@@ -2454,7 +2438,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.46.0.0';
+  GV = '1.48.0.0';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -2542,8 +2526,9 @@ const hyd = (s) => {
     if (s.hist && s.hist[s.md] && s.hist[s.md].length && s.simd == null) s.simd = s.season + ':' + s.ctx + ':' + s.md;
     s.mode = s.mode || 'L';
     s.ctx = s.ctx || 'L';
-    (s.teams || []).forEach((t) => {
+    (s.teams || []).forEach((t, ti_) => {
       if (t.fs && !FORM[t.fs]) delete t.fs;
+      if (t.sty == null && !t.ti && !t.nat && ti_ !== s.t) { try { aiTac(t); } catch (e) {} }
       if (!FORM[t.form]) {
         t.form = '2-3-1';
         try {
@@ -2825,13 +2810,6 @@ const NEWT = [
     ],
   },
 ];
-// Cases de choix des nouvelles équipes sur l'écran de création de partie.
-function newTiles() {
-  return NEWT.map(
-    (x, j) =>
-      `<button onclick="load('Création du club…',()=>{init(${100 + j},'${V.nm || 'L'}');render()})">${x.em} ${x.n}${ft(x.n)}${bioBtn(x.n)}<br><span class="mu">Niveau ${x.l}/20 · nouvelle équipe fictive</span><br><span class="mu"><b>Prise en main équilibrée</b></span></button>`,
-  ).join('');
-}
 // Fait entrer les trois nouvelles équipes dans la Ligue (à partir de la saison 2). Les effectifs sont créés
 // une fois pour toutes ; le calendrier est ensuite refait avec toutes les équipes.
 // Crée l'équipe (effectif de 12 joueurs, formation de départ) ; d = ajustement de difficulté des notes.
@@ -2847,7 +2825,21 @@ function mkNewTeam(x, d) {
   }));
   const t = { name: x.n, em: x.em, sq, form: x.f, m: 1, lu: [], pts: 0, pl: 0, gf: 0, ga: 0, w: 0, d: 0, l: 0, fr: 1 };
   autoLU(t);
+  aiTac(t);
   return t;
+}
+// Tactique de départ des équipes IA : un style de jeu cohérent avec leur formation (mentalité, pressing, consignes).
+function aiTac(t, r) {
+  if (!t) return;
+  const f = FORM[t.form] || FORM['2-3-1'],
+    d = f[1], a = f[3],
+    pool = a >= 3 ? [5, 2, 8, 6] : d >= 3 ? [9, 7, 8, 1] : a == 2 ? [2, 4, 5, 7, 1] : [1, 3, 4, 6, 7],
+    i = pool[Math.floor((r ? r() : Math.random()) * pool.length)],
+    st = TSTY[i];
+  t.sty = i;
+  t.ti = Object.assign({}, st.s);
+  t.m = st.m;
+  t.pr = st.pr;
 }
 function newTeams() {
   if (S.ctx == 'C') return false;
@@ -2861,7 +2853,7 @@ function newTeams() {
 function resetC() {
   mkJoin();
   const nw = newTeams();
-  const r = rng(S.season * 31 + (S.ctx == 'C' ? 7 : 0));
+  
   S.teams.forEach((t) => {
     t.pts = t.pl = t.gf = t.ga = t.w = t.d = t.l = 0;
     if (!t.nat) {
@@ -2875,6 +2867,7 @@ function resetC() {
         const ks = Object.keys(FORM);
         t.form = ks[(Math.random() * ks.length) | 0];
         delete t.fs;
+        aiTac(t);
       }
       autoLU(t);
     } else {
@@ -2921,7 +2914,7 @@ function newSeason0() {
     natSyncAll();
   }
   if (S.mode == 'C' && S.alt) {
-    const r = rng(S.season * 17);
+    
     S.alt.teams.forEach((t) =>
       t.sq.forEach((p) => {
         p.age = (p.age ?? 25) + 1;
@@ -3418,32 +3411,6 @@ const BIO = {
     'Créés pour ce jeu, les Magmas viennent des volcans actifs de Unadar, sous la muraille des Rykers dont ils partagent le Mur de roche. Trapus, la peau striée de veines orangées, ils jouent à l’usure, et une vieille querelle de familles les oppose aux Rykers pour l’héritage du grand cratère.',
   ],
 };
-// Ouvre la fenêtre de présentation d'un club.
-function bioShow(n) {
-  const b = BIO[n];
-  if (!b) return;
-  let o = document.getElementById('biom');
-  if (!o) {
-    o = document.createElement('div');
-    o.id = 'biom';
-    o.onclick = (e) => {
-      if (e.target === o) o.remove();
-    };
-    document.body.appendChild(o);
-  }
-  const i = T.findIndex((x) => x[0] == n),
-    t = T[i] || (NEWT.find((x) => x.n == n) ? [n, NEWT.find((x) => x.n == n).l, NEWT.find((x) => x.n == n).em] : null);
-  o.innerHTML = lgR(
-    `<div class="bioc"><button class="x" onclick="document.getElementById('biom').remove()">✕</button><h3>${t ? t[2] + ' ' : ''}${n}</h3><div class="mu">Planète : <b>${b[0]}</b>${t ? ' · Niveau ' + t[1] + '/20 · ' + (FICT.includes(n) ? 'équipe fictive' : 'équipe de la série') : ''}</div><p>${b[1]}</p><div class="ctl"><button class="p" onclick="document.getElementById('biom').remove();load('Création du club…',()=>{init(${i},'${V.nm || 'L'}');render()})">Choisir ce club</button></div></div>`,
-  );
-  icoFix();
-}
-// Petit bouton « i » de présentation d'un club.
-function bioBtn(n) {
-  return BIO[n]
-    ? `<span class="bio" role="button" tabindex="0" title="Présentation du club" onclick="event.stopPropagation();bioShow('${n}')">Bio</span>`
-    : '';
-}
 // Texte de présentation de chaque planète.
 const PBIO = {
   Akillian:
@@ -3473,35 +3440,6 @@ const PBIO = {
   Ysolde:
     'Planète fictive, discrète et lointaine, Ysolde fait ses premiers pas au grand jour avec une sélection sans complexe. Sans pression ni étiquette, elle vient écrire sa propre légende.',
 };
-// Ouvre la fenêtre de présentation d'une planète.
-function bioShowP(p) {
-  const t = PBIO[p];
-  if (!t) return;
-  const i = TN.findIndex((x) => x[0] == p),
-    n = TN[i];
-  let o = document.getElementById('biom');
-  if (!o) {
-    o = document.createElement('div');
-    o.id = 'biom';
-    o.onclick = (e) => {
-      if (e.target === o) o.remove();
-    };
-    document.body.appendChild(o);
-  }
-  o.innerHTML = lgR(
-    `<div class="bioc"><button class="x" onclick="document.getElementById('biom').remove()">✕</button><h3>${n[2]} ${p}</h3><div class="mu">Sélection nationale · Niveau ${n[1]}/20 · ${['Ysolde', 'Vega', 'Kaldor'].includes(p) ? 'planète fictive' : 'planète de la série'}</div><p>${t}</p><div class="ctl"><button class="p" onclick="document.getElementById('biom').remove();load('Création de la sélection…',()=>{init(${Math.max(
-      0,
-      T.findIndex((x) => planet(x[0]) == p),
-    )},'C',${i});V.mkp=0;render()})">Choisir cette sélection</button></div></div>`,
-  );
-  icoFix();
-}
-// Petit bouton « i » de présentation d'une planète.
-function bioBtnP(p) {
-  return PBIO[p]
-    ? `<span class="bio" role="button" tabindex="0" title="Présentation de la sélection" onclick="event.stopPropagation();bioShowP('${p}')">Bio</span>`
-    : '';
-}
 // Équipes de la série (noms officiels).
 const CANON = [
     'Snow Kids',
@@ -3615,6 +3553,113 @@ BR.aura = {
 let X = {},
   MOD = { teams: [] };
 // Applique les équipes créées dans l'éditeur de mods aux données du jeu.
+// FICHIERS DU DOSSIER « mods » : chaque fichier .json listé dans mods/index.json apporte des équipes, qui
+// rejoignent le choix des clubs d'une nouvelle carrière. FMOD = équipes lues dans ces fichiers ;
+// FMN = [nom du fichier, nombre d'équipes (−1 si illisible)].
+let FMOD = [],
+  FMN = [];
+// Nettoie une équipe lue dans un fichier (le fichier peut venir de n'importe qui : on n'accepte que des données simples).
+function fmClean(t, f) {
+  const tx = (v, n) => String(v == null ? '' : v).replace(/[<>"`\\$]/g, '').replace(/'/g, '’').slice(0, n);
+  if (!t || typeof t != 'object' || !tx(t.name, 30).trim()) return null;
+  const pl = (Array.isArray(t.pl) ? t.pl : [])
+    .slice(0, 30)
+    .filter((p) => p && tx(p.n, 30).trim() && POS.includes(p.p))
+    .map((p) => ({ n: tx(p.n, 30), p: p.p, o: Math.max(30, Math.min(99, +p.o || 50)), f: Math.max(0, Math.min(100, +p.f || 50)), og: tx(p.og, 30) || undefined }));
+  const col = (v) => (/^#[0-9a-f]{6}$/i.test(v) ? v : undefined);
+  return {
+    name: tx(t.name, 30).trim(),
+    l: Math.max(1, Math.min(20, +t.l || 10)),
+    em: tx(t.em, 80) || '🏟️',
+    k: tx(t.k, 20),
+    fn: tx(t.fn, 40),
+    fd: tx(t.fd, 200),
+    c1: col(t.c1),
+    c2: col(t.c2),
+    pl,
+    _f: f,
+  };
+}
+// Lit mods/index.json puis chaque fichier de mod. Sans effet si le jeu est ouvert depuis un fichier local.
+function loadFileMods() {
+  if (!/^https?:/.test(location.protocol)) return Promise.resolve();
+  const get = (u) => fetch(u, { cache: 'no-cache' }).then((x) => (x.ok ? x.json() : null)).catch(() => null);
+  return get('mods/index.json')
+    .then((ix) => {
+      const L = ix && Array.isArray(ix.mods) ? ix.mods.filter((f) => typeof f == 'string' && /^[\w .()-]+\.json$/i.test(f) && f != 'index.json').slice(0, 30) : [];
+      return Promise.all(L.map((f) => get('mods/' + encodeURIComponent(f)).then((j) => [f, j])));
+    })
+    .then((res) => {
+      const F = [],
+        N = [];
+      res.forEach(([f, j]) => {
+        const L = j && Array.isArray(j.teams) ? j.teams.map((t) => fmClean(t, f)).filter(Boolean) : null;
+        N.push([f, L ? L.length : -1]);
+        if (L) L.forEach((t) => F.push(t));
+      });
+      if (JSON.stringify(F) == JSON.stringify(FMOD) && !V.fmp) return;
+      FMOD = F;
+      FMN = N;
+      applyMod();
+      if (V.fmp) {
+        V.fmp = 0;
+        try {
+          S = hyd(JSON.parse(localStorage.getItem('gm6')));
+          mkSync();
+          useT();
+          natSyncAll();
+          if (!S.teams.every((t) => FX[t.name])) S = null;
+        } catch (e) {
+          S = null;
+        }
+      }
+      render();
+    })
+    .catch(() => {
+      V.fmp = 0;
+    });
+}
+// Enregistre dans un fichier .json les équipes créées dans l'éditeur (à placer dans le dossier « mods »).
+function modDl() {
+  const nm = 'mon-mod.json';
+  svFile(nm, JSON.stringify({ gfm: 'mod', nom: 'Mon mod', teams: MOD.teams }, null, 1)).then((q) => {
+    V.note = q == 1 ? 'Fichier « mon-mod.json » prêt : importez-le sur un autre appareil avec « Importer un fichier d’équipes ».' : q == 0 ? 'Export annulé.' : 'Export impossible dans ce navigateur.';
+    render();
+  });
+}
+// Importe un fichier d'équipes : ajoute (ou remplace par nom) sans effacer les équipes existantes.
+function modImp(el) {
+  const f = el.files && el.files[0];
+  el.value = '';
+  if (!f) return;
+  const end = (m) => {
+    V.note = m;
+    render();
+  };
+  if (f.size > 1e6) return end('Fichier trop volumineux.');
+  const rd = new FileReader();
+  rd.onload = (e) => {
+    let j;
+    try {
+      j = JSON.parse(e.target.result);
+    } catch (x) {
+      return end('Fichier illisible : ce n’est pas un fichier d’équipes.');
+    }
+    const L = (j && Array.isArray(j.teams) ? j.teams : []).map((t) => fmClean(t)).filter(Boolean).slice(0, 60);
+    if (!L.length) return end('Aucune équipe trouvée dans ce fichier.');
+    L.forEach((t) => {
+      delete t._f;
+      const i = MOD.teams.findIndex((x) => x.name == t.name);
+      if (i >= 0) MOD.teams[i] = t;
+      else MOD.teams.push(t);
+    });
+    sv();
+    applyMod();
+    end(L.length + ' équipe' + (L.length > 1 ? 's' : '') + ' importée' + (L.length > 1 ? 's' : '') + ' : ' + L.map((t) => t.name).join(', ') + '.');
+  };
+  rd.onerror = () => end('Lecture du fichier impossible.');
+  rd.readAsText(f);
+}
 function applyMod() {
   Object.keys(PAL).forEach((k) => {
     if (PAL0[k]) PAL[k] = PAL0[k].slice();
@@ -3623,12 +3668,14 @@ function applyMod() {
   T = TL = JSON.parse(JSON.stringify(T0));
   FX = JSON.parse(JSON.stringify(FX0));
   X = {};
-  MOD.teams.forEach((m) => {
+  FMOD.filter((m) => !MOD.teams.some((x) => x.name == m.name))
+    .concat(MOD.teams)
+    .forEach((m) => {
     const i = T.findIndex((t) => t[0] == m.name),
       r = [m.name, m.l, m.em || '🏟️'];
     if (i >= 0) T[i] = r;
     else T.push(r);
-    const b = BR[m.k] || BR.chance;
+    const b = BR[m.k] || BR.smog;
     FX[m.name] = { t: b.t, k: b.k, n: m.fn || b.n, d: m.fd || b.d };
     if (m.c1 && m.c2) PAL[m.name] = [m.c1, m.c2];
     if (m.pl && m.pl.length)
@@ -3763,11 +3810,12 @@ function init(ti, mode, ni) {
   // Chaque équipe démarre avec sa propre formation (mélange fixe, réparties sur les 7 formations).
   {
     const ks = Object.keys(FORM),
-      rr = rng(31),
+      rr = rng((Math.random() * 1e9) | 0),
       o = ks.slice().sort(() => rr() - 0.5);
     S.teams.forEach((t, i) => {
       t.form = o[i % o.length];
       autoLU(t);
+      if (i !== ti) aiTac(t, rr);
     });
   }
   if (NJ >= 0) {
@@ -3838,9 +3886,11 @@ function init(ti, mode, ni) {
       document.querySelectorAll('.mtoast').forEach((e) => e.classList.remove('on'));
     }
   } catch (e) {}
-  V.mc = mcNew();
+  V.mc = V.cr && V.cr.mc ? { ...V.cr.mc, pre: 1 } : mcNew();
+  V.cr = null;
   V.mc.n = 1;
-  save();
+  if (V.mc.pre && V.mc.bg) mcOk();
+  else save();
 }
 // Compose automatiquement la meilleure équipe de départ d'une équipe gérée par l'ordinateur.
 function autoLU(t) {
@@ -3865,10 +3915,19 @@ function autoLU(t) {
         b = i;
       }
     });
-    if (b < 0)
+    // Pas assez de joueurs à ce poste : on prend le meilleur joueur d'un poste voisin (ATT↔MID↔DEF) ;
+    // un gardien ne joue jamais en champ, et un joueur de champ ne garde les buts qu'en dernier recours.
+    if (b < 0) {
+      const PI = { DEF: 0, MID: 1, ATT: 2 },
+        adj = (x) => (x.p == p ? 1 : x.p == 'GK' || p == 'GK' ? 0.05 : Math.abs(PI[x.p] - PI[p]) == 1 ? 0.85 : 0.7);
+      bs = -1;
       t.sq.forEach((x, i) => {
-        if (b < 0 && !u.has(i) && !x.rv) b = i;
+        if (!u.has(i) && !x.rv && sc(x) * adj(x) > bs) {
+          bs = sc(x) * adj(x);
+          b = i;
+        }
       });
+    }
     if (b < 0)
       t.sq.forEach((x, i) => {
         if (b < 0 && !u.has(i)) b = i;
@@ -5608,14 +5667,17 @@ const RMP = [
   ['Marché façon Football Manager', 'Tableau triable, prix calculé, numéros de maillot et séparation Ligue/Coupe.', 'Disponible (bêta)'],
   ['Tactique en match', 'Terrain, instructions et rôles modifiables pendant la pause d’un match.', 'Disponible (bêta)'],
   ['Réserve et base de joueurs', 'Jusqu’à 15 joueurs de réserve utilisables hors match, et un moteur de recherche pour consulter tous les joueurs du jeu.', 'Disponible (bêta)'],
+  ['Onglet Entraînement', 'Programmes d’équipe, repos automatique et réglages par joueur (intensité, axe, reconversion de poste).', 'Disponible (bêta)'],
+  ['Vente de joueurs', 'Mise en vente avec conditions, offres des clubs étudiées dans un onglet dédié, paiement comptant ou en deux fois.', 'Disponible (bêta)'],
+  ['Création de carrière en 5 étapes', 'Manager, passé, compétition, planète et club, emplacement de sauvegarde.', 'Disponible (bêta)'],
+  ['Dossier mods et transfert d’équipes', 'Équipes de fichiers dans le choix des clubs, export et import d’un fichier d’équipes entre appareils.', 'Disponible (bêta)'],
+  ['Icônes à la place des emojis', 'Une bibliothèque d’icônes dessinées pour tout le jeu.', 'Disponible (bêta)'],
   ['Succès expliqués', 'Pop-ups au survol des balles, titres et décorations pour savoir comment les débloquer.', 'Disponible (bêta)'],
   [
     'Mode multijoueur 1 contre 1',
     'Affronter un autre joueur en match 1 contre 1 : votre équipe de sauvegarde contre l’équipe de la sauvegarde d’un autre joueur.',
     'À venir',
   ],
-  ['Onglet Entraînement', 'Un onglet dédié pour organiser l’entraînement de l’équipe et de chaque joueur.', 'À venir'],
-  ['Création du manager améliorée', 'Plus d’options pour créer et personnaliser son manager.', 'À venir'],
   ['Intégration Twitch', 'Lier le jeu à Twitch (détails à venir).', 'À venir'],
 ];
 
@@ -6250,23 +6312,6 @@ function fbBox() {
   if (!V.fb) return '';
   const r = fbRepo();
   return `<div style="position:fixed;inset:0;background:#0008;z-index:75;display:flex;align-items:center;justify-content:center;padding:12px" onclick="V.fb=0;render()"><div class="card" style="max-width:460px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:17px">💬 Signaler un bug / une idée</b>${hp('m_fb')}<div class="mu" style="margin:4px 0 8px">Merci de participer à la bêta ! Décrivez ce que vous avez vu ou ce que vous aimeriez.</div><div class="ctl"><label>Type <select onchange="V.fbt=this.value"><option ${V.fbt == 'Bug' || !V.fbt ? 'selected' : ''}>Bug</option><option ${V.fbt == 'Idée' ? 'selected' : ''}>Idée</option><option ${V.fbt == 'Autre' ? 'selected' : ''}>Autre</option></select></label></div><textarea rows="6" style="width:100%;box-sizing:border-box;margin:8px 0;padding:8px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit" placeholder="Que s’est-il passé ? Que faisiez-vous juste avant ?" oninput="V.fbm=this.value">${(V.fbm || '').replace(/</g, '&lt;')}</textarea><label class="mu" style="display:block;margin-bottom:8px"><input type="checkbox" ${V.fbi !== 0 ? 'checked' : ''} onchange="V.fbi=this.checked?1:0"> Joindre les infos techniques (version du jeu, navigateur, club et journée en cours)</label><div class="ctl">${r ? '<button class="p" onclick="fbGo()">Envoyer sur GitHub</button>' : ''}<button ${r ? '' : 'class="p"'} onclick="fbCopy()">Copier le rapport</button><button onclick="V.fb=0;render()">Fermer</button></div><div class="mu" id="fbs" style="margin-top:6px">${r ? 'GitHub ouvre un ticket prérempli (compte GitHub requis). Sinon, copiez le rapport et envoyez-le à l’organisateur.' : 'Copiez le rapport puis envoyez-le à l’organisateur de la bêta.'}</div></div></div>`;
-}
-// Résumé des sauvegardes (nombre d'emplacements, versions anciennes ou trop récentes).
-function svInfo() {
-  let n = 0,
-    o = 0,
-    w = 0;
-  try {
-    SL.forEach((k) => {
-      const m = slotMeta(k);
-      if (m) {
-        n++;
-        if ((m.dv || 0) > DV) w++;
-        else if ((m.dv || 0) < DV) o++;
-      }
-    });
-  } catch (e) {}
-  return `<div class="card" style="border-color:var(--ac)"><b>💾 Avant de commencer : vos sauvegardes</b>${hp('sv_info')}<ul style="margin:6px 0 8px 18px;padding:0;line-height:1.55"><li>Votre partie est <b>sauvegardée automatiquement dans ce navigateur</b>, sur cet appareil. Rien n’est envoyé en ligne.</li><li>Changer de navigateur ou d’appareil, ou vider les données du site, <b>efface les parties</b> : pensez à <b>Exporter</b> un fichier de sauvegarde.</li><li>Version du jeu : <b>${GV}</b>. Les anciennes sauvegardes sont adaptées automatiquement ; une sauvegarde créée par une <b>version plus récente</b> ne peut pas être chargée. Le jeu est en bêta : exportez avant chaque mise à jour.</li></ul><div class="ctl"><span class="mu">${n ? n + ' sauvegarde' + (n > 1 ? 's' : '') + ' existante' + (n > 1 ? 's' : '') + (o ? ' · ' + o + ' à adapter' : '') + (w ? ' · <b style="color:#e0457b">' + w + ' trop récente' + (w > 1 ? 's' : '') + '</b>' : '') : 'Aucune sauvegarde pour l’instant.'}</span><button onclick="V.sv=1;render()">Gérer mes sauvegardes</button></div></div>`;
 }
 
 /* ===== Statistiques, classements & académie ===== */
@@ -7349,6 +7394,21 @@ function acScout() {
   save();
   render();
 }
+// Ouvre l'onglet Staff du marché et met en surbrillance l'encadré du staff k (quelques secondes), pour guider le joueur.
+function stHl(k) {
+  V.tab = 'mkt';
+  V.mt = 'st';
+  V.hl = k;
+  render();
+  setTimeout(() => {
+    const e = document.querySelector(`.stfc[data-k="${k}"]`);
+    if (e) e.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  }, 60);
+  setTimeout(() => {
+    if (V.hl == k) V.hl = 0;
+    document.querySelectorAll('.stfh').forEach((x) => x.classList.remove('stfh'));
+  }, 4500);
+}
 // Page « Formation » (centre de formation interactif).
 function acView() {
   if (S.mode == 'C') return '';
@@ -7366,7 +7426,7 @@ function acView() {
     .join('')}</svg>`;
   const mts = t.sq.map((p, i) => [p, i]).sort((a, b) => b[0].o - a[0].o);
   return (
-    `<div class="card wide"><div class="ctl" style="justify-content:space-between"><b>🎓 Académie</b>${hp('ac')}<span class="mu">Niveau du centre ${stL('y') || 0} · places ${A.y.length}/${cap}</span>${vwBtn()}</div>${field}<div class="mu" style="margin-top:6px">Les jeunes progressent chaque jour. À 20 ans, ils rejoignent automatiquement l’équipe première (si l’effectif n’est pas complet). Chaque fin de saison, de nouveaux talents arrivent.</div><div class="ctl" style="margin-top:6px"><button onclick="acScout()" ${(A.sc || 0) >= 2 || S.cash < 250 || A.y.length >= cap ? 'disabled' : ''}>🔎 Chercher un talent (250 cr.) ${A.sc || 0}/2</button><button onclick="V.tab='mkt';V.mt='st';render()">⬆ Améliorer le centre</button></div>${A.note ? `<div style="margin-top:6px"><b>${A.note}</b></div>` : ''}</div>` +
+    `<div class="card wide"><div class="ctl" style="justify-content:space-between"><b>🎓 Académie</b>${hp('ac')}<span class="mu">Niveau du centre ${stL('y') || 0} · places ${A.y.length}/${cap}</span>${vwBtn()}</div>${field}<div class="mu" style="margin-top:6px">Les jeunes progressent chaque jour. À 20 ans, ils rejoignent automatiquement l’équipe première (si l’effectif n’est pas complet). Chaque fin de saison, de nouveaux talents arrivent.</div><div class="ctl" style="margin-top:6px"><button onclick="acScout()" ${(A.sc || 0) >= 2 || S.cash < 250 || A.y.length >= cap ? 'disabled' : ''}>🔎 Chercher un talent (250 cr.) ${A.sc || 0}/2</button><button onclick="stHl('y')">⬆ Améliorer le centre</button></div>${A.note ? `<div style="margin-top:6px"><b>${A.note}</b></div>` : ''}</div>` +
     (A.y.length
       ? `<div class="${V.vw == 'l' ? '' : 'acg '}wide">` +
         A.y
@@ -7575,7 +7635,7 @@ function render() {
     return;
   }
   if (V.hv) {
-    a.innerHTML = '<button onclick="V.hv=0;render()">← Menu</button>' + tutoView();
+    a.innerHTML = '<button onclick="V.hv=0;V.menu=1;render()">← Menu</button>' + tutoView();
     return;
   }
   if (V.ed) {
@@ -7586,45 +7646,23 @@ function render() {
     a.innerHTML = mcView();
     return;
   }
+  if (!S && !V.cr) V.cr = { mc: mcNew() };
+  if (!S && V.cr && (V.cr.step || 1) < 4) {
+    a.innerHTML = V.cr.step == 3 ? mcCmp() : V.cr.step == 2 ? mcPas() : mcPre();
+    return;
+  }
+  if (!S && V.cr && V.cr.step == 5) {
+    a.innerHTML = mcSav();
+    return;
+  }
   if (!S) {
     a.innerHTML =
-      `<div class="scr"></div><div class="ctl"><button onclick="V.menu=1;render()">← Menu</button></div><h1>🌌 Galactik Manager</h1>${svInfo()}<div class="card">Choisissez votre club pour la saison 1 de la Ligue Galactique.<br><span class="mu">Les équipes marquées d’un <i class="fic" title="Contenu fictif, inventé pour ce jeu (absent de la série)" style="opacity:1">✦</i> sont fictives, inventées pour le jeu ; les autres viennent de la série Galactik Football.</span></div>${A.gd ? '' : `<div class="card" style="border-color:var(--ac)"><b>🚀 Première partie ? En 3 étapes</b><ol style="margin:6px 0 8px 18px;padding:0;line-height:1.6"><li><b>Choisissez la compétition</b> (Ligue, Cup ou les deux), puis un club ou une planète en bas de page. Plus son niveau est élevé, plus il est fort mais plus l’objectif du conseil sera exigeant. Le club ⭐ est conseillé pour débuter.</li><li><b>Réglez la difficulté</b> et les événements de scénario juste en dessous (vous pourrez les laisser par défaut).</li><li><b>Lancez la partie</b> : une visite guidée vous présente le jeu en 11 étapes, et chaque « ? » explique l’élément à côté de lui.</li></ol><button onclick="setA('gd')">J’ai compris, masquer ce guide</button></div>`}<div class="card"><label><input type="checkbox" ${V.evt !== 0 ? 'checked' : ''} onchange="V.evt=this.checked?1:0"> 🎬 Événements de scénario (police, sabotages…)</label>${hp('evt')}<div class="ctl" style="margin-top:6px"><label>Difficulté <select onchange="V.df=+this.value">${['Facile', 'Normal', 'Difficile'].map((n, i) => `<option value="${i}" ${(V.df ?? 1) == i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>${hp('df')}</div></div><div class="card"><button onclick="V.ed=1;V.et=null;render()">🛠️ Éditeur de mods (équipes, joueurs, Fluides)</button> <button onclick="V.sv=1;V.sn='';render()">📂 Charger une partie</button> <button onclick="this.nextElementSibling.click()">📥 Importer mon tableur (.xlsx)</button><input type="file" accept=".xlsx" hidden onchange="imp(this.files[0])"> <span class="mu">${V.note || ''}</span></div><div class="card mdc"><b>Compétition</b> ${hp('modes')}<div class="mds">${[
-        ['L', 'Galactik League', LGL, 'Gérez un club dans la grande ligue interplanétaire.'],
-        [
-          'C',
-          'Galactik Cup',
-          LGC,
-          'Sélection de votre planète, format Coupe du monde (poules + phase finale).',
-        ],
-        ['D', 'Les deux', null, 'Un club et la sélection de sa planète, comme dans FM.'],
-      ]
-        .map(
-          ([k, n, lg, d]) =>
-            `<button class="${(V.nm || 'L') == k ? 'on' : ''}" onclick="V.nm='${k}';render()">${lg ? `<img src="${lg}" alt="">` : `<span class="two"><img src="${LGL}" alt=""><img src="${LGC}" alt=""></span>`}<b>${n}</b><span class="mu">${d}</span></button>`,
-        )
-        .join('')}</div></div><div class="grid">` +
-      ((V.nm || 'L') == 'C'
-        ? TN.map(
-            (n, i) =>
-              `<button onclick="load('Création de la sélection…',()=>{${n[0] == MKD.nat ? 'V.mkp=1;mkSync();' : ''}init(${
-                n[0] == MKD.nat
-                  ? 'TL.length-1'
-                  : Math.max(
-                      0,
-                      T.findIndex((x) => planet(x[0]) == n[0]),
-                    )
-              },'C',${i});V.mkp=0;render()})">${n[2]} ${n[0]}${ft(n[0])}${bioBtnP(n[0])}<br><span class="mu">Niveau ${n[1]}/20 · ${n[0] == 'Ysolde' || n[0] == MKD.nat || n[0] == 'Vega' || n[0] == 'Kaldor' ? 'planète fictive' : 'planète de la série'}</span><br><span class="mu"><b>${n[1] >= 15 ? 'Prise en main facile' : n[1] >= 12 ? 'Prise en main équilibrée' : 'Prise en main exigeante'}</b></span></button>`,
-          ).join('')
-        : T.map(
-            (t, i) =>
-              `<button onclick="load('Création du club…',()=>{init(${i},'${V.nm || 'L'}');render()})">${t[2]} ${t[0]}${ft(t[0])}${bioBtn(t[0])}<br><span class="mu">Niveau ${t[1]}/20 · ${FICT.includes(t[0]) ? 'équipe fictive' : 'équipe de la série'}</span><br><span class="mu"><b>${t[1] >= 15 ? 'Prise en main facile' : t[1] >= 12 ? 'Prise en main équilibrée' : 'Prise en main exigeante'}</b>${i == recoT() ? ' · ⭐ Conseillé pour débuter' : ''}</span></button>`,
-          ).join('') + newTiles() + mkTile()) +
-      `</div>`;
+      `<div class="scr"></div><div class="ctl"><button onclick="V.menu=1;render()">← Menu</button>${V.cr && V.cr.mc ? '<button onclick="V.cr.step=3;render()">← Compétition</button>' : ''}</div><h1>🌌 Galactik Manager</h1>${clbView()}`;
     return;
   }
   const t = me(),
     end = S.md >= S.fx.length;
-  let h = `<h1>${t.em} ${t.name}${ft(t.name)} <span class="mu">· Saison ${S.season} · Journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length} · ${fmtDay(S.day)}</span></h1><nav>${[['club', 'Club'], ['tac', 'Tactique'], ['match', 'Match'], ['cal', 'Cal.'], ['mail', '✉️' + (S.mail.filter((m) => m.u).length || '')], ['mkt', 'Marché'], ['gest', 'Gestion'], ...(S.mode == 'C' ? [] : [['form', 'Formation']]), ['fin', 'Finances'], ['car', 'Carrière'], ['table', 'Class.'], ['stat', 'Stats'], ['tuto', 'Aide ?']].map(([k, l]) => `<button class="${V.tab == k ? 'on' : ''}" onclick="V.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
+  let h = `<h1>${t.em} ${t.name}${ft(t.name)} <span class="mu">· Saison ${S.season} · Journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length} · ${fmtDay(S.day)}</span></h1><nav>${[['club', 'Club'], ['tac', 'Tactique'], ['match', 'Match'], ['cal', 'Cal.'], ['mail', '✉️' + (S.mail.filter((m) => m.u).length || '')], ['mkt', 'Marché'], ['gest', 'Gestion'], ...(S.mode == 'C' ? [] : [['form', 'Formation']]), ['ent', 'Entraîn.'], ['fin', 'Finances'], ['car', 'Carrière'], ['table', 'Class.'], ['stat', 'Stats'], ['tuto', 'Aide ?']].map(([k, l]) => `<button class="${V.tab == k ? 'on' : ''}" onclick="V.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
   if (V.tab == 'club') {
     h += eqSub();
     const sb = V.eq || 'liste';
@@ -7659,6 +7697,8 @@ function render() {
     h += careerView();
   } else if (V.tab == 'form') {
     h += acView();
+  } else if (V.tab == 'ent') {
+    h += entView();
   } else if (V.tab == 'adv') {
     h += advView();
   } else if (V.tab == 'stat') {
@@ -7987,11 +8027,6 @@ function mkSync() {
   else if (!wt && it >= 0) TN.splice(it, 1);
   useT();
 }
-// Contenu caché.
-const mkTile = () =>
-  mkU()
-    ? `<button onclick="load('Création du club…',()=>{V.mkp=1;mkSync();init(TL.length-1,'${V.nm || 'L'}');V.mkp=0;render()})">${MKD.em} ${MKD.n}<br><span class="mu">Niveau ${MKD.l}/20 · équipe cachée</span><br><span class="mu"><b>Prise en main équilibrée</b></span></button>`
-    : '';
 // Contenu caché.
 function mkJoin() {
   const k = S.mk;
@@ -8334,7 +8369,7 @@ function mkSearch() {
     uniq = (fn) => [...new Set(P.map(fn))].sort((a, b) => a.localeCompare(b)),
     sel = (k, L, v) => `<select onchange="mkF('${k}',this.value)">${L.map(([x, l]) => `<option value="${mkEsc(x)}" ${v == x ? 'selected' : ''}>${l}</option>`).join('')}</select>`,
     lv = [0, 40, 50, 60, 70, 80, 90];
-  return `<div class="card"><b>Marché des transferts</b>${hp('mks')}<div class="mu" style="margin:4px 0 8px">Tous les joueurs disponibles à cette saison. Touchez un joueur pour voir sa fiche, ou « Offre » pour négocier avec son club.</div><div class="ctl mkfl"><input placeholder="🔍 Nom du joueur" value="${mkEsc(f.q)}" oninput="mkF('q',this.value)" style="width:150px">${sel('c', [['', 'Toutes les équipes'], ...uniq(([, c]) => c).map((x) => [x, x])], f.c)}${sel('fl', [['', 'Tous les Fluides'], ...uniq(([p]) => plFlu(p)).map((x) => [x, x])], f.fl)}${sel('pl', [['', 'Toutes les planètes'], ...uniq(([p, c]) => planet(p.og || c)).map((x) => [x, x])], f.pl)}${sel('p', [['', 'Tous postes'], ['GK', 'Gardiens'], ['DEF', 'Défenseurs'], ['MID', 'Milieux'], ['ATT', 'Attaquants']], f.p)}${sel('mn', lv.map((x) => [x, x ? 'Niveau min. ' + x : 'Niveau min.']), f.mn)}${sel('mx', lv.slice(1).concat([100]).map((x) => [x, x == 100 ? 'Niveau max.' : 'Niveau max. ' + x]), f.mx)}${sel('s', [['o', 'Tri : Niveau'], ['p', 'Tri : Potentiel'], ['v', 'Tri : Prix'], ['a', 'Tri : Âge'], ['cp', 'Tri : Compatibilité'], ['n', 'Tri : Nom'], ['po', 'Tri : Poste'], ['cl', 'Tri : Équipe'], ['pf', 'Tri : Planète']], f.s)}<button onclick="mkReset()">Réinitialiser</button></div><div class="mu" id="mkc" style="margin:6px 0">${mkCnt(A)}</div><div class="mkh" id="mkhd">${mkHd()}</div><div id="mkl" class="mkl" onscroll="mkScroll(this)">${mkRows(A)}</div></div>`;
+  return `<div class="card"><b>Marché des transferts</b>${hp('mks')}<div class="mu" style="margin:4px 0 8px">Tous les joueurs disponibles à cette saison. Touchez un joueur pour voir sa fiche, ou « Offre » pour négocier avec son club.</div><div class="ctl mkfl"><input placeholder="Nom du joueur" value="${mkEsc(f.q)}" oninput="mkF('q',this.value)" style="width:150px">${sel('c', [['', 'Toutes les équipes'], ...uniq(([, c]) => c).map((x) => [x, x])], f.c)}${sel('fl', [['', 'Tous les Fluides'], ...uniq(([p]) => plFlu(p)).map((x) => [x, x])], f.fl)}${sel('pl', [['', 'Toutes les planètes'], ...uniq(([p, c]) => planet(p.og || c)).map((x) => [x, x])], f.pl)}${sel('p', [['', 'Tous postes'], ['GK', 'Gardiens'], ['DEF', 'Défenseurs'], ['MID', 'Milieux'], ['ATT', 'Attaquants']], f.p)}${sel('mn', lv.map((x) => [x, x ? 'Niveau min. ' + x : 'Niveau min.']), f.mn)}${sel('mx', lv.slice(1).concat([100]).map((x) => [x, x == 100 ? 'Niveau max.' : 'Niveau max. ' + x]), f.mx)}${sel('s', [['o', 'Tri : Niveau'], ['p', 'Tri : Potentiel'], ['v', 'Tri : Prix'], ['a', 'Tri : Âge'], ['cp', 'Tri : Compatibilité'], ['n', 'Tri : Nom'], ['po', 'Tri : Poste'], ['cl', 'Tri : Équipe'], ['pf', 'Tri : Planète']], f.s)}<button onclick="mkReset()">Réinitialiser</button></div><div class="mu" id="mkc" style="margin:6px 0">${mkCnt(A)}</div><div class="mkh" id="mkhd">${mkHd()}</div><div id="mkl" class="mkl" onscroll="mkScroll(this)">${mkRows(A)}</div></div>`;
 }
 // Page Transferts : aperçu, recherche, prêts, convoités, staff.
 function mktViewL() {
@@ -8343,7 +8378,6 @@ function mktViewL() {
     wl = S.wl || [],
     col = (q) => ({ GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' })[q] || '#888',
     chip = (r) => `<span class="fvr ${r >= 70 ? 'g' : r >= 50 ? 'o' : 'r'}">${r}</span>`,
-    orig = (p) => (typeof planet == 'function' && planet(p.og)) || p.og || '—',
     L = (S.tl || []).filter((x) => x.s == S.season),
     kk = (q) => L.filter((x) => x.k == q),
     sm = (A) => A.reduce((a, x) => a + x.a, 0),
@@ -8365,7 +8399,7 @@ function mktViewL() {
         ).join('') || '<div class="mu" style="padding:8px 2px">Aucun mouvement cette saison.</div>'
       }</div><div class="fvft"><span>Total</span><b>${sm(A)}</b></div></div>`,
     kpi = (l, v) => `<div class="fvk"><small>${l}</small><b>${v}</b></div>`,
-    tb = [['ap', 'Aperçu'], ['rc', 'Recherche'], ['of', 'Offres (' + (S.no || []).filter(NEGACT).length + ')'], ['pr', 'Prêts'], ['cv', 'Convoités (' + wl.length + ')'], ['st', 'Staff']],
+    tb = [['ap', 'Aperçu'], ['rc', 'Recherche'], ['of', 'Offres (' + (S.no || []).filter(NEGACT).length + ')'], ['sv', 'Vente' + (slCnt() ? ' <span class="svd">' + slCnt() + '</span>' : '')], ['pr', 'Prêts'], ['cv', 'Convoités (' + wl.length + ')'], ['st', 'Staff']],
     head = `<div class="fvw"><div class="fvk6 mtk">${kpi('Crédits', S.cash)}${kpi('Effectif', sqN(t) + '/15' + (rvN(t) ? ' +' + rvN(t) + ' rés.' : ''))}${kpi('Joueurs disponibles', PO.length)}${kpi('Offres en cours', (S.no || []).filter(NEGACT).length)}</div><div class="tvt mtt">${tb.map(([q, l]) => `<button class="${k == q ? 'on' : ''}" onclick="mtTab('${q}')">${l}</button>`).join('')}</div>`;
   let body = '';
   if (k == 'ap') {
@@ -8399,6 +8433,8 @@ function mktViewL() {
     body = mkSearch();
   } else if (k == 'of') {
     body = ofView();
+  } else if (k == 'sv') {
+    body = svView();
   } else if (k == 'pr') {
     body = loanView();
   } else if (k == 'cv') {
@@ -8425,7 +8461,7 @@ function mktViewL() {
     Object.keys(NS)
       .map(
         (k) =>
-          `<div class="card stfc"><span class="stfi">${STI[k]}</span><div class="stft"><b>${NS[k][0]}</b><span class="mu">${NS[k][1]}</span><span class="stfl" title="Niveau ${S.staff[k]} sur 5">${[1, 2, 3, 4, 5].map((n) => `<i${n <= S.staff[k] ? ' class="on"' : ''}></i>`).join('')}<em>niv. ${S.staff[k]}/5</em></span></div><button onclick="up('${k}')" ${S.staff[k] >= 5 || S.cash < S.staff[k] * 800 ? 'disabled' : ''}>${S.staff[k] >= 5 ? 'Max' : '+ ' + S.staff[k] * 800}</button></div>`,
+          `<div class="card stfc${V.hl == k ? ' stfh' : ''}" data-k="${k}"><span class="stfi">${STI[k]}</span><div class="stft"><b>${NS[k][0]}</b><span class="mu">${NS[k][1]}</span><span class="stfl" title="Niveau ${S.staff[k]} sur 5">${[1, 2, 3, 4, 5].map((n) => `<i${n <= S.staff[k] ? ' class="on"' : ''}></i>`).join('')}<em>niv. ${S.staff[k]}/5</em></span></div><button onclick="up('${k}')" ${S.staff[k] >= 5 || S.cash < S.staff[k] * 800 ? 'disabled' : ''}>${S.staff[k] >= 5 ? 'Max' : '+ ' + S.staff[k] * 800}</button></div>`,
       )
       .join('') +
     `</div>` +
@@ -8753,8 +8789,11 @@ function ovNeg() {
   const A = (S.no || []).filter(NEGACT),
     d = (x) => Math.max(0, x.dr - S.day),
     tx2 = (x) => (x.st == 'pend' ? x.cl + ' répond dans ' + d(x) + ' j' : x.st == 'pl' ? 'Le joueur répond dans ' + d(x) + ' j' : x.st == 'ctr' ? 'Contre-offre du club : ' + x.cf + ' cr.' : 'Le joueur demande ' + x.pc.sw + ' / match');
-  if (!A.length) return '';
+  const SV = (S.sl || []).filter((l) => l.of.length),
+    svr = SV.map((l) => `<div class="row ovn act" onclick="V.mt='sv';go2('mkt')"><span class="nm">${l.n}</span><span class="mu">Vente : ${l.of.length} offre${l.of.length > 1 ? 's' : ''} à étudier</span></div>`).join('');
+  if (!A.length) return svr;
   return (
+    svr +
     A.slice(0, 5)
       .map((x) => `<div class="row ovn${x.st == 'ctr' || x.st == 'pctr' ? ' act' : ''}" onclick="V.mt='of';go2('mkt')"><span class="nm">${x.n}</span><span class="mu">${tx2(x)}</span></div>`)
       .join('') + (A.length > 5 ? `<div class="mu">+ ${A.length - 5} autre${A.length > 6 ? 's' : ''} offre${A.length > 6 ? 's' : ''}</div>` : '')
@@ -8778,15 +8817,212 @@ function tbPay(w) {
   } catch (e) {}
 }
 
-// Vend un joueur de l'équipe (moitié du prix).
-function sell(i) {
-  const t = me();
-  if (sqN(t) <= 11) return;
-  tx('Transferts', price(t.sq[i]) >> 1);
-  tlog('out', t.sq[i], 'Marché', price(t.sq[i]) >> 1);
-  rmP(t, t.sq[i]);
+// ===== VENTE DE JOUEURS : mise en vente, offres des clubs, étude de l'offre =====
+// S.sl : joueurs en vente { n, ask: prix demandé, sb: prime à la signature demandée, cp: 1 si paiement comptant uniquement,
+//   d0, ex: dernier jour, of: [offres] }.
+// Une offre : { c: indice du club, fee: montant, sb: prime à la signature, pay: 0 comptant | 1 en deux fois, ex: dernier jour pour répondre, cn: 1 si montant revu }.
+// La prime est toujours versée tout de suite ; le montant peut être payé en deux fois (60 % puis le solde 30 jours plus tard).
+// S.sp : versements différés { d: jour, a: montant, n: joueur, cn: club }. S.sh : historique des ventes.
+const SOX = 5,
+  slHist = (n, cl, fee, st) => {
+    S.sh = S.sh || [];
+    S.sh.unshift({ n, cl, fee, st, d: S.day });
+    if (S.sh.length > 12) S.sh.length = 12;
+  },
+  slCnt = () => (S.sl || []).reduce((a, l) => a + l.of.length, 0),
+  slNow = (o) => (o.sb || 0) + (o.pay ? Math.round(o.fee * 0.6) : o.fee),
+  slRat = (r) => (r <= 0.9 ? ['Prix bas : les offres arriveront vite', '#2fb36b'] : r <= 1.1 ? ['Prix du marché : offres régulières', '#62c14a'] : r <= 1.3 ? ['Prix élevé : offres plus rares', '#e0a526'] : ['Prix très élevé : presque aucune offre', '#e5484d']);
+// Choisit un joueur dans la grille : prépare les conditions de vente.
+function svSel(i) {
+  const p = me().sq[i];
+  if (p && !(S.sl || []).some((l) => l.n == p.n)) V.vf = { i, ask: price(p), sb: 0, cp: 0, du: 30 };
+  render();
+}
+// Règle une condition (valeur absolue ou +/−).
+function svSet(k, v, add) {
+  const f = V.vf;
+  if (!f) return;
+  f[k] = add ? f[k] + v : +v;
+  if (k == 'ask') f.ask = Math.max(1, Math.round(f.ask || 1));
+  if (k == 'sb') f.sb = Math.max(0, Math.round(f.sb || 0));
+  render();
+}
+// Met le joueur choisi sur le marché de vente.
+function svList() {
+  const t = me(),
+    f = V.vf,
+    p = t.sq[f ? f.i : -1];
+  if (!p || sqN(t) <= 11) return;
+  S.sl = S.sl || [];
+  if (S.sl.some((l) => l.n == p.n)) return;
+  const du = [15, 30, 45].includes(f.du) ? f.du : 30;
+  S.sl.unshift({ n: p.n, ask: Math.max(1, Math.round(f.ask || price(p))), sb: Math.max(0, Math.round(f.sb || 0)), cp: f.cp ? 1 : 0, d0: S.day, ex: S.day + du, of: [] });
+  V.vf = null;
+  mail('Mise en vente : ' + p.n, p.n + ' est maintenant sur le marché des transferts, à ' + S.sl[0].ask + ' crédits' + (S.sl[0].sb ? ' plus ' + S.sl[0].sb + ' de prime à la signature' : '') + '. Les clubs intéressés enverront leurs offres : vous les étudierez dans Transferts > Vente. La mise en vente dure ' + du + ' jours.');
   save();
   render();
+}
+// Retire un joueur de la vente (les offres en cours sont annulées).
+function svWd(li) {
+  const l = (S.sl || [])[li];
+  if (!l) return;
+  slHist(l.n, '', 0, 'wd');
+  S.sl.splice(li, 1);
+  save();
+  render();
+}
+// Refuse une offre.
+function svNo(li, oi) {
+  const l = (S.sl || [])[li],
+    o = l && l.of[oi];
+  if (!o) return;
+  slHist(l.n, S.teams[o.c].name, o.fee + (o.sb || 0), 'rej');
+  l.of.splice(oi, 1);
+  save();
+  render();
+}
+// Contre-proposition : le club accepte (montant revu, à valider) ou retire son offre.
+function svCt(li, oi, f) {
+  const l = (S.sl || [])[li],
+    o = l && l.of[oi];
+  if (!o || o.cn) return;
+  const cn = S.teams[o.c].name;
+  if (Math.random() < (f <= 1.1 ? 0.55 : 0.25)) {
+    o.fee = Math.round(o.fee * f);
+    o.sb = Math.round((o.sb || 0) * f);
+    o.cn = 1;
+    o.ex = Math.max(o.ex, S.day + 2);
+    mail('Contre-proposition acceptée : ' + l.n, cn + ' accepte de monter son offre pour ' + l.n + ' : ' + (o.fee + o.sb) + ' crédits au total. À vous de décider (Transferts > Vente).');
+  } else {
+    slHist(l.n, cn, o.fee + (o.sb || 0), 'rej');
+    l.of.splice(oi, 1);
+    mail('Offre retirée : ' + l.n, cn + ' refuse votre contre-proposition et retire son offre pour ' + l.n + '.');
+  }
+  save();
+  render();
+}
+// Accepte une offre : le joueur part et l'argent arrive (prime tout de suite ; montant comptant, ou 60 % puis le solde 30 jours plus tard).
+function svAcc(li, oi) {
+  const l = (S.sl || [])[li],
+    o = l && l.of[oi],
+    t = me(),
+    k = 'sv' + li + '_' + oi;
+  if (!o) return;
+  if (ST.cf && V.mk != k) {
+    V.mk = k;
+    return render();
+  }
+  V.mk = null;
+  const i = t.sq.findIndex((p) => p.n == l.n),
+    c = S.teams[o.c];
+  if (i < 0 || sqN(t) <= 11 || c.sq.length >= 15) {
+    V.svn = 'Vente impossible : effectif minimum (11 joueurs) ou club acheteur au complet.';
+    return render();
+  }
+  V.svn = '';
+  V.sel = null;
+  const p = t.sq[i],
+    nm = t.lu.map((x) => t.sq[x].n),
+    tot = o.fee + (o.sb || 0),
+    now = slNow(o);
+  tx('Transferts', now);
+  if (tot > now) (S.sp = S.sp || []).push({ d: S.day + 30, a: tot - now, n: p.n, cn: c.name });
+  tlog('out', p, c.name, tot);
+  t.sq.splice(i, 1);
+  c.sq.push(p);
+  join(p, c);
+  t.lu = nm.map((n) => t.sq.findIndex((q) => q.n == n));
+  if (t.lu.includes(-1)) autoLU(t);
+  autoLU(c);
+  slHist(p.n, c.name, tot, 'sold');
+  S.sl.splice(li, 1);
+  mail('Vente conclue : ' + p.n, p.n + ' rejoint ' + c.name + ' pour ' + tot + ' crédits' + (tot > now ? ' : ' + now + ' versés maintenant, ' + (tot - now) + ' dans 30 jours.' : '.'));
+  save();
+  render();
+}
+// Chaque jour : versements différés, offres expirées, mises en vente terminées, nouvelles offres.
+function saleTick() {
+  try {
+    const t = me();
+    S.sp = (S.sp || []).filter((x) => {
+      if (S.day < x.d) return true;
+      tx('Transferts', x.a);
+      mail('Solde de vente reçu', x.cn + ' verse le solde de ' + x.a + ' crédits pour ' + x.n + '.');
+      return false;
+    });
+    if (!(S.sl || []).length) return;
+    S.sl = S.sl.filter((l) => {
+      const p = t.sq.find((q) => q.n == l.n);
+      if (!p) return false;
+      l.of = l.of.filter((o) => {
+        if (S.day <= o.ex) return true;
+        slHist(l.n, S.teams[o.c].name, o.fee + (o.sb || 0), 'exp');
+        return false;
+      });
+      if (S.day > l.ex && !l.of.length) {
+        slHist(l.n, '', 0, 'exp');
+        mail('Fin de la mise en vente : ' + l.n, 'Aucune offre retenue pour ' + l.n + ' : il n’est plus sur le marché. Vous pouvez le remettre en vente quand vous voulez.');
+        return false;
+      }
+      if (S.day <= l.ex && l.of.length < 3 && Math.random() < 0.14) {
+        const cl = S.teams.map((x, i) => i).filter((i) => i != S.t && S.teams[i].sq.length < 15 && !l.of.some((o) => o.c == i)),
+          D = l.ask + (l.sb || 0),
+          bud = Math.round(price(p) * (0.8 + Math.random() * 0.45));
+        if (cl.length && bud >= D * 0.75) {
+          const ci = cl[(Math.random() * cl.length) | 0],
+            pay = !l.cp && Math.random() < 0.35 ? 1 : 0;
+          let T = Math.round(Math.min(bud, D * 1.05));
+          if (pay) T = Math.round(T * 1.12);
+          const sb = Math.round((T * (l.sb || 0)) / D),
+            o = { c: ci, fee: T - sb, sb, pay, ex: S.day + SOX };
+          l.of.push(o);
+          mail('Offre de ' + S.teams[ci].name + ' pour ' + p.n, S.teams[ci].name + ' propose ' + T + ' crédits pour ' + p.n + (sb ? ' (dont ' + sb + ' de prime à la signature)' : '') + ' (valeur ' + price(p) + ', votre prix ' + D + ')' + (pay ? ', payés en deux fois' : '') + '. Étudiez l’offre dans Transferts > Vente : vous avez ' + SOX + ' jours pour répondre.');
+        }
+      }
+      return true;
+    });
+  } catch (e) {}
+}
+// Onglet « Vente ».
+function svView() {
+  me().sq.forEach(ensure);
+  const t = me(),
+    L = S.sl || [],
+    H = S.sh || [],
+    cn = { GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' },
+    PO = { GK: 0, DEF: 1, MID: 2, ATT: 3 },
+    listed = new Set(L.map((l) => l.n)),
+    all = t.sq.map((p, i) => [p, i]).sort((a, b) => PO[a[0].p] - PO[b[0].p] || b[0].o - a[0].o),
+    f = V.vf && t.sq[V.vf.i] && !listed.has(t.sq[V.vf.i].n) ? V.vf : null,
+    sp = f ? t.sq[f.i] : null,
+    low = sqN(t) <= 11,
+    stT = { sold: 'Vendu', rej: 'Offre refusée', exp: 'Expirée', wd: 'Retiré de la vente' },
+    tile = ([p, i]) => pcC(p, (f && f.i == i ? 'sel ' : '') + (listed.has(p.n) ? 'svl' : ''), `svSel(${i})`),
+    st = (k, l, step, mn) => `<div class="ofg"><span>${l}</span><div class="ofa2"><button onclick="svSet('${k}',${-step},1)">−${step}</button><input type="number" min="${mn}" value="${f ? f[k] : 0}" onchange="svSet('${k}',this.value)"><button onclick="svSet('${k}',${step},1)">+${step}</button></div></div>`,
+    D = f ? f.ask + f.sb : 0,
+    rt = sp ? slRat(D / price(sp)) : null,
+    panel = sp
+      ? `<div class="card svp"><div class="svh"><span class="entpo" style="background:${cn[sp.p]}">${sp.p}</span><b>${sp.n}</b><span class="mu">niv. ${sp.o} · ${sp.age} ans · valeur ${price(sp)} cr.</span></div>${st('ask', 'Prix demandé (cr.)', 50, 1)}${st('sb', 'Prime à la signature (cr.)', 10, 0)}<div class="ofg"><span>Paiement accepté</span><select onchange="svSet('cp',+this.value)"><option value="0" ${f.cp ? '' : 'selected'}>Comptant ou en deux fois</option><option value="1" ${f.cp ? 'selected' : ''}>Comptant uniquement</option></select></div><div class="ofg"><span>Durée de la mise en vente</span><select onchange="svSet('du',+this.value)">${[15, 30, 45].map((d) => `<option value="${d}" ${f.du == d ? 'selected' : ''}>${d} jours</option>`).join('')}</select></div><div class="mu" style="margin:6px 0;color:${rt[1]}"><b>${rt[0]}</b> : tu demandes ${D} cr. au total (${Math.round((100 * D) / price(sp))} % de la valeur)${t.lu.includes(f.i) ? ' · ⚠ titulaire : son départ affaiblira l’équipe' : ''}${low ? ' · effectif minimum atteint (11 joueurs)' : ''}</div><div class="mu">La prime est toujours versée tout de suite ; le prix peut être payé en deux fois (60 % puis le solde 30 jours plus tard) si tu l’acceptes.</div><div class="ctl" style="margin-top:8px"><button class="p" onclick="svList()" ${low ? 'disabled' : ''}>Mettre en vente</button><button onclick="V.vf=null;render()">Annuler</button></div></div>`
+      : '<div class="mu" style="margin-top:8px">Touche un joueur ci-dessus pour régler les conditions de sa vente.</div>',
+    form = `<div class="card"><b>Mettre un joueur en vente</b>${hp('sv')}<div class="mu" style="margin:4px 0 8px">Choisis un joueur, puis fixe tes conditions. Il apparaît sur le marché : les clubs intéressés envoient leurs offres, que tu étudies ici.</div><div class="pg" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr))">${all.map(tile).join('')}</div>${panel}</div>`,
+    row = (l, li) => {
+      const p = t.sq.find((q) => q.n == l.n) || { p: '', o: 0 },
+        dl = Math.max(0, l.ex - S.day);
+      return `<div class="card svc"><div class="svh"><span class="entpo" style="background:${cn[p.p] || '#888'}">${p.p}</span><b>${l.n}</b><span class="mu">note ${p.o} · valeur ${price(p)} · demandé ${l.ask} cr.${l.sb ? ' + ' + l.sb + ' de prime' : ''}${l.cp ? ' · comptant' : ''} · ${dl > 0 ? 'encore ' + dl + ' j' : 'dernier jour'}</span>${l.of.length ? `<span class="svd" title="Offres à étudier">${l.of.length} offre${l.of.length > 1 ? 's' : ''}</span>` : ''}<button onclick="svWd(${li})">Retirer de la vente</button></div>${
+        l.of.length
+          ? l.of
+              .map((o, oi) => {
+                const c = S.teams[o.c],
+                  tot = o.fee + (o.sb || 0),
+                  now = slNow(o),
+                  ok = V.mk == 'sv' + li + '_' + oi;
+                return `<div class="ofr"><div class="ofc"><b>${c.name}</b><span class="mu">Total <b>${tot}</b> cr. (${Math.round((100 * tot) / price(p))} % de la valeur) : prix ${o.fee}${o.sb ? ' + prime à la signature ' + o.sb : ''}</span><span class="mu">${o.pay ? 'Payé en deux fois : ' + now + ' cr. maintenant, ' + (tot - now) + ' cr. dans 30 jours' : 'Payé comptant'}</span><span class="mu">Réponse avant le ${fmtDay(o.ex)}${o.cn ? ' · montant revu après votre contre-proposition' : ''}</span></div><div class="ofs"><button class="p" onclick="svAcc(${li},${oi})">${ok ? 'Confirmer ?' : 'Accepter'}</button>${o.cn ? '' : `<button onclick="svCt(${li},${oi},1.1)">Contre +10 %</button><button onclick="svCt(${li},${oi},1.25)">Contre +25 %</button>`}<button onclick="svNo(${li},${oi})">Refuser</button></div></div>`;
+              })
+              .join('')
+          : '<div class="mu" style="padding:6px 2px">Aucune offre pour l’instant : le joueur est visible sur le marché.</div>'
+      }</div>`;
+    };
+  return `<h2>Vente de joueurs ${hp('sv2')}</h2>${V.svn ? `<div class="card" style="border-color:#e5484d">${V.svn}</div>` : ''}${L.length ? L.map(row).join('') : ''}${form}${(S.sp || []).length ? `<div class="card"><b>Versements à venir</b>${S.sp.map((x) => `<div class="row"><span class="nm">${x.n} <span class="mu">${x.cn}</span></span><span class="mu">+${x.a} cr. le ${fmtDay(x.d)}</span></div>`).join('')}</div>` : ''}<h2>Historique</h2><div class="card">${H.map((x) => `<div class="row"><span class="nm">${x.n} <span class="mu">${x.cl || ''}</span></span><span class="mu">${stT[x.st]}${x.fee ? ' · ' + x.fee + ' cr.' : ''} · ${fmtDay(x.d)}</span></div>`).join('') || '<div class="mu">Aucune vente pour l’instant.</div>'}</div>`;
 }
 // Démarre la phase finale de la Cup.
 function cupStart() {
@@ -8905,59 +9141,6 @@ function cupView() {
 // ======================================================================
 // ÉDITEUR DE MODS (équipes, joueurs, couleurs)
 // ======================================================================
-// Importe un fichier Excel d'équipes et de joueurs.
-function imp(f) {
-  if (!f) return;
-  const rd = new FileReader();
-  rd.onload = (e) => {
-    try {
-      const ws = XLSX.read(e.target.result, { type: 'array' }),
-        sh = ws.Sheets['Joueurs'] || ws.Sheets[ws.SheetNames[1]],
-        rows = XLSX.utils.sheet_to_json(sh, { header: 1, range: 3 }),
-        hd = rows[0],
-        ix = (n) => hd.indexOf(n),
-        ct = {},
-        K = {
-          GK: ['Réflexes (GK)', 'Physique', 'Détermination'],
-          DEF: ['Tacle', 'Physique', 'Vitesse', 'Détermination'],
-          MID: ['Passe', 'Vision', 'Dribble', 'Détermination'],
-          ATT: ['Finition', 'Vitesse', 'Dribble', 'Détermination'],
-        };
-      rows.slice(1).forEach((r) => {
-        const ti = T.findIndex((x) => x[0] == (NM[r[0]] || r[0]));
-        if (ti < 0 || !r[1] || !r[4]) return;
-        const g = (n) => +r[ix(n)] || 10,
-          ps = String(r[4]),
-          p = ps.includes('GK') ? 'GK' : /DC|DL/.test(ps) ? 'DEF' : /ST|\(W\)/.test(ps) ? 'ATT' : 'MID',
-          av = K[p].reduce((s, n) => s + g(n), 0) / K[p].length;
-        (ct[ti] = ct[ti] || []).push({
-          n: r[1],
-          p,
-          o: Math.round(28 + av * 3.3),
-          e: 100,
-          f: Math.round(g('Potentiel (1-20)') * 4.5),
-          g: 0,
-          c: r[2] == 'Canon' ? 1 : 0,
-        });
-      });
-      let n = 0;
-      Object.keys(ct).forEach((i) => {
-        const t = S.teams[i];
-        if (ct[i].length >= 11) {
-          t.sq = ct[i];
-          autoLU(t);
-          n += ct[i].length;
-        }
-      });
-      V.note = n + ' joueurs importés';
-      save();
-    } catch (x) {
-      V.note = 'Import impossible : ' + x.message;
-    }
-    render();
-  };
-  rd.readAsArrayBuffer(f);
-}
 // Raccourci : lit la valeur d'un champ de formulaire.
 const gv = (id) => document.getElementById(id).value,
   sv = () => {
@@ -9029,10 +9212,9 @@ function colWarn(c, nm) {
 function edT(i) {
   V.et = i;
   V.fv = null;
-  const t = T[i],
-    m = t && MOD.teams.find((x) => x.name == t[0]);
+  const t = T[i];
   V.ep = t && X[t[0]] ? X[t[0]].map((p) => ({ ...p })) : [];
-  V.ek = t ? FX[t[0]].k : 'chance';
+  V.ek = t ? FX[t[0]].k : 'smog';
   render();
 }
 // Page « Éditeur de mods ».
@@ -9040,20 +9222,20 @@ function edView() {
   const i = V.et,
     t = i >= 0 ? T[i] : null;
   let h =
-    '<h1>🛠️ Éditeur de mods</h1><div class="ctl"><button class="p" onclick="V.ed=0;S=null;save();render()">▶ Jouer avec ce mod</button></div><p class="mu">Les modifications s’appliquent à une nouvelle partie. Une équipe avec moins de 11 joueurs reçoit un effectif généré.</p>';
+    '<h1>🛠️ Éditeur de mods</h1><div class="ctl"><button class="p" onclick="if(S)autosave();V.ed=0;S=null;save();render()">▶ Jouer avec ce mod</button></div><p class="mu">Les modifications s’appliquent à une nouvelle partie. Une équipe avec moins de 11 joueurs reçoit un effectif généré.</p>';
   if (i == null || i == undefined)
     return (
       h +
       '<h2>Équipes</h2><div class="card">' +
       T.map(
         (t, j) =>
-          `<div class="row"><span class="nm">${t[2]} ${t[0]}${ft(t[0])} <span class="mu">niv. ${t[1]}${X[t[0]] ? ' · ' + X[t[0]].length + ' joueurs' : ''}</span></span><button onclick="edT(${j})">Éditer</button></div>`,
+          `<div class="row"><span class="nm">${t[2]} ${t[0]}${ft(t[0])} <span class="mu">niv. ${t[1]}${X[t[0]] ? ' · ' + X[t[0]].length + ' joueurs' : ''}${FMOD.some((m) => m.name == t[0]) ? ' · 📁 fichier du mod' : ''}</span></span><button onclick="edT(${j})">Éditer</button></div>`,
       ).join('') +
-      '<button style="margin-top:8px" onclick="edT(-1)">+ Nouvelle équipe</button></div><h2>Mod (JSON à copier/coller pour partager)</h2><div class="card"><textarea id="ej" rows="5" style="width:100%">' +
-      JSON.stringify(MOD).replace(/⟦/g, '&#10214;') +
-      '</textarea><div class="ctl"><button onclick="impJ()">Charger ce JSON</button><button onclick="MOD={teams:[]};sv();applyMod();render()">Réinitialiser</button></div></div><button onclick="V.ed=0;render()">Retour</button>'
+      '<button style="margin-top:8px" onclick="edT(-1)">+ Nouvelle équipe</button></div><h2>📁 Dossier « mods »</h2><div class="card"><div class="mu">Chaque fichier .json placé dans le dossier <b>mods</b> (et listé dans <b>mods/index.json</b>) apporte ses équipes : elles apparaissent dans le choix des clubs d’une nouvelle carrière. Le jeu doit être ouvert depuis son lien (pas depuis un fichier local).</div>' +
+      (FMN.length ? FMN.map(([f, n]) => `<div class="row"><span class="nm">📄 ${f} <span class="mu">${n < 0 ? 'illisible' : n + ' équipe' + (n > 1 ? 's' : '')}</span></span></div>`).join('') : '<div class="mu" style="margin-top:6px">Aucun fichier de mod chargé.</div>') +
+      '</div><h2>Transférer mes équipes</h2><div class="card"><div class="mu">Exporte tes équipes dans un fichier, puis importe ce fichier sur n’importe quel appareil (PC, tablette, mobile) : les équipes sont ajoutées à celles déjà présentes, sans rien effacer. Une équipe du même nom est remplacée.</div><div class="ctl" style="margin-top:8px"><button onclick="modDl()">⬇ Exporter mes équipes</button><button class="p" onclick="gv(\'mif\').click()">📂 Importer un fichier d’équipes</button><input type="file" id="mif" accept=".json,application/json" style="display:none" onchange="modImp(this)" aria-label="Importer un fichier d’équipes"></div><span class="mu">' + (V.note || '') + '</span><div class="ctl" style="margin-top:8px"><button onclick="MOD={teams:[]};sv();applyMod();render()">Réinitialiser mes équipes</button></div></div><button onclick="V.ed=0;render()">Retour</button>'
     );
-  const f = t ? FX[t[0]] : BR.chance,
+  const f = t ? FX[t[0]] : BR.smog,
     q = V.fv || {
       n: t ? t[0] : '',
       e: t ? t[2] : '🏟️',
@@ -9170,16 +9352,6 @@ function delT() {
   render();
 }
 // Importe un mod au format JSON.
-function impJ() {
-  try {
-    const m = JSON.parse(gv('ej'));
-    if (!Array.isArray(m.teams)) throw 1;
-    MOD = m;
-    sv();
-    applyMod();
-  } catch (e) {}
-  render();
-}
 // Invente un nom de joueur qui n'existe pas encore.
 function uname(U, A, B) {
   let n,
@@ -10377,7 +10549,40 @@ const MAN = (() => {
   // Vrai si l'animation de match est activée dans les paramètres.
   const on = () => !!(typeof ST !== 'undefined' && ST.an !== 0 && V.m);
   // Vrai en mode « léger » (moins d'effets) pour les petits ordinateurs.
-  const lite = () => !!(ST.anlite || ST.rm);
+  // Petites étiquettes de texte du terrain (numéros, noms) : dessinées une seule fois puis recopiées en image,
+// ce qui est bien plus léger que de redessiner le texte à chaque image de l'animation.
+const TXS = new Map();
+function txSpr(txt, sz, col, stk) {
+  const q = lite() ? 1 : Math.min(window.devicePixelRatio || 1, 1.5),
+    k = txt + '|' + sz + '|' + col + '|' + (stk || '') + '|' + q;
+  let e = TXS.get(k);
+  if (e) return e;
+  const x0 = document.createElement('canvas').getContext('2d');
+  x0.font = `${sz}px ${FNT}`;
+  const pad = Math.ceil(sz * 0.25) + 2,
+    w = Math.ceil(x0.measureText(txt).width) + pad * 2,
+    h = Math.ceil(sz * 1.3) + pad * 2,
+    c = document.createElement('canvas');
+  c.width = Math.ceil(w * q);
+  c.height = Math.ceil(h * q);
+  const x = c.getContext('2d');
+  x.scale(q, q);
+  x.font = `${sz}px ${FNT}`;
+  x.textAlign = 'center';
+  x.textBaseline = 'middle';
+  if (stk) {
+    x.lineWidth = sz * 0.16;
+    x.strokeStyle = stk;
+    x.strokeText(txt, w / 2, h / 2);
+  }
+  x.fillStyle = col;
+  x.fillText(txt, w / 2, h / 2);
+  e = { c, w, h };
+  if (TXS.size > 500) TXS.clear();
+  TXS.set(k, e);
+  return e;
+}
+const lite = () => !!(ST.anlite || ST.rm);
   // Facteur de vitesse de l'animation selon le rythme choisi.
   const pf = () => [1.35, 1, 0.55][V.sp ?? 1];
   // Sens d'attaque d'une équipe (change à la mi-temps).
@@ -10386,7 +10591,7 @@ const MAN = (() => {
   const goalOf = (t) => (dirOf(t) > 0 ? 1 : 0);
   // Renvoie l'équipe t (0 ou 1) du match en cours.
   const tm = (t) => st.M.t[t];
-  const slotsOf = (t) => slots(tm(t).form);
+  
   // Nom du joueur k de l'équipe t.
   const pname = (t, k) => {
     const T = tm(t),
@@ -10419,8 +10624,7 @@ const MAN = (() => {
   // Numéros de maillot des joueurs en match.
   function nums(M) {
     return M.t.map((T) => {
-      const used = new Set([1]),
-        o = {};
+      const o = {};
       T.lu.forEach((li, k) => {
         const p = T.sq[li];
         if (!p) return;
@@ -11082,7 +11286,6 @@ const MAN = (() => {
       if (u >= 1) st.hold = { t: A, k: g.a };
     } else if (g.k == 'pass') {
       const to = st.pos[A][g.b],
-        from = st.pos[A][g.a],
         e = eio(u),
         sx = g.b0.x,
         sy = g.b0.y;
@@ -11191,7 +11394,7 @@ const MAN = (() => {
     u = clamp(u, 0.03, 0.95);
     let x = d > 0 ? u : 1 - u;
     if (cur && g) {
-      const sl = slots(T.form);
+      
       if (t == A && g.k == 'pass' && k == g.b) {
         x += d * 0.05;
       }
@@ -11223,8 +11426,7 @@ const MAN = (() => {
     const press = [null, null];
     for (let t = 0; t < 2; t++) {
       if (st.own == t || st.ko) continue;
-      let best = [],
-        lst = [];
+      let lst = [];
       for (let k = 1; k < 7; k++) {
         const p = st.pos[t][k];
         lst.push([k, (p[0] - b.x) ** 2 + (p[1] - b.y) ** 2]);
@@ -11252,8 +11454,7 @@ const MAN = (() => {
           gl = st.aura && st.aura.fk == 'bubble' && st.aura.t == t && st.aura.k == k,
           rate = div || gl ? 9 : st.cur ? 3.4 : 2.6,
           mx = (div ? 0.55 : gl ? 0.45 : 0.16) * dt,
-          ds = Math.hypot(dx, dy * 0.65),
-          mv = Math.min(1, ds ? mx / ds : 0) * 1;
+          ds = Math.hypot(dx, dy * 0.65);
         const f = Math.min(1 - Math.exp(-dt * rate), Math.min(1, ds ? (mx * (div ? 1 : 1.2)) / ds : 1));
         p[0] += dx * f;
         p[1] += dy * f;
@@ -11267,7 +11468,7 @@ const MAN = (() => {
         const pl = P3(p[0], p[1]);
         if (want == null) {
           const bb = P3(b.x, b.y);
-          let dd = dirOf(t);
+          
           if (
             st.cur &&
             st.seg &&
@@ -11909,16 +12110,8 @@ const MAN = (() => {
       for (const o of out) {
         if (o.lb) {
           if (o.sz < 5) continue;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.font = `${o.sz}px ${FNT}`;
-          if (o.st) {
-            ctx.lineWidth = o.sz * 0.16;
-            ctx.strokeStyle = o.st;
-            ctx.strokeText(o.txt, o.q[0], o.q[1]);
-          }
-          ctx.fillStyle = o.col;
-          ctx.fillText(o.txt, o.q[0], o.q[1]);
+          const sp = txSpr(o.txt, Math.round(o.sz), o.col, o.st);
+          ctx.drawImage(sp.c, o.q[0] - sp.w / 2, o.q[1] - sp.h / 2, sp.w, sp.h);
           continue;
         }
         const c = rgb(o.c);
@@ -12372,7 +12565,7 @@ const MAN = (() => {
       ctx.fillRect(0, 0, W, H * 0.085);
       ctx.fillRect(0, H * 0.915, W, H * 0.085);
       if (g) {
-        const sc = st.cur;
+        
         ctx.fillStyle = '#fff';
         ctx.font = `${H * 0.034}px ${FNT}`;
         ctx.textAlign = 'left';
@@ -12437,8 +12630,7 @@ window.phFit = function (im) {
     let t = A,
       k = sc.pl,
       big,
-      sub,
-      cls = '';
+      sub;
     if (type == 'goal') {
       big = 'BUT !';
       sub =
@@ -13246,15 +13438,6 @@ function roleSec(p, i) {
   const t = me(),
     li = t.lu.indexOf(i),
     sl = li >= 0 ? slots(t.form)[li] : null,
-    cur = (ph) => p[ph] || '',
-    opt = (ph) =>
-      '<option value="">— Rôle standard —</option>' +
-      [p.p, ...POS.filter((g) => g != p.p)]
-        .map((g) => {
-          const L = ROLES[g][ph == 're' ? 'ep' : 'sp'];
-          return `<optgroup label="${{ GK: 'Gardien', DEF: 'Défenseur', MID: 'Milieu', ATT: 'Attaquant' }[g]}">${L.map((R, j) => (j ? `<option value="${g}:${j}" ${cur(ph) == g + ':' + j ? 'selected' : ''}>${R[0]} ${'★'.repeat(roleStars(p, R))}${'☆'.repeat(5 - roleStars(p, R))}</option>` : '')).join('')}</optgroup>`;
-        })
-        .join(''),
     desc = (ph) => {
       const r = rolePick(p, ph);
       if (!r) return '';
@@ -13643,8 +13826,7 @@ function tacView() {
   const M = false,
     lv = V.tab == 'match' && !!V.m && !V.m.done,
     mode = V.tt == 'in' ? V.ts : '',
-    sel = V.sel,
-    cl = (i) => (sel === i ? 'sel ' : '');
+    sel = V.sel;
   // ----- Terrain -----
   const bad = t.lu
     .map((li, k) => {
@@ -13858,7 +14040,9 @@ const HELP = {
   tvd: 'Réglages de défense : la ligne rouge montre la hauteur de la défense, la ligne pointillée le début du pressing.',
   tvr: 'Chaque titulaire a un rôle avec le ballon et un rôle sans le ballon. Les étoiles indiquent son adéquation.',
   tve: 'Les joueurs sur le banc. Glissez-en un sur un titulaire pour les échanger.',
-  rc: 'Un joueur de champ peut apprendre un autre poste (défenseur, milieu ou attaquant). La durée dépend de l’âge ; « Repos » met la reconversion en pause et « Intensif » l’accélère. Pendant ce temps son malus au nouveau poste diminue chaque jour, et il est un peu moins efficace à son poste actuel. Les gardiens ne peuvent pas se reconvertir.',
+  ent: 'Règle l’entraînement de chaque joueur : intensité (Repos, Normal, Intensif), axe à travailler et reconversion de poste. La barre « Progression » montre le chemin vers +1 niveau ; les jeunes progressent vite, les plus de 31 ans déclinent.',
+  entp: 'Un programme change l’intensité de tout l’effectif d’un coup. « Appliquer à » règle un groupe seulement (un poste ou une tranche d’âge). Intensif = progrès plus rapides mais énergie qui baisse ; Repos = l’énergie remonte.',
+  enta: 'Quand un joueur passe sous le seuil d’énergie choisi, il se met au repos tout seul, puis reprend son réglage dès qu’il a récupéré 20 points d’énergie. Ton réglage de départ n’est jamais modifié.',
   xp: 'La petite jauge sous la carte montre l’expérience du joueur : à 100 %, il gagne un niveau. L’entraînement la fait monter chaque jour (plus vite pour les jeunes et avec l’intensité Intensif).',
   pre: 'Un préréglage mémorise la formation, les titulaires, la mentalité, le pressing et les consignes. Vous pouvez le charger depuis le Planificateur ou juste avant le coup d’envoi d’un match.',
   eqs: 'Classement de vos joueurs sur la saison en cours pour la statistique choisie.',
@@ -13894,8 +14078,6 @@ const HELP = {
   cris: 'Un cri de touche toutes les 10 minutes, pour toute l’équipe. Son effet dure 10 minutes. À utiliser selon le score et l’état de l’équipe.',
   ana: 'Zones d’action : où se joue le ballon pour chaque équipe. Élan : qui domine, par tranches de 5 minutes (barres vers le haut pour l’équipe à domicile).',
   mstat: 'Statistiques en direct du match : possession, passes, tirs, tirs cadrés et fautes.',
-  train:
-    'L’intensité d’entraînement fait progresser la jauge vers +1 niveau. Intensif = plus vite mais plus de fatigue ; les jeunes progressent plus vite.',
   moral:
     'Humeur du joueur. Elle monte avec les victoires et le temps de jeu, baisse avec les défaites et le banc, et influence légèrement ses performances.',
   contrat:
@@ -13963,7 +14145,8 @@ const HELP = {
   mks: 'Tous les joueurs disponibles à cette saison : ceux des autres équipes et les agents libres. Les équipes qui arrivent plus tard dans la Ligue n’y figurent qu’à partir de leur saison. Cherchez un nom ou filtrez par équipe, Fluide, planète, poste et niveau. Touchez un joueur pour voir sa fiche, « Offre » pour négocier : le club vend rarement en dessous de la valeur du joueur.',
   rsv: 'La réserve accueille jusqu’à 15 joueurs de plus que votre effectif : ils ne sont ni titulaires ni remplaçants et ne jouent pas les matchs. Ils restent payés et peuvent être rappelés, échangés avec un joueur de l’effectif ou prêtés. Seuls les changements hors match sont possibles.',
   mkt: 'Joueurs libres à recruter ; le prix dépend de leur niveau. Effectif limité à 15 joueurs. La liste se renouvelle régulièrement.',
-  sell: 'Vous pouvez vendre vos remplaçants (pas les titulaires) pour la moitié de leur valeur. Gardez au moins 11 joueurs.',
+  sv: 'Touchez un joueur puis réglez vos conditions : prix demandé, prime à la signature, paiement accepté et durée de la vente (15, 30 ou 45 jours). Plus le total demandé est haut, plus les offres sont rares ; elles arrivent par mail et dans cet onglet. Gardez au moins 11 joueurs.',
+  sv2: 'Un point coloré indique les joueurs qui ont reçu une offre. Étudiez le montant et le mode de paiement (comptant ou en deux fois, 60 % puis le solde 30 jours plus tard), puis acceptez, faites une contre-proposition (le club peut retirer son offre) ou refusez. Une offre expire après 5 jours.',
   next: 'Votre prochain match. Cliquez sur « Jouer la journée » : les autres matchs de la journée sont joués en même temps.',
   fluide:
     'Le Fluide est le pouvoir spécial de votre équipe : il se déclenche au hasard pendant les matchs, plus souvent si vos joueurs ont un bon Fl.',
@@ -13976,12 +14159,11 @@ const HELP = {
   j: 'Nombre de matchs joués.',
   sub: '3 remplacements possibles pendant un match : touchez un titulaire puis un remplaçant.',
   cup: 'Après le championnat, les 8 meilleures équipes jouent une coupe à élimination directe (tirs au but si égalité). Le vainqueur gagne 2000 crédits.',
-  imp: 'Charge votre fichier Excel (onglet « Joueurs ») pour remplacer les effectifs des équipes.',
   ed: 'Créez vos propres équipes, joueurs et Fluides. Les changements s’appliquent à une nouvelle partie.',
   start:
     'Choisissez l’équipe que vous dirigerez. Plus son niveau est élevé, plus elle est forte, mais plus l’objectif du conseil sera exigeant.',
-  modjson:
-    'Texte contenant votre mod : copiez-le pour le partager, ou collez celui d’un ami puis cliquez sur « Charger ».',
+  modtr:
+    'Exportez vos équipes dans un fichier, puis importez-le sur un autre appareil : les équipes sont ajoutées à celles que vous avez déjà.',
   cal: 'Votre calendrier de la saison : les trois prochains matchs en haut, puis le mois en cours avec l’adversaire, domicile (D) ou extérieur (E), la compétition et le score des matchs joués. Les flèches changent de mois, « Aujourd’hui » revient à la date du jeu. La liste en bas détaille les matchs du mois.',
   pitch:
     'Terrain vu de dessus, aux couleurs de la planète du match. Les passes, tirs et arrêts affichés correspondent exactement au texte du journal. « Rejouer l’action » revoit le dernier tir au ralenti. Tout se règle dans Paramètres > Animation des matchs.',
@@ -14015,7 +14197,6 @@ const HP = [
   ['Titulaires</span>', 'titu'],
   ['Remplaçants</div>', 'remp'],
   ['<b>Statistiques</b>', 'mstat'],
-  ['<h2>Entraînement', 'train'],
   ['Moral : ', 'moral'],
   ['<h2>Contrat', 'contrat'],
   ['<h2>Prêts', 'prets'],
@@ -14040,7 +14221,6 @@ const HP = [
   ['<h2>Stade', 'stade'],
   ['(plus cher = moins de monde)</span>', 'tk'],
   ['<h2>Marché des transferts', 'mkt'],
-  ['<h2>Vendre', 'sell'],
   ['Prochain match : ', 'next'],
   ['🌀 Fluide : ', 'fluide'],
   ['Confiance du conseil : ', 'conf'],
@@ -14054,10 +14234,9 @@ const HP = [
   ['Note équipe</span>', 'tnote'],
   ['<span>Astuce :</span>', 'dnd'],
   ['<b>🏆 Coupe de la Ligue', 'cup'],
-  [' (.xlsx)</button>', 'imp'],
   ['Éditeur de mods</h1>', 'ed'],
   ['Ligue Galactique.', 'start'],
-  ['Mod (JSON à copier/coller pour partager)', 'modjson'],
+  ['<h2>Transférer mes équipes</h2>', 'modtr'],
   ['<h2>Équipes', 'edteams'],
 ];
 // Insère automatiquement les bulles d'aide dans le HTML d'une page.
@@ -14065,9 +14244,9 @@ const addHelp = (h) => {
   if (V.tab == 'mkt')
     h = h.replace(/<h2>Stade<\/h2><div class="card">[\s\S]*?<\/div><\/div>(?=<h2>Staff)/, '');
   HP.forEach(([s, k]) => {
-    h = h.split(s).join(s + hp(k));
+    if (h.includes(s)) h = h.split(s).join(s + hp(k));
   });
-  if (V.vw == 'l') h = h.split('<div class="pg">').join('<div class="pg l">');
+  if (V.vw == 'l' && h.includes('<div class="pg">')) h = h.split('<div class="pg">').join('<div class="pg l">');
   return h;
 };
 // Textes du Tutoriel.
@@ -14077,8 +14256,16 @@ const TU = [
     'Vous dirigez un club de la Ligue Galactique : composez l’équipe, choisissez la tactique, gérez l’argent et visez l’objectif fixé par le conseil. Chaque « ? » du jeu explique l’élément à côté duquel il se trouve : survolez-le (ou touchez-le sur mobile).',
   ],
   [
+    'Créer une nouvelle carrière',
+    'Depuis l’écran de départ, « Nouvelle carrière » vous guide en 5 étapes, avec un bouton « Suivant » en bas à droite. 1) Votre manager : prénom, nom et apparence (visage visible dans le cadre). 2) Son passé : chaque passé donne des effets, résumés dans le second cadre. 3) Le type de championnat : Galactik League, Galactik Cup ou les deux, avec une case pour activer ou non les événements spéciaux. 4) La planète puis le club : choisissez une planète à gauche, puis un club à droite ; sa présentation (bio, Fluide, niveau) s’affiche dans le cadre, ainsi que la difficulté. 5) L’emplacement de sauvegarde : choisissez l’un des 5 emplacements, puis lancez la partie. Les équipes de l’éditeur de mods figurent dans la liste des clubs.',
+  ],
+  [
+    'Installer le jeu',
+    'Sur l’écran de départ, le bouton « Installer sur mobile ou tablette » explique en quelques lignes comment ajouter le jeu à l’écran d’accueil (Android avec Chrome, iPhone et iPad avec Safari). Une fois installé, il s’ouvre en plein écran et fonctionne aussi sans connexion une fois chargé.',
+  ],
+  [
     'Les onglets',
-    'Club : effectif et prochain match. Tactique : formation et placement. Match : le match en direct. Cal. : calendrier et scores. ✉️ : messages du club. Transferts : offres, prêts et staff. Gestion : stade, sponsors et boutique. Finances : revenus et dépenses. Class. : classement et coupe. Adversaires : fiches et tactiques de tous les clubs. Aide : cette page.',
+    'Club : effectif et prochain match. Tactique : formation et placement. Match : le match en direct. Cal. : calendrier et scores. ✉️ : messages du club. Transferts : offres, ventes, prêts et staff. Formation : centre de formation. Entraînement : programmes et réglages par joueur. Gestion : stade, sponsors et boutique. Finances : revenus et dépenses. Class. : classement et coupe. Adversaires : fiches et tactiques de tous les clubs. Aide : cette page.',
   ],
   [
     'Jouer une journée',
@@ -14086,7 +14273,7 @@ const TU = [
   ],
   [
     'L’effectif et les joueurs',
-    'Chaque joueur a un poste (GK gardien, DEF défenseur, MID milieu, ATT attaquant), un niveau (le gros chiffre, plus il est haut mieux c’est), une énergie (la barre : elle baisse quand il joue, remonte quand il se repose) et un Fluide personnel (Fl). Un joueur placé hors de son poste perd 25 % de son niveau. La fiche du joueur montre ses notes de forme, ses statistiques, sa carte de chaleur et sa gestion (entraînement, rôle, capitaine, Fluide). La petite barre d’expérience indique quand il gagne un niveau, jusqu’à son potentiel. Les attributs influencent le match : Finition et Réflexes (tirs, arrêts), Passe et Vision (milieu), Tacle et Physique (défense), Vitesse et Dribble (attaque), Détermination (fin de match). L’axe d’entraînement choisi les fait progresser.',
+    'Chaque joueur a un poste (GK gardien, DEF défenseur, MID milieu, ATT attaquant), un niveau (le gros chiffre, plus il est haut mieux c’est), une énergie (la barre : elle baisse quand il joue, remonte quand il se repose) et un Fluide personnel (Fl). Un joueur placé hors de son poste perd 25 % de son niveau. La fiche du joueur montre ses notes de forme, ses statistiques, sa carte de chaleur et sa gestion (rôle, capitaine, Fluide) ; l’entraînement se règle dans l’onglet Entraînement. La petite barre d’expérience indique quand il gagne un niveau, jusqu’à son potentiel. Les attributs influencent le match : Finition et Réflexes (tirs, arrêts), Passe et Vision (milieu), Tacle et Physique (défense), Vitesse et Dribble (attaque), Détermination (fin de match). L’axe d’entraînement choisi (onglet Entraînement) les fait progresser.',
   ],
   [
     'La tactique',
@@ -14110,7 +14297,7 @@ const TU = [
   ],
   [
     'Argent, transferts et staff',
-    'Les crédits servent à recruter des joueurs, vendre des remplaçants et améliorer le staff (entraîneur, kiné, analyste, centre de formation). Pour recruter, vous déposez une offre dans Transferts : le club vendeur répond sous 2 à 4 jours, puis le joueur étudie vos conditions (prime de signature, salaire, prime de titre, durée). Les contre-propositions se traitent dans l’onglet Offres. Gagnez des crédits en jouant, en gagnant et grâce aux sponsors. L’onglet Base de joueurs de Transferts permet de chercher n’importe quel joueur du jeu et d’en consulter la fiche, sans pouvoir l’acheter.',
+    'Les crédits servent à recruter des joueurs et à améliorer le staff (entraîneur, kiné, analyste, centre de formation). Pour recruter, vous déposez une offre dans Transferts : le club vendeur répond sous 2 à 4 jours, puis le joueur étudie vos conditions (prime de signature, salaire, prime de titre, durée). Les contre-propositions se traitent dans l’onglet Offres. Pour vendre un joueur, utilisez l’onglet Vente. Gagnez des crédits en jouant, en gagnant et grâce aux sponsors. L’onglet Base de joueurs de Transferts permet de chercher n’importe quel joueur du jeu et d’en consulter la fiche, sans pouvoir l’acheter.',
   ],
   [
     'Le stade',
@@ -14125,8 +14312,8 @@ const TU = [
     'Une fois le championnat terminé, lancez la Coupe de la Ligue depuis Class. : les 8 meilleures équipes s’affrontent en élimination directe.',
   ],
   [
-    'Éditeur de mods et import',
-    'Sur l’écran de départ, l’éditeur permet de créer des équipes, des joueurs et des Fluides. Dans Club, le bouton d’import charge un fichier Excel de joueurs.',
+    'Éditeur de mods et transfert d’équipes',
+    'Sur l’écran de départ, l’éditeur de mods permet de créer des équipes (nom, niveau, couleurs, Fluide, joueurs). Une équipe créée apparaît ensuite dans le choix des clubs de toute nouvelle carrière, sur cet appareil. Pour la retrouver ailleurs (PC, tablette, mobile) : dans l’éditeur, carte « Transférer mes équipes », exportez vos équipes dans un fichier, puis importez ce fichier sur l’autre appareil avec « Importer un fichier d’équipes ». L’import ajoute les équipes à celles déjà présentes ; une équipe du même nom est remplacée. Une équipe importée sert dans une nouvelle carrière, pas dans une partie déjà commencée. Celui qui héberge le jeu peut aussi déposer des fichiers dans le dossier « mods » pour offrir des équipes à tous les joueurs.',
   ],
   [
     'Consignes tactiques',
@@ -14146,11 +14333,19 @@ const TU = [
   ],
   [
     'Entraînement, moral et derbys',
-    'Dans le profil ⓘ d’un joueur, choisissez l’intensité d’entraînement (Repos, Normal, Intensif) et l’axe à travailler : chaque journée fait avancer la jauge vers +1 niveau (les jeunes progressent vite, les plus de 31 ans déclinent). Le moral (😀 à 😠) monte avec les victoires et le temps de jeu, baisse avec les défaites et le banc, et influence la performance : un joueur mal dans sa peau peut demander à partir. Les derbys (Snow Kids–Tigres Rouges, Snow Kids–Shadows, Lightnings–Xenons, Technodroids–Vortex, Pirates–Shadows) ont plus d’occasions, plus de fautes et une billetterie à +40 %.',
+    'Chaque journée d’entraînement fait avancer la jauge de chaque joueur vers +1 niveau (les jeunes progressent vite, les plus de 31 ans déclinent) : tout se règle dans l’onglet Entraînement. Le moral (😀 à 😠) monte avec les victoires et le temps de jeu, baisse avec les défaites et le banc, et influence la performance : un joueur mal dans sa peau peut demander à partir. Les derbys (Snow Kids–Tigres Rouges, Snow Kids–Shadows, Lightnings–Xenons, Technodroids–Vortex, Pirates–Shadows) ont plus d’occasions, plus de fautes et une billetterie à +40 %.',
+  ],
+  [
+    'L’onglet Entraînement',
+    'Il liste tous vos joueurs, sous forme de lignes : énergie, progression vers le prochain niveau (« +1 niveau dans ~64 j » ou « Potentiel atteint »), intensité (Repos, Normal, Intensif), axe à travailler et reconversion de poste. Les programmes d’équipe règlent tout l’effectif d’un clic (Récupération, Équilibré, Intensif, Jeunes d’abord) et « Appliquer à » règle un groupe (un poste ou une tranche d’âge). Le repos automatique met seul au repos un joueur sous un seuil d’énergie (50, 60 ou 70 %) jusqu’à ce qu’il ait regagné 20 points. Filtrez par poste et triez par niveau, âge, énergie ou prochain niveau. Les gardiens suivent tout cela, sauf la reconversion de poste, impossible pour eux. Touchez un nom pour ouvrir la fiche du joueur.',
+  ],
+  [
+    'Vendre un joueur',
+    'Dans Transferts > Vente, touchez la carte du joueur à vendre puis réglez vos conditions : prix demandé, prime à la signature, paiement accepté (comptant ou en deux fois) et durée de la mise en vente (15, 30 ou 45 jours). Le joueur reste sur le marché : les clubs envoient leurs offres, signalées par un mail, une pastille rouge sur l’onglet et un compteur sur le joueur. Chaque offre indique le montant, la prime, le mode de paiement (en deux fois : 60 % tout de suite, le solde 30 jours plus tard) et la date limite (5 jours). Vous pouvez accepter, faire une contre-proposition (+10 % ou +25 %, que le club peut refuser) ou refuser. Plus le total demandé est haut, plus les offres sont rares. Gardez toujours au moins 11 joueurs.',
   ],
   [
     'Offres sur vos joueurs',
-    'Quelques fois par saison, un club propose d’acheter l’un de vos joueurs. Le joueur peut refuser de partir (titulaire heureux, club moins bon) ; s’il accepte, vous pouvez accepter l’offre, faire une contre-proposition (+20 % ou +40 %, que le club peut refuser) ou refuser. Gardez toujours au moins 11 joueurs.',
+    'Quelques fois par saison, un club propose spontanément, par mail, d’acheter l’un de vos joueurs. Le joueur peut refuser de partir (titulaire heureux, club moins bon) ; s’il accepte, vous pouvez accepter l’offre, faire une contre-proposition (+20 % ou +40 %, que le club peut refuser) ou refuser. Gardez toujours au moins 11 joueurs.',
   ],
   [
     'Événements',
@@ -14158,7 +14353,7 @@ const TU = [
   ],
   [
     'Sauvegardes',
-    'Le bouton « Sauvegardes » (onglet Club ou écran de départ) ouvre 5 emplacements manuels et une sauvegarde automatique, mise à jour après chaque match. Sauvegarder sur un emplacement déjà utilisé demande confirmation. Les sauvegardes restent dans ce navigateur et ne fonctionnent qu’avec le mod utilisé lors de la partie.',
+    'Le bouton « Sauvegardes » (onglet Club ou écran de départ) ouvre 5 emplacements manuels et une sauvegarde automatique, mise à jour après chaque match. Sauvegarder sur un emplacement déjà utilisé demande confirmation. Les sauvegardes restent dans ce navigateur ; exportez-les pour jouer sur un autre appareil. Une sauvegarde qui contient une équipe de mod ne se recharge que si cette équipe est toujours disponible (équipe créée dans l’éditeur ou fichier du dossier « mods »).',
   ],
   [
     'Gestion et finances',
@@ -14190,7 +14385,7 @@ const TU = [
   ],
   [
     'Les adversaires',
-    'L’onglet Adversaires liste tous les clubs, classés. Tapez un nom de club ou de joueur pour chercher. La fiche affiche le classement, la forme, la prochaine rencontre, la tactique (formation avec et sans ballon, mentalité, pressing, style, consignes), les joueurs à surveiller, la composition probable et les cartes des joueurs. Les clubs de l’ordinateur utilisent des consignes standard, seule leur formation change. Le même volet s’ouvre depuis le classement ou depuis l’icône de l’adversaire dans « Prochain match ».',
+    'L’onglet Adversaires liste tous les clubs, classés. Tapez un nom de club ou de joueur pour chercher. La fiche affiche le classement, la forme, la prochaine rencontre, la tactique (formation avec et sans ballon, mentalité, pressing, style, consignes), les joueurs à surveiller, la composition probable et les cartes des joueurs. Les clubs de l’ordinateur jouent avec des formations variées et un style cohérent avec elle (mentalité, pressing, consignes). Le même volet s’ouvre depuis le classement ou depuis l’icône de l’adversaire dans « Prochain match ».',
   ],
   [
     'Glossaire',
@@ -14201,7 +14396,7 @@ const TU = [
 function tutoView() {
   const o = V.tu ?? 0;
   return (
-    '<div class="card"><button class="p" onclick="tourGo(0)">🎓 Lancer la visite guidée</button></div>' +
+    (S ? '<div class="card"><button class="p" onclick="tourGo(0)">🎓 Lancer la visite guidée</button></div>' : '<div class="card mu">La visite guidée se lance depuis une partie (menu « Visite guidée » ou page Aide).</div>') +
     TU.concat(
       NBU()
         ? [
@@ -14219,7 +14414,7 @@ function tutoView() {
       .join('')
   );
 }
-// Étapes de la visite guidée (16 étapes) racontées par Clamp : [page affichée, titre, texte]. Chaque étape ouvre la page
+// Étapes de la visite guidée (17 étapes) racontées par Clamp : [page affichée, titre, texte]. Chaque étape ouvre la page
 // dont elle parle ; {N} est remplacé par le nombre d'étapes.
 const TOUR = [
   [
@@ -14275,7 +14470,12 @@ const TOUR = [
   [
     'mkt',
     'Les transferts',
-    'Dans l’Aperçu des transferts, touche n’importe où dans un encadré (meilleur joueur disponible, joueur convoité…) pour aller directement dans l’onglet correspondant. Dans Recherche, touche un joueur pour déposer une offre : montant du transfert, prime de signature, salaire, prime de titre et durée du contrat. Le club vendeur répond sous quelques jours, puis le joueur étudie tes conditions ; l’onglet Offres suit chaque négociation. Rien n’est payé avant l’accord. La Base de joueurs te laisse consulter la fiche de tous les joueurs du jeu, sans achat.',
+    'Dans l’Aperçu des transferts, touche n’importe où dans un encadré (meilleur joueur disponible, joueur convoité…) pour aller directement dans l’onglet correspondant. Dans Recherche, touche un joueur pour déposer une offre : montant du transfert, prime de signature, salaire, prime de titre et durée du contrat. Le club vendeur répond sous quelques jours, puis le joueur étudie tes conditions ; l’onglet Offres suit chaque négociation. Rien n’est payé avant l’accord. Pour vendre, l’onglet Vente met un joueur sur le marché et te présente les offres des clubs. La Base de joueurs te laisse consulter la fiche de tous les joueurs du jeu, sans achat.',
+  ],
+  [
+    'ent',
+    'L’entraînement',
+    'Ici, tu organises la progression de tout l’effectif. Les programmes d’équipe règlent l’intensité d’un clic, le repos automatique ménage les joueurs fatigués, et chaque ligne te laisse choisir l’intensité, l’axe à travailler et la reconversion de poste. La barre de progression annonce le prochain niveau.',
   ],
   [
     'table',
@@ -14300,7 +14500,7 @@ const TOUR = [
   [
     'tuto',
     'Besoin d’aide ?',
-    'Voilà, tu sais l’essentiel ! L’onglet Aide contient un tutoriel complet, et tu peux relancer cette visite quand tu veux. Le jeu se sauvegarde automatiquement dans ton navigateur, mais exporte une sauvegarde de temps en temps. Bon match, manager !',
+    'Voilà, tu sais l’essentiel ! L’onglet Aide contient un tutoriel complet, et tu peux relancer cette visite quand tu veux. Le jeu se sauvegarde automatiquement dans ton navigateur, mais exporte une sauvegarde de temps en temps pour la garder ou la retrouver sur un autre appareil. Tu aimes créer ? L’éditeur de mods, sur l’écran de départ, permet de fabriquer tes équipes et de les transférer d’un appareil à l’autre avec un simple fichier. Bon match, manager !',
   ],
 ];
 // Passe à une étape de la visite guidée.
@@ -14386,7 +14586,7 @@ function mk2(a, i) {
   const k = a + i;
   if (a == 'b' || V.mk == k || !ST.cf) {
     V.mk = null;
-    a == 'b' ? ofOpenN((S.mkt[i] || {}).n) : a == 'l' ? borrow(i) : a == 'o' ? takeS(i) : sell(i);
+    a == 'b' ? ofOpenN((S.mkt[i] || {}).n) : a == 'l' ? borrow(i) : takeS(i);
   } else {
     V.mk = k;
     render();
@@ -14611,7 +14811,7 @@ function fbar() {
     .map(([k, l]) => `<option value="${k}" ${(f.c || 0) == k ? 'selected' : ''}>${l}</option>`)
     .join(
       '',
-    )}</select><input placeholder="🔍 Nom" value="${f.q}" oninput="V.fl.q=this.value" onchange="render()" style="width:110px"></div>`;
+    )}</select><input placeholder="Nom" value="${f.q}" oninput="V.fl.q=this.value" onchange="render()" style="width:110px"></div>`;
 }
 // Bouton « Cartes / Liste ».
 const vwBtn = () =>
@@ -14948,10 +15148,6 @@ function upM(k) {
   S.mer[k]++;
   save();
   render();
-}
-// Carte « Stade » avec prix du billet.
-function stadeCard() {
-  return `<div class="card"><div class="row"><span class="nm">Stade niv. ${S.st} · ${2000 * S.st} places <span class="mu">recette estimée à domicile : ${gate()}</span></span><button onclick="upS()" ${S.st >= 5 || S.cash < S.st * 1000 + 500 ? 'disabled' : ''}>+ ${S.st * 1000 + 500}</button></div><div class="row"><span class="nm">Prix du billet : ${S.tk} <span class="mu">(plus cher = moins de monde)</span></span><button onclick="S.tk=Math.max(5,S.tk-1);save();render()">−</button><button onclick="S.tk=Math.min(25,S.tk+1);save();render()">+</button></div></div>`;
 }
 // Logos des sponsors (dessins plats, 64 x 64).
 const SPL = {
@@ -15400,22 +15596,22 @@ const LEGD = {
   mn: [
     '📋',
     'Mentions légales',
-    `<h3>Éditeur et nature du jeu</h3><p><b>Galactik Manager</b> (« GFM ») est un jeu de gestion <b>gratuit, sans aucun but lucratif</b>, réalisé par un fan, à titre de loisir : aucune recette, publicité, vente ni don n’est associé au jeu. Il est distribué sans publicité, sans achat intégré et sans abonnement.</p><p>Contact : utilisez le bouton « Signaler un bug / une idée » de l’accueil.</p><h3>Œuvre dont le jeu s’inspire</h3><p>Le jeu est un <b>projet de fans non officiel</b>. Il n’est ni affilié, ni approuvé, ni sponsorisé par les ayants droit de la série d’animation « Galactik Football ». Les noms, personnages, équipes et univers évoqués restent la propriété de leurs titulaires respectifs et ne sont utilisés que dans un esprit d’hommage.</p><p>Si vous êtes titulaire de droits et souhaitez demander une modification ou un retrait, contactez l’auteur par le bouton ci-dessus : il sera donné suite rapidement.</p><h3>Hébergement</h3><p>Le jeu est une page web statique. Il est hébergé sur GitHub Pages (GitHub, Inc., États-Unis) ou sur la plateforme qui vous a fourni le lien.</p><h3>Polices et bibliothèques tierces</h3><p>Les polices de caractères sont chargées depuis Google Fonts. Une bibliothèque libre (SheetJS, licence Apache 2.0) peut être chargée depuis cdnjs (Cloudflare) uniquement pour l’import/export de tableurs dans l’éditeur de mods.</p>`,
+    `<h3>Éditeur et nature du jeu</h3><p><b>Galactik Manager</b> (« GFM ») est un jeu de gestion <b>gratuit, sans aucun but lucratif</b>, réalisé par un fan, à titre de loisir : aucune recette, publicité, vente ni don n’est associé au jeu. Il est distribué sans publicité, sans achat intégré et sans abonnement.</p><p>Contact : utilisez le bouton « Signaler un bug / une idée » de l’accueil.</p><h3>Œuvre dont le jeu s’inspire</h3><p>Le jeu est un <b>projet de fans non officiel</b>. Il n’est ni affilié, ni approuvé, ni sponsorisé par les ayants droit de la série d’animation « Galactik Football ». Les noms, personnages, équipes et univers évoqués restent la propriété de leurs titulaires respectifs et ne sont utilisés que dans un esprit d’hommage.</p><p>Si vous êtes titulaire de droits et souhaitez demander une modification ou un retrait, contactez l’auteur par le bouton ci-dessus : il sera donné suite rapidement.</p><h3>Hébergement</h3><p>Le jeu est une page web statique. Il est hébergé sur GitHub Pages (GitHub, Inc., États-Unis) ou sur la plateforme qui vous a fourni le lien.</p><h3>Polices et ressources tierces</h3><p>Les polices de caractères sont chargées depuis Google Fonts. Aucune autre bibliothèque ni service externe n’est chargé. Les fichiers d’équipes que vous exportez ou importez dans l’éditeur de mods sont lus et créés uniquement sur votre appareil.</p>`,
   ],
   cg: [
     '📋',
     'Conditions d’utilisation',
-    `<h3>1. Objet</h3><p>Ces conditions encadrent l’usage du jeu Galactik Manager. En l’utilisant, vous les acceptez.</p><h3>2. Accès et gratuité</h3><p>Le jeu est gratuit et fourni <b>« en l’état »</b>, sans garantie de disponibilité, d’exactitude ou d’absence de bogue. Il est actuellement en <b>version bêta</b> : des fonctions peuvent changer, être supprimées ou être rééquilibrées à tout moment.</p><h3>3. Vos parties</h3><p>Vos parties sont enregistrées <b>uniquement sur votre appareil</b>. L’auteur n’y a pas accès et ne peut pas les récupérer. Pensez à les <b>exporter</b> depuis l’écran « Sauvegardes ». Une mise à jour peut rendre une ancienne sauvegarde incompatible ; les informations de compatibilité sont indiquées avant la création d’une partie.</p><h3>4. Usage acceptable</h3><p>Vous vous engagez à ne pas tenter de perturber l’hébergement du jeu, à ne pas le redistribuer comme s’il était le vôtre et à ne pas le vendre. Les mods et sauvegardes que vous créez ou partagez doivent respecter les droits des tiers.</p><h3>5. Propriété intellectuelle</h3><p>Le code et les éléments originaux du jeu appartiennent à leur auteur. Les éléments issus de l’univers « Galactik Football » appartiennent à leurs ayants droit (voir Mentions légales). Toute utilisation commerciale est interdite sans accord préalable.</p><h3>6. Retours et signalements</h3><p>Les messages envoyés via le bouton de retour sont volontaires et décrits dans la page « Confidentialité ». En envoyant une idée, vous autorisez l’auteur à l’utiliser librement dans le jeu.</p><h3>7. Responsabilité</h3><p>Dans les limites permises par la loi, l’auteur ne peut être tenu responsable de la perte de données, d’une interruption du service ou d’un dommage lié à l’usage du jeu.</p><h3>8. Modification</h3><p>Ces conditions peuvent évoluer avec le jeu. La version applicable est celle affichée ici.</p>`,
+    `<h3>1. Objet</h3><p>Ces conditions encadrent l’usage du jeu Galactik Manager. En l’utilisant, vous les acceptez.</p><h3>2. Accès et gratuité</h3><p>Le jeu est gratuit et fourni <b>« en l’état »</b>, sans garantie de disponibilité, d’exactitude ou d’absence de bogue. Il est actuellement en <b>version bêta</b> : des fonctions peuvent changer, être supprimées ou être rééquilibrées à tout moment.</p><h3>3. Vos parties</h3><p>Vos parties et vos équipes créées ou importées sont enregistrées <b>uniquement sur votre appareil</b>. L’auteur n’y a pas accès et ne peut pas les récupérer. Pensez à les <b>exporter</b> depuis l’écran « Sauvegardes ». Une mise à jour peut rendre une ancienne sauvegarde incompatible ; les informations de compatibilité sont indiquées avant la création d’une partie.</p><h3>4. Usage acceptable</h3><p>Vous vous engagez à ne pas tenter de perturber l’hébergement du jeu, à ne pas le redistribuer comme s’il était le vôtre et à ne pas le vendre. Les mods, équipes et sauvegardes que vous créez ou partagez doivent respecter les droits des tiers. Un fichier d’équipes reçu d’une autre personne est importé à vos risques : le jeu n’en conserve que des textes et des chiffres et ignore tout autre contenu, mais vous restez responsable de ce que vous choisissez d’importer et de diffuser.</p><h3>5. Propriété intellectuelle</h3><p>Le code et les éléments originaux du jeu appartiennent à leur auteur. Les éléments issus de l’univers « Galactik Football » appartiennent à leurs ayants droit (voir Mentions légales). Toute utilisation commerciale est interdite sans accord préalable.</p><h3>6. Retours et signalements</h3><p>Les messages envoyés via le bouton de retour sont volontaires et décrits dans la page « Confidentialité ». En envoyant une idée, vous autorisez l’auteur à l’utiliser librement dans le jeu.</p><h3>7. Responsabilité</h3><p>Dans les limites permises par la loi, l’auteur ne peut être tenu responsable de la perte de données, d’une interruption du service ou d’un dommage lié à l’usage du jeu.</p><h3>8. Modification</h3><p>Ces conditions peuvent évoluer avec le jeu. La version applicable est celle affichée ici.</p>`,
   ],
   pc: [
     '🔒',
     'Confidentialité',
-    `<h3>En bref</h3><p><b>Aucun compte, aucune publicité, aucun traceur, aucune analyse d’audience.</b> Le jeu ne collecte ni ne vend de données personnelles.</p><h3>Données conservées sur votre appareil</h3><p>Le jeu enregistre dans le stockage local de votre navigateur : vos parties (sauvegarde automatique et emplacements), vos réglages (taille du texte, sons, affichage…), vos mods, et quelques repères (introduction ou visite guidée déjà vues). Ces données ne quittent <b>pas</b> votre appareil. Le nom que vous donnez à votre manager reste dans votre sauvegarde.</p><h3>Connexions à des services tiers</h3><p>Lors du chargement de la page, votre navigateur contacte <b>Google Fonts</b> (polices) et, uniquement dans l’éditeur de mods, <b>cdnjs / Cloudflare</b> (bibliothèque tableur). Ces services reçoivent, comme tout site web, votre adresse IP et des informations techniques standard, conformément à leur propre politique. L’hébergeur (GitHub Pages) peut aussi tenir des journaux techniques.</p><h3>Bouton « Signaler un bug / une idée »</h3><p>Rien n’est envoyé automatiquement. Si vous choisissez « Envoyer sur GitHub », une page GitHub s’ouvre avec votre message pré-rempli : vous le relisez et le publiez vous-même (avec votre compte GitHub, le message est alors public). Les infos techniques (version du jeu, navigateur, club et journée) ne sont jointes que si la case est cochée. Évitez d’y inscrire des informations personnelles.</p><h3>Vos droits</h3><p>Vos données étant stockées chez vous, vous gardez la main : vous pouvez les exporter, les supprimer depuis l’écran « Sauvegardes » ou en vidant les données du site dans votre navigateur. Pour toute question, utilisez le bouton de retour.</p><h3>Mineurs</h3><p>Le jeu ne demande aucune donnée personnelle ; les plus jeunes sont invités à jouer avec l’accord d’un parent.</p>`,
+    `<h3>En bref</h3><p><b>Aucun compte, aucune publicité, aucun traceur, aucune analyse d’audience.</b> Le jeu ne collecte ni ne vend de données personnelles.</p><h3>Données conservées sur votre appareil</h3><p>Le jeu enregistre dans le stockage local de votre navigateur : vos parties (sauvegarde automatique et emplacements), vos réglages (taille du texte, sons, affichage…), vos mods (équipes créées ou importées), et quelques repères (introduction ou visite guidée déjà vues). Ces données ne quittent <b>pas</b> votre appareil. Le nom que vous donnez à votre manager reste dans votre sauvegarde.</p><h3>Connexions à des services tiers</h3><p>Lors du chargement de la page, votre navigateur contacte <b>Google Fonts</b> (polices). Ce service reçoit, comme tout site web, votre adresse IP et des informations techniques standard, conformément à sa propre politique. L’hébergeur (GitHub Pages) peut aussi tenir des journaux techniques.</p><h3>Fichiers d’équipes</h3><p>L’export crée un fichier sur votre appareil ; l’import lit un fichier que vous choisissez, sur votre appareil. Rien n’est envoyé à un serveur. Le jeu lit aussi les fichiers du dossier « mods » de son hébergement, comme n’importe quelle page du site.</p><h3>Bouton « Signaler un bug / une idée »</h3><p>Rien n’est envoyé automatiquement. Si vous choisissez « Envoyer sur GitHub », une page GitHub s’ouvre avec votre message pré-rempli : vous le relisez et le publiez vous-même (avec votre compte GitHub, le message est alors public). Les infos techniques (version du jeu, navigateur, club et journée) ne sont jointes que si la case est cochée. Évitez d’y inscrire des informations personnelles.</p><h3>Vos droits</h3><p>Vos données étant stockées chez vous, vous gardez la main : vous pouvez les exporter, les supprimer depuis l’écran « Sauvegardes » ou en vidant les données du site dans votre navigateur. Pour toute question, utilisez le bouton de retour.</p><h3>Mineurs</h3><p>Le jeu ne demande aucune donnée personnelle ; les plus jeunes sont invités à jouer avec l’accord d’un parent.</p>`,
   ],
   ck: [
     '🛡',
     'Cookies et stockage local',
-    `<h3>Cookies</h3><p>Le jeu <b>n’utilise aucun cookie</b> : ni cookie publicitaire, ni cookie de mesure d’audience, ni cookie de suivi. Aucun bandeau de consentement n’est donc nécessaire.</p><h3>Stockage local (localStorage)</h3><p>Pour fonctionner, le jeu utilise le stockage local de votre navigateur, strictement nécessaire à l’enregistrement de vos parties et de vos réglages :</p><ul><li><b>Parties</b> : sauvegarde automatique et 5 emplacements.</li><li><b>Réglages</b> : taille du texte, contraste, sons, affichage des joueurs, difficulté…</li><li><b>Mods</b> : vos personnalisations de l’éditeur.</li><li><b>Repères</b> : introduction et visite guidée déjà vues.</li></ul><p>Rien de tout cela n’est envoyé à un serveur.</p><h3>Hors-ligne (PWA)</h3><p>Si vous installez le jeu, un <i>service worker</i> peut conserver une copie des fichiers du jeu pour qu’il fonctionne sans connexion.</p><h3>Les effacer</h3><p>Supprimez vos parties depuis « Sauvegardes », ou videz les données du site dans les réglages de votre navigateur. <b>Attention</b> : cela efface définitivement vos parties non exportées.</p>`,
+    `<h3>Cookies</h3><p>Le jeu <b>n’utilise aucun cookie</b> : ni cookie publicitaire, ni cookie de mesure d’audience, ni cookie de suivi. Aucun bandeau de consentement n’est donc nécessaire.</p><h3>Stockage local (localStorage)</h3><p>Pour fonctionner, le jeu utilise le stockage local de votre navigateur, strictement nécessaire à l’enregistrement de vos parties et de vos réglages :</p><ul><li><b>Parties</b> : sauvegarde automatique et 5 emplacements.</li><li><b>Réglages</b> : taille du texte, contraste, sons, affichage des joueurs, difficulté…</li><li><b>Mods</b> : vos équipes créées dans l’éditeur ou importées depuis un fichier.</li><li><b>Repères</b> : introduction et visite guidée déjà vues.</li></ul><p>Rien de tout cela n’est envoyé à un serveur.</p><h3>Hors-ligne (PWA)</h3><p>Si vous installez le jeu, un <i>service worker</i> peut conserver une copie des fichiers du jeu pour qu’il fonctionne sans connexion.</p><h3>Les effacer</h3><p>Supprimez vos parties depuis « Sauvegardes », ou videz les données du site dans les réglages de votre navigateur. <b>Attention</b> : cela efface définitivement vos parties non exportées.</p>`,
   ],
 };
 // Fenêtre qui affiche un texte juridique.
@@ -15444,6 +15640,7 @@ function menuNew() {
   S = null;
   save();
   V.menu = 0;
+  V.cr = { mc: mcNew() };
   render();
 }
 // Bouton « Visite guidée » du menu.
@@ -15501,11 +15698,7 @@ const ldBox = () =>
 
 // Deux listes de rôles (avec et sans ballon) pour un titulaire de l'écran Tactique.
 function roleRow(li, g) {
-  const p = me().sq[li],
-    o = (ph) =>
-      ROLES[g][ph == 're' ? 'ep' : 'sp']
-        .map((R, j) => `<option value="${j ? g + ':' + j : ''}" ${(p[ph] || '') == (j ? g + ':' + j : '') ? 'selected' : ''}>${R[0]}${j ? ' ' + '★'.repeat(roleStars(p, R)) : ''}</option>`)
-        .join('');
+  
   return rolePk(li, 're', [g], 1) + rolePk(li, 'rs', [g], 1);
 }
 // Génère parfois une offre d'un autre club pour un de tes joueurs.
@@ -15665,19 +15858,22 @@ function actMo(i, j) {
 }
 // Entraînement quotidien : les joueurs progressent selon l'axe choisi et le staff.
 function train() {
-  const t = me();
+  const t = me(),
+    ta = S.ta && S.ta.on ? S.ta.s : 0;
   t.sq.forEach((p) => {
     ensure(p);
-    const y = p.age <= 24 ? 1.5 : p.age <= 29 ? 1 : 0.5,
-      it = [0.5, 1, 1.8][p.in ?? 1];
-    p.xp =
-      (p.xp || 0) +
-      (((3 + stL('c')) * y * it) / 7) * (1 + skV('f1') + mgb('tx') + (p.age <= 24 ? mgb('ty') : 0));
-    if ((p.in ?? 1) == 2) p.e = Math.max(45, p.e - 0.5);
-    if ((p.in ?? 1) == 0) p.e = Math.min(100, p.e + 0.5);
+    // Repos automatique : un joueur sous le seuil se repose jusqu'à +20 points d'énergie.
+    if (ta) {
+      if (p.e < ta) p.ar = 1;
+      else if (p.e >= Math.min(100, ta + 20)) p.ar = 0;
+    } else p.ar = 0;
+    const iv = trIv(p);
+    p.xp = (p.xp || 0) + trGain(p, iv);
+    if (iv == 2) p.e = Math.max(45, p.e - 0.5);
+    if (iv == 0) p.e = Math.min(100, p.e + 0.5);
     // Reconversion de poste : progresse chaque jour (pause si « Repos », plus vite en « Intensif »).
     if (p.rc) {
-      p.rc.left -= [0, 1, 1.6][p.in ?? 1];
+      p.rc.left -= [0, 1, 1.6][iv];
       if (p.rc.left <= 0) {
         const to = p.rc.to;
         mail('Reconversion terminée : ' + p.n, p.n + ' joue désormais au poste de ' + POSN[to] + '.');
@@ -15714,33 +15910,115 @@ function stopRc(i) {
   save();
   render();
 }
-// Section « Entraînement » de la fiche d'un joueur.
-function trainSec(p, i) {
-  ensure(p);
-  const sel = (arr, v, fn) =>
-    `<select onchange="${fn}">${arr.map((n, j) => `<option value="${j}" ${v == j ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
-  return `<h2>Entraînement</h2><div class="ctl"><label>Intensité ${sel(['Repos', 'Normal', 'Intensif'], p.in ?? 1, `me().sq[${i}].in=+this.value;save();render()`)}</label><label>Axe ${sel(p.p == 'GK' ? AT.map((n, j) => (j == 1 ? 'Réflexes' : n)) : AT, p.fc ?? 0, `me().sq[${i}].fc=+this.value;save()`)}</label></div><div class="mu" style="margin-top:8px">Progression vers +1 niveau : ${p.o >= ptCap(p) ? (p.o >= 95 ? 'niveau maximum' : 'potentiel atteint, plus de progression') : Math.round(p.xp || 0) + '/100'}</div>${xpB(p, 'w')}<div class="mu" style="margin-top:4px">Intensif = progrès plus rapides mais plus de fatigue.</div>${rcSec(p, i)}`;
+// ===== Onglet « Entraînement » : programmes d'équipe, repos automatique et réglages par joueur =====
+const ENG = {
+  all: ['Tout l’effectif', () => 1],
+  GK: ['Gardiens', (p) => p.p == 'GK'],
+  DEF: ['Défenseurs', (p) => p.p == 'DEF'],
+  MID: ['Milieux', (p) => p.p == 'MID'],
+  ATT: ['Attaquants', (p) => p.p == 'ATT'],
+  y: ['Jeunes (24 ans et moins)', (p) => p.age <= 24],
+  m: ['25 à 30 ans', (p) => p.age > 24 && p.age <= 30],
+  v: ['31 ans et plus', (p) => p.age > 30],
+};
+const ENP = [
+  ['Récupération', '😴', 'Tout le monde au repos : l’énergie remonte.', () => 0],
+  ['Équilibré', '⚖️', 'Intensité normale pour tous.', () => 1],
+  ['Intensif', '🔥', 'Progrès rapides, mais plus de fatigue.', () => 2],
+  ['Jeunes d’abord', '🌱', 'Jeunes en intensif, 25 à 30 ans en normal, 31 ans et plus au repos.', (p) => (p.age <= 24 ? 2 : p.age <= 30 ? 1 : 0)],
+];
+const ENI = ['Repos', 'Normal', 'Intensif'];
+// Intensité réellement appliquée aujourd'hui (le repos automatique l'emporte).
+const trIv = (p) => (p.ar ? 0 : p.in ?? 1);
+// Expérience gagnée en une journée à l'intensité iv.
+function trGain(p, iv) {
+  const y = p.age <= 24 ? 1.5 : p.age <= 29 ? 1 : 0.5;
+  return (((3 + stL('c')) * y * [0.5, 1, 1.8][iv]) / 7) * (1 + skV('f1') + mgb('tx') + (p.age <= 24 ? mgb('ty') : 0));
 }
-// Bloc « Reconversion de poste » de la fiche joueur.
-function rcSec(p, i) {
-  if (p.p == 'GK') return '<h3 style="margin:12px 0 4px">Reconversion</h3><div class="mu">Un gardien ne peut pas changer de poste.</div>';
-  const pct = p.rc ? Math.round(100 * (1 - Math.max(0, p.rc.left) / p.rc.tot)) : 0,
-    opts = ['DEF', 'MID', 'ATT'].filter((g) => g != p.p);
-  return `<h3 style="margin:12px 0 4px">Reconversion de poste${hp('rc')}</h3>${
-    p.rc
-      ? `<div class="mu">Il apprend le poste de <b>${POSN[p.rc.to]}</b> : ${pct} % (encore ${Math.max(1, Math.ceil(p.rc.left))} jours à intensité Normal). Au nouveau poste son malus diminue peu à peu ; à son poste actuel il est un peu moins efficace (−5 %).</div><div class="gg2" style="height:8px;border-radius:6px;background:rgba(255,255,255,.14);overflow:hidden;margin:6px 0"><i style="display:block;height:100%;width:${pct}%;background:#b78bff"></i></div><div class="ctl"><button onclick="stopRc(${i})">Annuler la reconversion</button></div>`
-      : `<div class="ctl"><label>Nouveau poste <select id="rcs${i}">${opts.map((g) => `<option value="${g}">${POSN[g][0].toUpperCase() + POSN[g].slice(1)}</option>`).join('')}</select></label><button class="p" onclick="startRc(${i},document.getElementById('rcs${i}').value)">Lancer (${rcDays(p)} jours)</button></div><div class="mu" style="margin-top:4px">Durée selon l’âge. Le joueur garde son poste jusqu’à la fin.</div>`
-  }`;
+// Jours restants avant +1 niveau (null si le joueur a atteint son potentiel).
+const trDays = (p, iv) => (p.o >= ptCap(p) ? null : Math.max(1, Math.ceil((100 - (p.xp || 0)) / trGain(p, iv))));
+function entIn(i, v) {
+  const p = me().sq[i];
+  if (!p) return;
+  p.in = v;
+  save();
+  render();
+}
+function entAx(i, v) {
+  const p = me().sq[i];
+  if (p) p.fc = v;
+  save();
+}
+function entPlan(k) {
+  const f = ENP[k][3];
+  me().sq.forEach((p) => (p.in = f(p)));
+  save();
+  render();
+}
+function entBulk(v) {
+  const g = ENG[V.eg || 'all'];
+  me().sq.forEach((p) => {
+    if (g[1](p)) p.in = v;
+  });
+  save();
+  render();
+}
+function entAuto(on, s) {
+  S.ta = { on: on ? 1 : 0, s: s || (S.ta && S.ta.s) || 60 };
+  save();
+  render();
+}
+function entView() {
+  const t = me(),
+    cn = { GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' },
+    ta = S.ta || { on: 0, s: 60 },
+    fp = V.ep2 || 'all',
+    so = V.es || 'o',
+    pn = { GK: 'Gardien', DEF: 'Défenseur', MID: 'Milieu', ATT: 'Attaquant' },
+    L = t.sq
+      .map((p, i) => ({ p, i }))
+      .filter(({ p }) => fp == 'all' || p.p == fp)
+      .sort((a, b) => {
+        const x = a.p,
+          y = b.p;
+        if (so == 'a') return x.age - y.age;
+        if (so == 'e') return x.e - y.e;
+        if (so == 'x') return (trDays(x, trIv(x)) ?? 999) - (trDays(y, trIv(y)) ?? 999);
+        return y.o - x.o;
+      }),
+    opt = (arr, v) => arr.map(([k, l]) => `<option value="${k}" ${v == k ? 'selected' : ''}>${l}</option>`).join(''),
+    row = ({ p, i }) => {
+      ensure(p);
+      const iv = trIv(p),
+        d = trDays(p, iv),
+        gk = p.p == 'GK',
+        ax = (gk ? AT.map((n, j) => (j == 1 ? 'Réflexes' : n)) : AT).map((n, j) => [j, n]),
+        en = Math.round(p.e),
+        ec = en < 50 ? '#e5484d' : en < 75 ? '#e0a526' : '#2fb36b',
+        opts = ['DEF', 'MID', 'ATT'].filter((g) => g != p.p),
+        rc = gk
+          ? '<span class="mu">Gardien : pas de reconversion</span>'
+          : p.rc
+            ? `<span class="mu">→ <b>${POSN[p.rc.to]}</b> ${Math.round(100 * (1 - Math.max(0, p.rc.left) / p.rc.tot))} % · ${Math.max(1, Math.ceil(p.rc.left))} j</span><button onclick="stopRc(${i})">Annuler</button>`
+            : `<select id="rcs${i}" aria-label="Nouveau poste">${opts.map((g) => `<option value="${g}">${POSN[g][0].toUpperCase() + POSN[g].slice(1)}</option>`).join('')}</select><button onclick="startRc(${i},document.getElementById('rcs${i}').value)" title="Durée : ${rcDays(p)} jours">Reconvertir</button>`;
+      return `<div class="entr"><div class="entn" onclick="prof('sq',${i})" title="Ouvrir le profil"><span class="entpo" style="background:${cn[p.p]}">${p.p}</span><span><b>${p.n}</b><span class="mu">${p.age} ans · niv. ${p.o}</span></span></div><div class="entc"><span class="entl">Énergie</span><div class="entb"><i style="width:${Math.max(0, Math.min(100, en))}%;background:${ec}"></i></div><span class="mu">${en} %${p.ar ? ' · 💤 repos auto' : ''}</span></div><div class="entc"><span class="entl">Progression</span><div class="entb"><i style="width:${d == null ? 100 : Math.round(p.xp || 0)}%"></i></div><span class="mu">${d == null ? (p.o >= 95 ? 'Niveau maximum' : 'Potentiel atteint') : '+1 niveau dans ~' + d + ' j'}</span></div><div class="entc"><span class="entl">Intensité</span><div class="entg" role="group" aria-label="Intensité">${ENI.map((n, j) => `<button class="${(p.in ?? 1) == j ? 'on' : ''}" onclick="entIn(${i},${j})">${n}</button>`).join('')}</div></div><div class="entc"><span class="entl">Axe</span><select onchange="entAx(${i},+this.value)" aria-label="Axe d’entraînement">${opt(ax, p.fc ?? 0)}</select></div><div class="entc entrc"><span class="entl">Poste</span><div class="ctl">${rc}</div></div></div>`;
+    };
+  return `<div class="entv"><h1>🏋️ Entraînement ${hp('ent')}</h1><div class="card"><b>Programmes d’équipe</b>${hp('entp')}<div class="mu" style="margin:4px 0 8px">Règle l’intensité de tout l’effectif en un clic ; tu peux ensuite ajuster chaque joueur.</div><div class="entpl">${ENP.map(([n, e, d], k) => `<button onclick="entPlan(${k})" title="${d}"><b>${e} ${n}</b><span class="mu">${d}</span></button>`).join('')}</div><div class="ctl" style="margin-top:10px"><label>Appliquer à <select onchange="V.eg=this.value;render()">${opt(Object.entries(ENG).map(([k, v]) => [k, v[0]]), V.eg || 'all')}</select></label>${ENI.map((n, j) => `<button onclick="entBulk(${j})">${n}</button>`).join('')}</div></div><div class="card"><label class="stl" style="border:0;padding:0"><span><b>💤 Repos automatique</b>${hp('enta')}<span class="mu">Un joueur trop fatigué se repose seul, puis reprend son programme dès qu’il a récupéré.</span></span><span class="sw"><input type="checkbox" ${ta.on ? 'checked' : ''} onchange="entAuto(this.checked)"><i></i></span></label>${ta.on ? `<div class="ctl" style="margin-top:6px"><label>Repos sous <select onchange="entAuto(1,+this.value)">${[50, 60, 70].map((v) => `<option value="${v}" ${ta.s == v ? 'selected' : ''}>${v} % d’énergie</option>`).join('')}</select></label><span class="mu">Reprise à ${Math.min(100, ta.s + 20)} %.</span></div>` : ''}</div><div class="ctl" style="margin:8px 0"><label>Poste <select onchange="V.ep2=this.value;render()">${opt([['all', 'Tous'], ['GK', 'Gardiens'], ['DEF', 'Défenseurs'], ['MID', 'Milieux'], ['ATT', 'Attaquants']], fp)}</select></label><label>Trier par <select onchange="V.es=this.value;render()">${opt([['o', 'Niveau'], ['a', 'Âge'], ['e', 'Énergie (plus fatigués d’abord)'], ['x', 'Prochain niveau (plus proches d’abord)']], so)}</select></label><span class="mu">${L.length} joueur${L.length > 1 ? 's' : ''}</span></div><div class="entw">${L.map(row).join('')}</div></div>`;
 }
 // Convertit un numéro de jour en date.
 const dateOf = (d) => dOf((S && S.ctx) || 'L', d),
-  fmtDay = (n) =>
-    new Date(Date.UTC(2026 + (S.season || 1) - 1, 7, 1 + (n || 0))).toLocaleDateString('fr-FR', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      timeZone: 'UTC',
-    }),
+  FDF = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }),
+  FDC = new Map(),
+  fmtDay = (n) => {
+    const y = S.season || 1,
+      k = y * 1e5 + (n || 0);
+    let v = FDC.get(k);
+    if (v === undefined) {
+      v = FDF.format(new Date(Date.UTC(2026 + y - 1, 7, 1 + (n || 0))));
+      FDC.set(k, v);
+    }
+    return v;
+  },
   ACH = {
     s5: 'Invaincu sur 5 matchs',
     der: 'Roi du derby',
@@ -15826,6 +16104,7 @@ function dayTick() {
   train();
   acTick();
   negTick();
+  saleTick();
   if (S.ctx != 'C') aiTransfers();
   if (S.ctx != 'C') genOffer();
   mdPre();
@@ -16436,7 +16715,7 @@ const BGS = [
     e: '⚽',
     n: 'Ancien joueur pro',
     d: 'Il connaît les vestiaires.',
-    b: ['Moral de départ +10', 'Victoire : moral +1 · défaite : −1 de moins'],
+    b: ['Moral de départ +10', 'Après un match : victoire +4 de moral (au lieu de +3), défaite −2 (au lieu de −3)'],
     k: { mo0: 10, mw: 1, ml: 1 },
   },
   {
@@ -16456,7 +16735,7 @@ const BGS = [
     e: '🎤',
     n: 'Personnalité publique',
     d: 'Les médias l’adorent.',
-    b: ['Interviews : effets positifs +1', 'Sponsors et boutique +8 %'],
+    b: ['Interviews : chaque effet positif (moral, confiance) +1', 'Sponsors et boutique +8 %'],
     k: { iv: 1, spn: 0.08 },
   },
   {
@@ -16493,6 +16772,7 @@ const BGS = [
   },
 ];
 Object.assign(HELP, {
+  clb: 'Choisissez d’abord une planète à gauche, puis un de ses clubs à droite : sa présentation s’affiche dans le cadre. En mode Cup, vous choisissez directement la sélection d’une planète.',
   mc_id:
     'Le nom et le genre de votre manager. Ils apparaissent dans le premier mail et dans l’onglet Manager.',
   mc_look: 'Apparence purement visuelle : elle n’a aucun effet sur le jeu.',
@@ -16561,21 +16841,26 @@ function mcNew() {
     bg: null,
   };
 }
+// Manager en cours de création (avant ou après le choix du club).
+const mcO = () => V.mc || (V.cr && V.cr.mc);
 // Modifie un champ de la création du manager.
 function mcS(k, v) {
-  V.mc[k] = v;
+  mcO()[k] = v;
   render();
 }
 // Bouton « Aléatoire » de la création du manager.
 function mcRnd() {
-  const o = V.mc,
-    n = mcNew();
-  V.mc = { ...n, g: o.g, bg: o.bg, n: o.n };
+  const o = mcO(),
+    n = mcNew(),
+    r = { ...n, g: o.g, bg: o.bg, n: o.n, pre: o.pre };
+  if (V.mc) V.mc = r;
+  else V.cr.mc = r;
   render();
 }
 // Retour pendant la création du manager.
 function mcBack() {
   const n = V.mc && V.mc.n;
+  if (V.mc && V.mc.pre) V.cr = { mc: V.mc, step: 4 };
   V.mc = null;
   if (n) {
     S = null;
@@ -16602,6 +16887,137 @@ function mcOk() {
   save();
   render();
 }
+// Cartes « Identité » et « Apparence » de la création du manager.
+function mcId(m) {
+  const sw = (k, arr, cur) =>
+      arr
+        .map((c, i) => `<button class="sw ${cur == i ? 'on' : ''}" style="background:${c}" title="Choix ${i + 1}" onclick="mcS('${k}',${i})"></button>`)
+        .join(''),
+    ch = (k, arr, cur) => arr.map((n, i) => `<button class="${cur == i ? 'p' : ''}" onclick="mcS('${k}',${i})">${n}</button>`).join(''),
+    tp = (S && S.teams && S.teams[S.t] && PAL[S.teams[S.t].name]) || ['#6579ae', '#d71921'];
+  return `<div class="card"><h2>Identité${hp('mc_id')}</h2><label class="mu">Prénom <input value="${m.fn.replace(/"/g, '')}" maxlength="16" onchange="mcS('fn',this.value)"></label> <label class="mu">Nom <input value="${m.ln.replace(/"/g, '')}" maxlength="16" onchange="mcS('ln',this.value)"></label><div class="ctl" style="margin-top:6px">${MGG.map(([k, n]) => `<button class="${m.g == k ? 'p' : ''}" onclick="mcS('g','${k}')">${n}</button>`).join('')}</div>
+<h2>Apparence${hp('mc_look')}</h2><div class="mu">Peau</div><div>${sw('sk', MGSK, m.sk)}</div><div class="mu">Coiffure</div><div class="ctl">${ch('hs', MGHS, m.hs)}</div><div class="mu">Couleur de cheveux</div><div>${sw('hc', MGHC, m.hc)}</div><div class="mu">Accessoire</div><div class="ctl">${ch('ac', MGAC, m.ac)}</div><div class="mu">Tenue</div><div>${sw('oc', [tp[0], tp[1], '#2d6a4f', '#e07a1f', '#7b2cbf', '#f1f1f1'], m.oc)}</div></div>`;
+}
+// Étape 2 de la nouvelle carrière : passé du manager (liste à gauche, résumé et effets à droite).
+function mcPas() {
+  const m = V.cr.mc,
+    b = BGS.find((x) => x.id == m.bg);
+  return `<div class="mcw"><div class="ctl"><button onclick="V.cr.step=1;render()">← Manager</button></div><h1>🧑‍💼 Passé de votre manager</h1><div class="mu" style="margin-bottom:8px">Étape 2 : choisissez ce que faisait ${m.fn} ${m.ln} avant d’arriver dans la Ligue.</div><div class="mcg mcg3"><div class="card"><h2>Passés possibles${hp('mc_bg')}</h2><div class="mcbl">${BGS.map((x) => `<button class="mcb ${m.bg == x.id ? 'on' : ''}" onclick="mcS('bg','${x.id}')"><b>${x.e} ${x.n}</b><span class="mu">${x.d}</span></button>`).join('')}</div></div><div class="card mcsm">${b ? `<div class="mcsh">${mgSvg(m, 90)}<div><b style="font-size:18px">${b.e} ${b.n}</b><div class="mu">${m.fn} ${m.ln}</div></div></div><p>${b.d}</p><h2>Effets sur votre partie</h2><ul class="mcl">${b.b.map((x) => `<li>${x}</li>`).join('')}</ul>` : '<div class="mu" style="padding:30px 10px;text-align:center">Touchez un passé dans la liste pour voir son résumé et ses effets sur votre partie.</div>'}</div></div><button class="p mcnx" ${b ? '' : 'disabled'} onclick="V.cr.step=3;render()">Suivant →</button></div>`;
+}
+// Étape 3 de la nouvelle carrière : type de compétition et événements de scénario.
+function mcCmp() {
+  return `<div class="mcw"><div class="ctl"><button onclick="V.cr.step=2;render()">← Passé</button></div><h1>🏆 Type de championnat</h1><div class="mu" style="margin-bottom:8px">Étape 3 : choisissez la compétition que vous voulez disputer.</div><div class="card mdc" style="margin-bottom:12px"><b>Compétition</b> ${hp('modes')}<div class="mds">${[
+        ['L', 'Galactik League', LGL, 'Gérez un club dans la grande ligue interplanétaire.'],
+        [
+          'C',
+          'Galactik Cup',
+          LGC,
+          'Sélection de votre planète, format Coupe du monde (poules + phase finale).',
+        ],
+        ['D', 'Les deux', null, 'Un club et la sélection de sa planète, comme dans FM.'],
+      ]
+        .map(
+          ([k, n, lg, d]) =>
+            `<button class="${(V.nm || 'L') == k ? 'on' : ''}" onclick="V.nm='${k}';render()">${lg ? `<img src="${lg}" alt="">` : `<span class="two"><img src="${LGL}" alt=""><img src="${LGC}" alt=""></span>`}<b>${n}</b><span class="mu">${d}</span></button>`,
+        )
+        .join('')}</div></div><div class="card" style="display:flex;align-items:center;gap:10px"><label class="stl" style="flex:1;border:0;padding:0"><span><b>🎬 Événements spéciaux</b><span class="mu">Événements rares inspirés de la série : descente de police, sabotages, météorites…</span></span><span class="sw"><input type="checkbox" ${V.evt !== 0 ? 'checked' : ''} onchange="V.evt=this.checked?1:0"><i></i></span></label>${hp('evt')}</div><button class="p mcnx" onclick="V.cr.step=4;render()">Suivant →</button></div>`;
+}
+// Liste de tous les clubs choisissables (série, nouvelles équipes, et club caché s'il est débloqué).
+function clbData() {
+  const m = V.nm || 'L',
+    cl = T.map((t, i) => ({ n: t[0], em: t[2], lv: t[1], pl: planet(t[0]), go: `init(${i},'${m}')`, rec: i == recoT() }));
+  NEWT.forEach((x, j) => cl.push({ n: x.n, em: x.em, lv: x.l, pl: planet(x.n), go: `init(${100 + j},'${m}')`, nw: 1 }));
+  if (mkU()) cl.push({ n: MKD.n, em: MKD.em, lv: MKD.l, pl: MKD.nat, hid: 1, go: `V.mkp=1;mkSync();init(TL.length-1,'${m}');V.mkp=0` });
+  return cl;
+}
+// Choix d'une planète / d'un club dans l'étape « Club ».
+function clbP(p) {
+  V.cr.pl = p;
+  V.cr.cl = null;
+  render();
+}
+function clbC(n) {
+  V.cr.cl = n;
+  render();
+}
+// Étape 4 de la nouvelle carrière : deux cadres (planètes / clubs de la planète) avec présentation du club.
+function clbView() {
+  const C = (V.nm || 'L') == 'C',
+    q = (x) => String(x).replace(/'/g, "\\'"),
+    lvT = (l) => (l >= 15 ? 'Prise en main facile' : l >= 12 ? 'Prise en main équilibrée' : 'Prise en main exigeante');
+  const DF = `<div class="card" style="margin-bottom:10px"><div class="ctl"><label>Difficulté <select onchange="V.df=+this.value">${['Facile', 'Normal', 'Difficile'].map((n, i) => `<option value="${i}" ${(V.df ?? 1) == i ? 'selected' : ''}>${n}</option>`).join('')}</select></label>${hp('df')}</div></div>`;
+  if (C) {
+    const P = TN.map((n, i) => ({ n: n[0], em: n[2], lv: n[1], i })),
+      p = P.find((x) => x.n == V.cr.pl) || P[0],
+      fic = ['Ysolde', 'Vega', 'Kaldor', MKD.nat].includes(p.n),
+      go = `${p.n == MKD.nat ? 'V.mkp=1;mkSync();' : ''}init(${p.n == MKD.nat ? 'TL.length-1' : Math.max(0, T.findIndex((x) => planet(x[0]) == p.n))},'C',${p.i});V.mkp=0`;
+    V.cr.cur = { name: 'la sélection de ' + p.n, f: new Function(go) };
+    return DF + `<div class="cxw"><div class="card"><h2>Planètes ${hp('clb')}</h2><div class="cxp">${P.map((x) => `<button class="${x.n == p.n ? 'on' : ''}" onclick="clbP('${q(x.n)}')"><span class="cxe">${plIc(x.n, 36)}</span><span><b>${x.n}</b><small class="mu">Niveau ${x.lv}/20</small></span></button>`).join('')}</div></div><div class="card cxr"><div class="cxi"><span class="cxe">${plIc(p.n, 56)}</span><div><b style="font-size:20px">Sélection de ${p.n}${fic ? ' ' + FIC : ''}</b><div class="mu">Niveau ${p.lv}/20 · ${fic ? 'planète fictive' : 'planète de la série'} · ${lvT(p.lv)}</div></div></div><p>${PBIO[p.n] || ''}</p>${FX[p.n] ? `<div class="cxf"><b>✨ ${p.n == 'Pirates' ? 'Pouvoir spécial (pas de Fluide)' : 'Fluide'} : ${FX[p.n].n}</b><div class="mu">${FX[p.n].d}</div></div>` : ''}</div><button class="p mcnx" onclick="V.cr.step=5;render()">Suivant →</button></div>`;
+  }
+  const A = clbData(),
+    P = [];
+  TN.forEach((n) => A.some((c) => c.pl == n[0]) && P.push(n[0]));
+  A.forEach((c) => P.includes(c.pl) || P.push(c.pl));
+  const pl = P.includes(V.cr.pl) ? V.cr.pl : P[0],
+    L = A.filter((c) => c.pl == pl),
+    c = L.find((x) => x.n == V.cr.cl) || L[0],
+    b = BIO[c.n];
+  V.cr.cur = { name: c.n, f: new Function(c.go) };
+  return DF + `<div class="cxw"><div class="card"><h2>Planètes ${hp('clb')}</h2><div class="cxp">${P.map((n) => `<button class="${n == pl ? 'on' : ''}" onclick="clbP('${q(n)}')"><span class="cxe">${plIc(n, 36)}</span><span><b>${n}</b><small class="mu">${A.filter((x) => x.pl == n).length} club${A.filter((x) => x.pl == n).length > 1 ? 's' : ''}</small></span></button>`).join('')}</div></div><div class="cxc"><div class="card"><h2>Clubs de ${pl}</h2><div class="cxl">${L.map((x) => `<button class="${x.n == c.n ? 'on' : ''}" onclick="clbC('${q(x.n)}')"><span class="cxe">${x.em}</span><span><b>${x.n}${x.hid ? '' : ft(x.n)}</b><small class="mu">Niveau ${x.lv}/20</small></span></button>`).join('')}</div></div><div class="card cxr"><div class="cxi"><span class="cxe">${c.em}</span><div><b style="font-size:20px">${c.n}${c.hid ? '' : ft(c.n)}</b><div class="mu">Planète : <b>${pl}</b> · Niveau ${c.lv}/20 · ${c.hid ? 'équipe cachée' : c.nw || FICT.includes(c.n) ? 'équipe fictive' : 'équipe de la série'}</div></div></div><p>${b ? b[1] : 'Club de la planète ' + pl + '.'}</p>${FX[c.n] ? `<div class="cxf"><b>✨ ${['Pirates', 'Tigres Rouges'].includes(c.n) ? 'Pouvoir spécial (pas de Fluide)' : 'Fluide'} : ${FX[c.n].n}</b><div class="mu">${FX[c.n].d}</div></div>` : ''}<div class="mu"><b>${lvT(c.lv)}</b>${c.rec ? ' · ⭐ Conseillé pour débuter' : ''}<br>Plus le niveau est élevé, plus le club est fort, mais plus l’objectif du conseil sera exigeant.</div></div></div><button class="p mcnx" onclick="V.cr.step=5;render()">Suivant →</button></div>`;
+}
+// Étape 5 de la nouvelle carrière : choix de l'emplacement de sauvegarde, puis lancement de la partie.
+function mcSav() {
+  const m = V.cr.mc,
+    b = BGS.find((x) => x.id == m.bg),
+    sl = V.cr.sl,
+    md = { L: 'Galactik League', C: 'Galactik Cup', D: 'League + Cup' }[V.nm || 'L'];
+  return `<div class="mcw"><div class="ctl"><button onclick="V.cr.step=4;render()">← Club</button></div><h1>💾 Emplacement de sauvegarde</h1><div class="mu" style="margin-bottom:8px">Étape 5 : choisissez où enregistrer votre nouvelle partie.</div><div class="card" style="margin-bottom:12px"><h2>Votre partie</h2><ul class="mcl"><li>Manager : <b>${m.fn} ${m.ln}</b>${b ? ' (' + b.n.toLowerCase() + ')' : ''}</li><li>Compétition : <b>${md}</b></li><li>Club : <b>${V.cr.cur ? V.cr.cur.name : '—'}</b></li><li>Difficulté : <b>${['Facile', 'Normal', 'Difficile'][V.df ?? 1]}</b> · événements spéciaux : <b>${V.evt !== 0 ? 'oui' : 'non'}</b></li></ul></div><div class="card"><h2>Emplacements</h2><div class="sll">${[1, 2, 3, 4, 5].map((i) => {
+    const q = slotMeta(SL[i]);
+    return `<button class="${sl == i ? 'on' : ''}" onclick="V.cr.sl=${i};render()"><b>Emplacement ${i}</b><span class="mu">${q ? q.t + ' · Saison ' + q.sn + ' · J' + (q.md + 1) + ' · ' + q.dt : 'Vide'}</span>${q ? '<span class="slw">⚠ Remplacera cette sauvegarde</span>' : ''}</button>`;
+  }).join('')}</div></div><button class="p mcnx" ${sl ? '' : 'disabled'} onclick="clbStart()">Commencer la partie →</button></div>`;
+}
+// Crée la partie avec les choix faits, l'enregistre dans l'emplacement choisi et ouvre le jeu.
+function clbStart() {
+  const k = V.cr && V.cr.sl,
+    f = V.cr && V.cr.cur && V.cr.cur.f;
+  if (!k || !f) return;
+  load('Création du club…', () => {
+    f();
+    slotSave(SL[k]);
+    render();
+  });
+}
+// ICÔNES DE PLANÈTES : une pastille ronde par planète (différente des écussons de clubs), dessinée en SVG plat.
+const PLI = {
+  Akillian: ['#bfe9ff', '<ellipse cx="24" cy="9" rx="14" ry="6" fill="#fff"/><ellipse cx="24" cy="40" rx="12" ry="5" fill="#fff"/><path d="M14 24l4 -3 4 3 4 -4 6 5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><circle cx="34" cy="16" r="1.8" fill="#fff"/><circle cx="12" cy="31" r="1.8" fill="#fff"/>'],
+  Ombra: ['#2c1f4d', '<path d="M24 5a19 19 0 1 0 0 38a13 19 0 0 1 0 -38z" fill="#0d0820"/><circle cx="34" cy="17" r="2" fill="#b79cff"/><circle cx="30" cy="31" r="1.5" fill="#b79cff"/><circle cx="37" cy="26" r="1" fill="#fff"/>'],
+  Paradisia: ['#5ed39a', '<path d="M24 14c4 3 4 8 0 11c-4 -3 -4 -8 0 -11zM13 24c3 -3 8 -3 11 1c-3 4 -8 4 -11 -1zM35 24c-3 -3 -8 -3 -11 1c3 4 8 4 11 -1zM24 34c4 -3 4 -8 0 -11c-4 3 -4 8 0 11z" fill="#ffd6e8"/><circle cx="24" cy="24" r="3" fill="#ffd23f"/>'],
+  Xzion: ['#6f7dff', '<path d="M28 6l-12 20h8l-4 16l14 -22h-8z" fill="#ffe14d" stroke="#1a1a2e" stroke-width="2" stroke-linejoin="round"/>'],
+  'Wamba Prime': ['#27b9a0', '<path d="M8 20c6 -8 14 -2 18 -4c4 -2 8 2 12 8c-4 6 -10 2 -14 6c-6 4 -12 -2 -16 -10z" fill="#ffd23f"/><circle cx="33" cy="34" r="4" fill="#ff7a59"/>'],
+  Unadar: ['#c4572f', '<path d="M12 40l9 -20h6l9 20z" fill="#7d2e1a"/><path d="M21 20l3 5l3 -5z" fill="#ffb02e"/><circle cx="24" cy="14" r="3" fill="#ffb02e"/><circle cx="31" cy="9" r="2" fill="#ffb02e"/>'],
+  'Archipel Xenon': ['#2d9bf0', '<ellipse cx="15" cy="18" rx="6" ry="4" fill="#7be07b"/><ellipse cx="31" cy="25" rx="8" ry="4.5" fill="#7be07b"/><ellipse cx="19" cy="34" rx="5" ry="3" fill="#7be07b"/><path d="M8 28q4 -3 8 0" fill="none" stroke="#fff" stroke-width="2"/>'],
+  Pirates: ['#3c3f4f', '<path d="M24 11c-8 0 -11 5 -11 10c0 3 1 5 3 6v4h16v-4c2 -1 3 -3 3 -6c0 -5 -3 -10 -11 -10z" fill="#f4f4f4"/><circle cx="19.5" cy="22" r="3" fill="#1a1a2e"/><circle cx="28.5" cy="22" r="3" fill="#1a1a2e"/><path d="M22 28v3M26 28v3" stroke="#1a1a2e" stroke-width="2"/>'],
+  Hektonïa: ['#38d6e8', '<circle cx="17" cy="28" r="7" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="31" cy="18" r="5" fill="none" stroke="#fff" stroke-width="2.5"/><circle cx="32" cy="34" r="3" fill="#fff"/><circle cx="14" cy="14" r="2.5" fill="#fff"/>'],
+  Cyclopia: ['#8c5be8', '<ellipse cx="24" cy="24" rx="13" ry="9" fill="#fff"/><circle cx="24" cy="24" r="6.5" fill="#35d07f"/><circle cx="24" cy="24" r="3" fill="#1a1a2e"/><circle cx="26" cy="22" r="1.2" fill="#fff"/>'],
+  Technoïd: ['#8e99a8', '<circle cx="24" cy="24" r="8" fill="none" stroke="#3cd0ff" stroke-width="4"/><path d="M24 9v6M24 33v6M9 24h6M33 24h6M13 13l4 4M31 31l4 4M35 13l-4 4M17 31l-4 4" stroke="#3cd0ff" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="24" r="2.5" fill="#1a1a2e"/>'],
+  Vega: ['#f08ac4', '<path d="M17 12l2 5l5 2l-5 2l-2 5l-2 -5l-5 -2l5 -2z" fill="#fff6a0"/><path d="M33 26l1.8 4.2l4.2 1.8l-4.2 1.8l-1.8 4.2l-1.8 -4.2l-4.2 -1.8l4.2 -1.8z" fill="#fff6a0"/>'],
+  Kaldor: ['#5f84c0', '<path d="M24 24m0 0c0 -5 6 -5 6 0c0 8 -12 8 -12 -1c0 -11 18 -11 18 2c0 6 -6 10 -12 9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/>'],
+  Ysolde: ['#c9b3ea', '<path d="M5 20q19 8 38 0" fill="none" stroke="#fff" stroke-width="3" opacity=".9"/><path d="M5 28q19 8 38 0" fill="none" stroke="#fff" stroke-width="3" opacity=".7"/><circle cx="33" cy="14" r="2.5" fill="#fff"/>'],
+  Hélion: ['#ffb52e', '<circle cx="24" cy="24" r="8" fill="#fff3a0"/><path d="M24 6v6M24 36v6M6 24h6M36 24h6M11 11l4 4M33 33l4 4M37 11l-4 4M15 33l-4 4" stroke="#fff3a0" stroke-width="3" stroke-linecap="round"/>'],
+  Kéthros: ['#8b6b4a', '<circle cx="17" cy="18" r="5" fill="#5e4630"/><circle cx="31" cy="28" r="7" fill="#5e4630"/><circle cx="16" cy="34" r="3" fill="#5e4630"/><circle cx="33" cy="14" r="2" fill="#5e4630"/>'],
+  Sahélis: ['#e8c070', '<path d="M4 22q6 -6 12 0t12 0t12 0" fill="none" stroke="#fff3c9" stroke-width="3"/><path d="M4 31q6 -6 12 0t12 0t12 0" fill="none" stroke="#c98a2e" stroke-width="3"/><circle cx="33" cy="12" r="3" fill="#fff3c9"/>'],
+  Lyrrhia: ['#e871cf', '<path d="M14 18q-4 6 0 12M19 14q-7 10 0 20M24 11q-10 13 0 26M29 14q-7 10 0 20M34 18q-4 6 0 12" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>'],
+};
+// Dessine l'icône d'une planète (w = largeur en pixels).
+function plIc(n, w) {
+  const p = PLI[n] || ['#7f8cb5', ''];
+  return `<svg class="pli" viewBox="0 0 48 48" width="${w || 34}" height="${w || 34}" role="img" aria-label="Planète ${n}"><defs><clipPath id="plc"><circle cx="24" cy="24" r="19"/></clipPath></defs><circle cx="24" cy="24" r="19" fill="${p[0]}"/><g clip-path="url(#plc)">${p[1]}<ellipse cx="17" cy="14" rx="9" ry="5" fill="#fff" opacity=".22" transform="rotate(-25 17 14)"/></g><circle cx="24" cy="24" r="19" fill="none" stroke="#1a1a2e" stroke-width="3"/><ellipse cx="24" cy="24" rx="23" ry="6" fill="none" stroke="#1a1a2e" stroke-width="2" opacity=".0"/></svg>`;
+}
+// Étape 1 de la nouvelle carrière : personnalisation du manager (avant le choix du club).
+function mcPre() {
+  const m = V.cr.mc;
+  return `<div class="mcw"><div class="ctl"><button onclick="V.cr=null;V.menu=1;render()">← Menu</button></div><h1>🧑‍💼 Créez votre manager</h1><div class="mu" style="margin-bottom:8px">Étape 1 : personnalisez votre manager.</div><div class="mcg mcg2"><div class="card mcp">${mgSvg(m, 190)}<b style="font-size:18px;margin-top:8px;display:block">${(m.fn || '…') + ' ' + (m.ln || '')}</b><div class="mu" style="margin:4px 0 10px">Manager</div><div class="ctl" style="justify-content:center"><button onclick="mcRnd()">🎲 Aléatoire</button></div></div>${mcId(m)}</div><button class="p mcnx" onclick="V.cr.step=2;render()">Suivant →</button></div>`;
+}
 // Écran de création du manager.
 function mcView() {
   const m = V.mc,
@@ -16612,16 +17028,10 @@ function mcView() {
           (c, i) =>
             `<button class="sw ${cur == i ? 'on' : ''}" style="background:${c}" title="Choix ${i + 1}" onclick="mcS('${k}',${i})"></button>`,
         )
-        .join(''),
-    ch = (k, arr, cur) =>
-      arr
-        .map((n, i) => `<button class="${cur == i ? 'p' : ''}" onclick="mcS('${k}',${i})">${n}</button>`)
-        .join(''),
-    tp = PAL[me().name] || ['#6579ae', '#d71921'];
-  return `<div class="mcw"><div class="ctl"><button onclick="mcBack()">← ${m.n ? 'Retour au choix du club' : 'Annuler'}</button></div><h1>🧑‍💼 Créez votre manager</h1><div class="mcg">
+        .join('');
+  return `<div class="mcw"><div class="ctl"><button onclick="mcBack()">← ${m.n ? 'Retour au choix du club' : 'Annuler'}</button></div><h1>🧑‍💼 Créez votre manager</h1><div class="mcg ${m.pre ? 'mcg2' : ''}">
 <div class="card mcp">${mgSvg(m, 190)}<b style="font-size:18px;margin-top:8px;display:block">${(m.fn || '…') + ' ' + (m.ln || '')}</b><div class="mu">${b ? b.e + ' ' + b.n : 'Choisissez un passé →'}</div><div class="mu" style="margin:4px 0 10px">Manager de ${me().em} ${me().name}</div>${b ? `<ul class="mcl">${b.b.map((x) => `<li>${x}</li>`).join('')}</ul>` : ''}<div class="ctl"><button onclick="mcRnd()">🎲 Aléatoire</button><button class="p" ${b ? '' : 'disabled'} onclick="mcOk()">✔ Valider</button></div></div>
-<div class="card"><h2>Identité${hp('mc_id')}</h2><label class="mu">Prénom <input value="${m.fn.replace(/"/g, '')}" maxlength="16" onchange="mcS('fn',this.value)"></label> <label class="mu">Nom <input value="${m.ln.replace(/"/g, '')}" maxlength="16" onchange="mcS('ln',this.value)"></label><div class="ctl" style="margin-top:6px">${MGG.map(([k, n]) => `<button class="${m.g == k ? 'p' : ''}" onclick="mcS('g','${k}')">${n}</button>`).join('')}</div>
-<h2>Apparence${hp('mc_look')}</h2><div class="mu">Peau</div><div>${sw('sk', MGSK, m.sk)}</div><div class="mu">Coiffure</div><div class="ctl">${ch('hs', MGHS, m.hs)}</div><div class="mu">Couleur de cheveux</div><div>${sw('hc', MGHC, m.hc)}</div><div class="mu">Accessoire</div><div class="ctl">${ch('ac', MGAC, m.ac)}</div><div class="mu">Tenue</div><div>${sw('oc', [tp[0], tp[1], '#2d6a4f', '#e07a1f', '#7b2cbf', '#f1f1f1'], m.oc)}</div></div>
+${m.pre ? '' : mcId(m)}
 <div class="card"><h2>Passé${hp('mc_bg')}</h2><div class="mcbg">${BGS.map((x) => `<button class="mcb ${m.bg == x.id ? 'on' : ''}" onclick="mcS('bg','${x.id}')"><b>${x.e} ${x.n}</b><br><span class="mu">${x.b.join(' · ')}</span></button>`).join('')}</div></div></div></div>`;
 }
 
@@ -16650,11 +17060,6 @@ function mgOverview() {
     n = lg.filter((x) => x.g == x.c).length,
     d = lg.length - w - n,
     wp = lg.length ? Math.round((100 * w) / lg.length) : 0,
-    ring = (v, c) => {
-      const r = 52,
-        cc = 2 * Math.PI * r;
-      return `<svg viewBox="0 0 130 130" class="mgr"><circle cx="65" cy="65" r="${r}" fill="none" stroke="currentColor" stroke-opacity=".12" stroke-width="12"/><circle cx="65" cy="65" r="${r}" fill="none" stroke="${c}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${((cc * v) / 100).toFixed(1)} ${cc.toFixed(1)}" transform="rotate(-90 65 65)"/><text x="65" y="73" text-anchor="middle" font-size="26" font-weight="800" fill="currentColor">${v}%</text></svg>`;
-    },
     ic = (i) => `<svg class="ic" aria-hidden="true"><use href="#i-${i}"/></svg>`,
     st = (i, v, l) => `<div class="mgs">${ic(i)}<b>${v}</b><small>${l}</small></div>`,
     pal = (S.pal || []).slice().reverse(),
@@ -17154,6 +17559,8 @@ function opClose() {
 function scoutBody(t, modal) {
   try {
     if (!t.lu || t.lu.length != slots(t.form).length) autoLU(t);
+    // Compositions déjà enregistrées avec un joueur au mauvais poste (gardien en champ, ou l'inverse) : on les refait (équipes adverses seulement).
+    else if (t !== me() && slots(t.form).some((q, k) => t.sq[t.lu[k]] && (q == 'GK') != (t.sq[t.lu[k]].p == 'GK'))) autoLU(t);
   } catch (e) {}
   const sl = slots(t.form),
     col = (q) => ({ GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' })[q] || '#888',
@@ -17225,7 +17632,7 @@ function advView() {
       (r) =>
         `<div class="adr ${sel === r.t ? 'sel' : ''}" onclick="V.adt=this.dataset.n;render()" data-n="${mkEsc(r.t.name)}"><span class="chnu">${r.k + 1}</span><span class="adn">${r.t.em} <b>${r.t.name}</b>${nx && nx.opp === r.t ? ' <small class="mreq">Prochain</small>' : ''}${r.hit.length ? `<small class="mu"> → ${r.hit.slice(0, 3).join(', ')}</small>` : ''}</span><span class="mu">${r.t.pts} pts</span>${chForm(r.t)}</div>`,
     ).join('') || '<div class="mu" style="padding:14px">Aucun club ni joueur ne correspond.</div>';
-  return `<div class="fvw"><div class="adg"><div class="card adl"><div class="ctl" style="justify-content:space-between"><b>🔎 Adversaires ${hp('adv')}</b></div><input class="adq" placeholder="🔍 Club ou joueur…" value="${mkEsc(V.adq || '')}" onchange="V.adq=this.value;render()"><div class="adrs">${rows}</div></div><div class="card adc">${sel ? scoutBody(sel, 0) : '<div class="mu">Aucun club.</div>'}</div></div></div>`;
+  return `<div class="fvw"><div class="adg"><div class="card adl"><div class="ctl" style="justify-content:space-between"><b>🔎 Adversaires ${hp('adv')}</b></div><input class="adq" placeholder="Club ou joueur…" value="${mkEsc(V.adq || '')}" onchange="V.adq=this.value;render()"><div class="adrs">${rows}</div></div><div class="card adc">${sel ? scoutBody(sel, 0) : '<div class="mu">Aucun club.</div>'}</div></div></div>`;
 }
 function pcBox() {
   const c = typeof V != 'undefined' && V && V.pc;
@@ -17547,6 +17954,7 @@ function shell(c) {
           ['gest', '🏟️', S.ctx == 'C' ? 'Gestion fédérale' : 'Gestion du club'],
         ]
           .concat(S.mode == 'C' ? [] : [['form', '🎓', 'Formation']])
+          .concat([['ent', '🏋️', 'Entraînement']])
           .concat([
             ['fin', '💰', 'Finances'],
             ['stat', '📊', 'Statistiques'],
@@ -18005,7 +18413,7 @@ function join(p, t) {
 function fluSec(p, t) {
   const og = p.og || (t ? t.name : '?');
   return (
-    `<h2>Origine et Fluide</h2><div>Planète : <b>${planet(og)}</b> · Fluide d’origine : <b>${fluK(p) == 'multi' ? 'Multifluide (compatible avec tous les Fluides)' : fluK(p) == 'none' ? (p.og == 'Tigres Rouges' ? 'Aucun (le Souffle d’Akillian ne se manifeste pas encore chez les Tigres Rouges ; compensé par leurs bottes cybernétiques)' : 'Aucun (les Pirates n’ont pas de Fluide ; compensés par plus de physique, d’endurance et de détermination)') : (FX[og] || {}).n || '—'}</b></div>${p.nz ? `<div style="color:#d33"><b>${p.nz.x ? '🛌 Rejet sévère' : '🤢 Nausées'}</b> : rejet du Fluide de l’équipe${p.nz.x && p.inj ? ', incapable de jouer encore ' + p.inj + ' match(s)' : ''}, adaptation dans ~${Math.ceil(p.nz.l)} match(s)</div>` : '<div class="mu">État : 🙂 à l’aise avec le Fluide de son équipe</div>'}<details class="dd" style="margin-top:4px"><summary class="mu">▸ Compatibilité avec chaque Fluide (votre équipe : ${t ? compat(p, t.name) + ' %' : '—'})</summary><div class="fc">` +
+    `<h2>Origine et Fluide</h2><div>Planète : <b>${planet(og)}</b> · Fluide d’origine : <b>${fluK(p) == 'multi' ? 'Multifluide (compatible avec tous les Fluides)' : fluK(p) == 'none' ? (p.og == 'Tigres Rouges' ? 'Aucun (le Souffle d’Akillian ne se manifeste pas encore chez les Tigres Rouges ; compensé par leurs bottes cybernétiques)' : 'Aucun (les Pirates n’ont pas de Fluide ; compensés par plus de physique, d’endurance et de détermination)') : (FX[og] || {}).n || '—'}</b></div>${p.nz ? `<div style="color:#d33"><b>${p.nz.x ? '🛌 Rejet sévère' : '🤢 Nausées'}</b> : rejet du Fluide de l’équipe${p.nz.x && p.inj ? ', incapable de jouer encore ' + p.inj + ' match' + (p.inj > 1 ? 's' : '') : ''}, adaptation dans ~${Math.ceil(p.nz.l)} match${Math.ceil(p.nz.l) > 1 ? 's' : ''}</div>` : '<div class="mu">État : 🙂 à l’aise avec le Fluide de son équipe</div>'}<details class="dd" style="margin-top:4px"><summary class="mu">▸ Compatibilité avec chaque Fluide (votre équipe : ${t ? compat(p, t.name) + ' %' : '—'})</summary><div class="fc">` +
     T.map((x) => {
       const c = compat(p, x[0]);
       return `<div class="row" style="padding:2px 0;${t && x[0] == t.name ? 'font-weight:800' : ''}"><span class="nm">${x[2]} ${(fxOf(x[0]) || {}).n || x[0]}</span>${gg(c, { size: 44, fs: 34, c: '#b78bff', tt: 'Compatibilité : ' + c + ' %' })}</div>`;
@@ -18138,7 +18546,6 @@ function profBox() {
     p.pt && p.age <= PTA && p.pt <= p.o ? 'Au sommet' : p.age <= 21 ? 'Jeune talent' : p.age <= PTA ? 'En développement' : p.age <= 30 ? 'Au sommet' : 'Vers le déclin',
     trend = `<div class="pk"><div class="pkt"><b>Tendance de développement</b>${hp('pfd')}</div><div class="pfgw">${pfTrend(p)}<div class="pf2c"><div><span class="mu">Développement</span><b>${dev}</b></div><div><span class="mu">Note actuelle</span><b>${p.o}</b></div><div><span class="mu">Potentiel</span><b>${p.pt && p.age <= 26 ? (p.pt > p.o ? p.o + ' – ' + p.pt : p.o + ' (atteint)') : '—'}</b></div></div></div></div>`;
   const mg = (h) => (sq && h ? `<div class="pk pfm3">${h}</div>` : ''),
-    mgT = sq ? mg(trainSec(p, f.i)) : '',
     mgR = sq ? mg(roleSec(p, f.i)) : '',
     mgC = sq ? mg(capSec(p, f)) : '';
   const fl = `<details class="pk dd" open><summary><b>Origine et Fluide : compatibilité avec chaque équipe</b></summary>${fluSec(p, f.k == 'ed' ? null : me())}</details>`;
@@ -18159,7 +18566,7 @@ function profBox() {
       `<div class="pk"><div class="pkt"><b>Statistiques de la saison</b>${hp('pfs')}</div>${ic('team', 'Apparitions', p.mp || 0)}${ic('ball', 'Buts', p.g || 0)}${ic('swap', 'Passes décisives', st.a || 0)}${ic('target', 'Tirs cadrés', (st.ot || 0) + ' / ' + (st.sh || 0))}${p.p == 'GK' ? ic('glove', 'Arrêts', st.sv || 0) : ''}${p.p == 'GK' || p.p == 'DEF' ? ic('shield', 'Sans but encaissé', st.cs || 0) : ''}${ic('medal', 'Homme du match', st.mm || 0)}<div class="pfs"><i class="pfcc cy" style="background:#ff8a3b"></i><span>Exclusions</span><b>${yc + rc + (st.ex || 0)}</b></div></div>` +
       (tt ? `<div class="pk">${tt.replace(/^<h2>Titres<\/h2>/, '<div class="pkt"><b>Titres</b></div>')}</div>` : '');
   const shirt = `<div class="pk pfsh">${jersey(kitOf(T0), pnum(T0, p), p.n, 110)}<div class="pfl">Numéro de maillot : <b>${pnum(T0, p)}</b></div></div>`;
-  return `<div class="pfm" onclick="V.pf=null;render()"><div class="pfc${p.pr ? ' prs' : p.c ? ' chr' : ''}" style="--pc:${pcol}" onclick="event.stopPropagation()"><div class="pfh">${photo(p)}<div style="flex:1 1 auto;min-width:0"><div class="pfn">${p.c ? '★ ' : ''}<span class="${p.pr ? 'prn' : p.c ? 'chn' : ''}">${p.n}</span>${fp(p)}${p.nz ? ' ' + pfIc('sick') : ''}</div><div class="pfch"><span class="chp" style="background:var(--pc);color:#071016">${PN}</span>${tm ? `<span class="chp">${tm.name}</span>` : ''}<span class="chp" title="${FTN[foot(p)]}">${footIc(p)}${FTN[foot(p)]}</span><span class="chp">${p.age} ans</span><span class="chp">${planet(og)}</span>${p.inj ? `<span class="chp" style="background:#d33;color:#fff">${pfIc('warn')}indisponible ${p.inj} j.</span>` : ''}${p.ln ? `<span class="chp">${pfIc('loan')}prêt</span>` : ''}</div></div>${tm ? `<div class="pft" title="${tm.name}">${tm.em}</div>` : ''}<div class="pfv"><span>${pfIc('coin')}${price(p)}</span><span class="mu">${sal(p)} / match · ${p.ct} an${p.ct > 1 ? 's' : ''}</span></div><div class="pfrg"><div><span>Général</span><div class="pfo">${p.o}</div>${xpB(p, 'h')}</div><div><span>Potentiel</span><div class="pfo pt">${p.pt && p.age <= 26 ? p.pt : '—'}</div></div></div><button class="pfx" onclick="V.pf=null;V.pn='';render()" aria-label="Fermer">✕</button></div><div class="pfsc"><div class="pf2"><div class="pc1">${left}${mgT}${mgC}</div><div class="pc2">${tiles}${attrCard}<div class="pf2r"><div class="pc2s">${infoCard}${trend}</div><div class="pc2s">${contrat}${fl}</div></div></div><div class="pc3">${stats}${shirt}${mgR}</div></div>${V.pn ? `<div style="margin:8px 18px 0"><b>${V.pn}</b></div>` : ''}</div></div></div>`;
+  return `<div class="pfm" onclick="V.pf=null;render()"><div class="pfc${p.pr ? ' prs' : p.c ? ' chr' : ''}" style="--pc:${pcol}" onclick="event.stopPropagation()"><div class="pfh">${photo(p)}<div style="flex:1 1 auto;min-width:0"><div class="pfn">${p.c ? '★ ' : ''}<span class="${p.pr ? 'prn' : p.c ? 'chn' : ''}">${p.n}</span>${fp(p)}${p.nz ? ' ' + pfIc('sick') : ''}</div><div class="pfch"><span class="chp" style="background:var(--pc);color:#071016">${PN}</span>${tm ? `<span class="chp">${tm.name}</span>` : ''}<span class="chp" title="${FTN[foot(p)]}">${footIc(p)}${FTN[foot(p)]}</span><span class="chp">${p.age} ans</span><span class="chp">${planet(og)}</span>${p.inj ? `<span class="chp" style="background:#d33;color:#fff">${pfIc('warn')}indisponible ${p.inj} j.</span>` : ''}${p.ln ? `<span class="chp">${pfIc('loan')}prêt</span>` : ''}</div></div>${tm ? `<div class="pft" title="${tm.name}">${tm.em}</div>` : ''}<div class="pfv"><span>${pfIc('coin')}${price(p)}</span><span class="mu">${sal(p)} / match · ${p.ct} an${p.ct > 1 ? 's' : ''}</span></div><div class="pfrg"><div><span>Général</span><div class="pfo">${p.o}</div>${xpB(p, 'h')}</div><div><span>Potentiel</span><div class="pfo pt">${p.pt && p.age <= 26 ? p.pt : '—'}</div></div></div><button class="pfx" onclick="V.pf=null;V.pn='';render()" aria-label="Fermer">✕</button></div><div class="pfsc"><div class="pf2"><div class="pc1">${left}${mgC}</div><div class="pc2">${tiles}${attrCard}<div class="pf2r"><div class="pc2s">${infoCard}${trend}</div><div class="pc2s">${contrat}${fl}</div></div></div><div class="pc3">${stats}${shirt}${mgR}</div></div>${V.pn ? `<div style="margin:8px 18px 0"><b>${V.pn}</b></div>` : ''}</div></div></div>`;
 }
 // Ajuste les barres de progression.
 function barFix() {
@@ -18424,11 +18831,11 @@ function mailView() {
     unrN = all.filter(([m]) => m.u && !m.x).length,
     allOn = shIds.length && shIds.every((i) => sel.includes(i));
   const side = `<select class="mfs" title="Dossier" onchange="V.mf=this.value;V.mp=0;V.ms=[];V.mo=-1;render()">${[
-    ['in', '📥 Boîte de réception'],
-    ['unr', '✉️ Non lus'],
-    ['star', '⭐ Suivis'],
-    ['act', '⚡ À traiter'],
-    ['trash', '🗑️ Corbeille'],
+    ['in', 'Boîte de réception'],
+    ['unr', 'Non lus'],
+    ['star', 'Suivis'],
+    ['act', 'À traiter'],
+    ['trash', 'Corbeille'],
   ]
     .map(([k, n]) => `<option value="${k}" ${f == k ? 'selected' : ''}>${n}${cnt(k) ? ' (' + cnt(k) + ')' : ''}</option>`)
     .join('')}</select>`;
@@ -18452,7 +18859,7 @@ function mailView() {
             : ''
         }`
       : '<div class="mu" style="padding:30px;text-align:center">📬 Sélectionnez un message pour le lire.</div>';
-  return `<div class="card wide mbox ${m ? 'open' : ''}">${RQ.length ? `<div class="mgate">✉️ <b>Réponse requise</b> : répondez ${RQ.length > 1 ? 'aux ' + RQ.length + ' mails marqués' : 'au mail marqué'} « Réponse requise » pour pouvoir continuer la partie.</div>` : ''}<div class="mtop"><b>📥 Messagerie ${hp('mbox')}</b>${side}<input placeholder="🔍 Rechercher dans les messages" value="${V.mq || ''}" onchange="V.mq=this.value;V.mp=0;V.ms=[];render()"><span class="mck ${allOn ? 'on' : ''}" title="Tout sélectionner" onclick="mTogAll([${shIds}])">${allOn ? '✓' : ''}</span>${sel.length ? `<span class="mu"><b>${sel.length}</b> sélectionné${sel.length > 1 ? 's' : ''}</span>${f == 'trash' ? `<button onclick="mSelRestore()">Restaurer (${sel.length})</button><button onclick="mSelPurge()">Supprimer définitivement (${sel.length})</button>` : `<button class="p" onclick="mSelDel()">Supprimer (${sel.length})</button>`}<button onclick="V.ms=[];render()">Annuler</button>` : ''}<span class="mu">${L.length} message${L.length > 1 ? 's' : ''}${unrN ? ' · <b class="mnb">' + unrN + ' non lu' + (unrN > 1 ? 's' : '') + '</b>' : ''}</span><button onclick="mReadAll()">Tout marquer comme lu</button>${f == 'trash' ? '<button onclick="mEmpty()">Vider la corbeille</button>' : ''}</div><div class="mgrid"><div class="mlist">${rows}</div><div class="mpane">${pane}</div></div></div>`;
+  return `<div class="card wide mbox ${m ? 'open' : ''}">${RQ.length ? `<div class="mgate">✉️ <b>Réponse requise</b> : répondez ${RQ.length > 1 ? 'aux ' + RQ.length + ' mails marqués' : 'au mail marqué'} « Réponse requise » pour pouvoir continuer la partie.</div>` : ''}<div class="mtop"><b>📥 Messagerie ${hp('mbox')}</b>${side}<input placeholder="Rechercher dans les messages" value="${V.mq || ''}" onchange="V.mq=this.value;V.mp=0;V.ms=[];render()"><span class="mck ${allOn ? 'on' : ''}" title="Tout sélectionner" onclick="mTogAll([${shIds}])">${allOn ? '✓' : ''}</span>${sel.length ? `<span class="mu"><b>${sel.length}</b> sélectionné${sel.length > 1 ? 's' : ''}</span>${f == 'trash' ? `<button onclick="mSelRestore()">Restaurer (${sel.length})</button><button onclick="mSelPurge()">Supprimer définitivement (${sel.length})</button>` : `<button class="p" onclick="mSelDel()">Supprimer (${sel.length})</button>`}<button onclick="V.ms=[];render()">Annuler</button>` : ''}<span class="mu">${L.length} message${L.length > 1 ? 's' : ''}${unrN ? ' · <b class="mnb">' + unrN + ' non lu' + (unrN > 1 ? 's' : '') + '</b>' : ''}</span><button onclick="mReadAll()">Tout marquer comme lu</button>${f == 'trash' ? '<button onclick="mEmpty()">Vider la corbeille</button>' : ''}</div><div class="mgrid"><div class="mlist">${rows}</div><div class="mpane">${pane}</div></div></div>`;
 }
 // Ouvre un message.
 function mOpen(i) {
@@ -18725,10 +19132,13 @@ function menuView() {
   const au = slotMeta('gmauto'),
     has = !!S;
   const nw = V.nw
-    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Fenêtres de match flottantes</b> : dans l’écran de match, les fenêtres Stats, Journal, Compo et Consignes se déplacent librement : tirez-les par leur titre. Un bouton épingle les fige à l’endroit voulu et les garde ouvertes quand vous utilisez les autres boutons. Elles sont aussi un peu transparentes pour voir le terrain derrière.</li><li><b>« Continuer » jour par jour</b> : le bouton fait maintenant passer un seul jour par clic, jusqu’au jour du match (où il devient « Jouer le match »). Les mails à réponse obligatoire bloquent toujours la suite.</li><li><b>Listes qui gardent leur place</b> : quand vous fermez la fiche d’un joueur, la liste (Recherche des transferts, historique…) reste exactement où vous l’aviez laissée, au lieu de remonter tout en haut.</li><li><b>Potentiel atteint</b> : la fiche d’un joueur qui a atteint son potentiel affiche une courbe plate, « Au sommet » et « Potentiel : 70 (atteint) » au lieu d’une courbe de progression.</li><li><b>Roadmap</b> : ajout de l’onglet Entraînement, prévu prochainement.</li><li><b>Correction</b> : la fenêtre Statistiques de fin de match ne déborde plus : les notes des joueurs s’affichent l’une sous l’autre, sans barre de défilement horizontale.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
+    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Tutoriel de l’accueil réparé</b> : la tuile « Tutoriel » ouvre maintenant la page d’aide, avec un bouton « ← Menu » pour revenir. Le bouton « Lancer la visite guidée » apparaît quand une partie est en cours.</li><li><b>Reprise du 1.47</b> : nouvelle carrière en 5 étapes, onglets Entraînement et Vente, dossier mods et icônes à la place des émojis.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
     : '';
   const ins = V.ins
     ? `<div class="mo" onclick="V.ins=0;render()"><div class="card" style="max-width:460px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">📥 Télécharger et installer sur PC</b><p class="mu">Deux façons de jouer hors du navigateur par défaut :</p><p><b>1. Télécharger</b> : un dossier à extraire, avec un lanceur Windows.</p><div class="ctl"><button class="p" onclick="pcDl()">⬇ Télécharger pour PC (.zip)</button>${PWA ? '<button onclick="pwaI();V.ins=0;render()">Installer maintenant</button>' : ''}</div><p class="mu">${V.pcm || 'Le dossier contient le jeu et un lanceur Windows qui l’ouvre dans sa propre fenêtre (Edge ou Chrome), sans toucher à votre navigateur par défaut.'}</p><p><b>2. Installer comme application</b> :</p><ol style="line-height:1.5;padding-left:20px"><li>Ouvrez le jeu dans <b>Chrome</b> ou <b>Edge</b>, directement depuis son lien.</li><li>Cliquez sur l’icône d’installation à droite de la barre d’adresse, ou sur le menu ⋮ puis <b>« Installer Galactik Manager »</b>.</li></ol><p class="mu">Si l’option n’apparaît pas, le navigateur ne la propose pas pour cette page. Firefox et Safari ne permettent pas cette installation sur PC.</p><button onclick="V.ins=0;V.pcm='';render()">Fermer</button></div></div>`
+    : '';
+  const mob = V.mob
+    ? `<div class="mo" onclick="V.mob=0;render()"><div class="card" style="max-width:460px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">📲 Installer sur mobile ou tablette</b><p class="mu">Le jeu peut s’installer comme une vraie application : icône sur l’écran d’accueil, plein écran, et il fonctionne même sans connexion une fois chargé.</p>${PWA ? '<div class="ctl"><button class="p" onclick="pwaI();V.mob=0;render()">Installer maintenant</button></div>' : ''}<p><b>🤖 Android (Chrome)</b></p><ol style="line-height:1.5;padding-left:20px;margin-top:0"><li>Ouvrez le jeu depuis son lien dans <b>Chrome</b>.</li><li>Touchez le menu <b>⋮</b>, puis <b>« Installer l’application »</b> (ou « Ajouter à l’écran d’accueil »).</li></ol><p><b>🍎 iPhone / iPad (Safari)</b></p><ol style="line-height:1.5;padding-left:20px;margin-top:0"><li>Ouvrez le jeu dans <b>Safari</b> (pas dans un autre navigateur).</li><li>Touchez <b>Partager</b> (le carré avec une flèche), puis <b>« Sur l’écran d’accueil »</b>.</li></ol><p class="mu">Le jeu doit être ouvert depuis son lien, pas depuis un fichier téléchargé. Conseil : sur tablette, passez en mode paysage.</p><button class="p" onclick="V.mob=0;render()">Fermer</button></div></div>`
     : '';
   const rmb = V.rm
     ? `<div class="mo" onclick="V.rm=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">🚀 Roadmap</b><div class="mu" style="margin:2px 0 10px">Ce qui est déjà disponible et ce qui arrive, dans l’ordre prévu.</div><div class="rmt">${RMP.map(([t, d, st], i) => `<div class="rmn"><i class="rmd"></i><div><b>${t}</b> <span class="chp rms">${st}</span><div class="mu">${d}</div></div></div>`).join('')}</div><button class="p" onclick="V.rm=0;render()">Fermer</button></div></div>`
@@ -18749,7 +19159,7 @@ function menuView() {
       : au
         ? T('m c1', `${PH}<span class="bd">▶</span>`, 'Reprendre la sauvegarde auto', `${au.t} · saison ${au.sn} · journée ${au.md + 1} · ${au.dt}`, "slotAct('l',0)", 'm_cont')
         : T('m c1 off', `${PH}<span class="bd">–</span>`, 'Continuer la carrière', 'Aucune partie en cours. Lancez une nouvelle carrière.', '', 'm_cont');
-  return `<div class="mm"><div class="mbg"></div><div class="mw gx gxa2"><div class="mh"><h1>GFM</h1><small class="gv">${GV}</small><span class="gxi">${[['V.nw=1', '✨', 'Les nouveautés', 'm_news'], ['V.rm=1', '🚀', 'Roadmap', 'm_road'], ['V.fb=1', '💬', 'Signaler un bug / une idée', 'm_fb'], ...(PWAS() || !PCON ? [] : [['pwaI()', '📥', 'Télécharger / installer sur PC', 'm_inst']]), ['V.stp=1', '⚙️', 'Paramètres', 'm_pref'], ['quit()', '⏻', 'Quitter', 'm_quit']].map(([f, ic, t, k]) => `<button class="gxb" onclick="${f};render()" title="${t}" aria-label="${t}">${ic}<span>${t}</span></button>`).join('')}</span></div><div class="mtg">${cont}${T('m c2', `${PH}<span class="bd">+</span>`, 'Nouvelle carrière', mkU() ? '15 clubs · 15 planètes' : '14 clubs · 14 planètes', 'menuNew()', 'm_new')}${T('m ch', '', 'Charger une partie', '5 emplacements et sauvegarde automatique', "V.sv=1;V.sn='';render()", 'm_load')}${T('n md', '', 'Éditeur de mods', 'Équipes, joueurs, Fluides, couleurs', 'V.menu=0;V.ed=1;V.et=null;render()', 'm_ed')}${T('n tu', '', 'Tutoriel', 'Effectif, tactique, Fluides, finances', 'V.hv=1;render()', 'm_tuto')}${T('n v', '', 'Visite guidée', TOUR.length + ' étapes avec Clamp', 'menuTour()', 'm_tour')}${O('▶', 'Découvrir la série', 'Vidéo de @andsboy · 14 min · YouTube', "window.open('https://www.youtube.com/watch?v=3w1j_jVfzYE','_blank','noopener')", 'm_vid')}${O('⚙️', 'Paramètres', '', 'V.stp=1;render()', 'm_pref')}${O('⏻', 'Quitter', '', 'quit()', 'm_quit')}</div><div class="gxz"><div class="gxc"><span>${mkU() ? 15 : 14} clubs</span><span>${mkU() ? 15 : 14} planètes</span><span>2 compétitions</span><span>7 contre 7</span></div><div class="gxw"><b>Projet de fans non officiel</b> · gratuit et sans aucun but lucratif · non affilié aux ayants droit de « Galactik Football ».</div><div class="gxf">${legLinks()}</div></div></div>${nw}${rmb}${ins}${bye}</div>`;
+  return `<div class="mm"><div class="mbg"></div><div class="mw gx gxa2"><div class="mh"><h1>GFM</h1><small class="gv">${GV}</small><span class="gxi">${[['V.nw=1', '✨', 'Les nouveautés', 'm_news'], ['V.rm=1', '🚀', 'Roadmap', 'm_road'], ...(PWAS() ? [] : [['V.mob=1', '📲', 'Installer sur mobile / tablette', 'm_mob']]), ['V.fb=1', '💬', 'Signaler un bug / une idée', 'm_fb'], ...(PWAS() || !PCON ? [] : [['pwaI()', '📥', 'Télécharger / installer sur PC', 'm_inst']]), ['V.stp=1', '⚙️', 'Paramètres', 'm_pref'], ['quit()', '⏻', 'Quitter', 'm_quit']].map(([f, ic, t, k]) => `<button class="gxb" onclick="${f};render()" title="${t}" aria-label="${t}">${ic}<span>${t}</span></button>`).join('')}</span></div><div class="mtg">${cont}${T('m c2', `${PH}<span class="bd">+</span>`, 'Nouvelle carrière', mkU() ? '15 clubs · 15 planètes' : '14 clubs · 14 planètes', 'menuNew()', 'm_new')}${T('m ch', '', 'Charger une partie', '5 emplacements et sauvegarde automatique', "V.sv=1;V.sn='';render()", 'm_load')}${T('n md', '', 'Éditeur de mods', 'Équipes, joueurs, Fluides, couleurs', 'V.menu=0;V.ed=1;V.et=null;render()', 'm_ed')}${T('n tu', '', 'Tutoriel', 'Effectif, tactique, Fluides, finances', 'V.hv=1;V.menu=0;render()', 'm_tuto')}${T('n v', '', 'Visite guidée', TOUR.length + ' étapes avec Clamp', 'menuTour()', 'm_tour')}${O('▶', 'Découvrir la série', 'Vidéo de @andsboy · 14 min · YouTube', "window.open('https://www.youtube.com/watch?v=3w1j_jVfzYE','_blank','noopener')", 'm_vid')}${O('⚙️', 'Paramètres', '', 'V.stp=1;render()', 'm_pref')}${O('⏻', 'Quitter', '', 'quit()', 'm_quit')}</div><div class="gxz"><div class="gxc"><span>${mkU() ? 15 : 14} clubs</span><span>${mkU() ? 15 : 14} planètes</span><span>2 compétitions</span><span>7 contre 7</span></div><div class="gxw"><b>Projet de fans non officiel</b> · gratuit et sans aucun but lucratif · non affilié aux ayants droit de « Galactik Football ».</div><div class="gxf">${legLinks()}</div></div></div>${nw}${rmb}${mob}${ins}${bye}</div>`;
 }
 // Bouton « Quitter » : sauvegarde automatique puis message d'au revoir.
 function quit() {
@@ -18759,6 +19169,7 @@ function quit() {
 }
 // Enregistre la partie en cours dans le navigateur (emplacement principal).
 function save() {
+  if (!S && V.fmp) return;
   try {
     localStorage.setItem('gm6', ser());
   } catch (e) {}
@@ -18775,9 +19186,12 @@ try {
   mkSync();
   useT();
   natSyncAll();
+  if (!S.teams.every((t) => FX[t.name])) throw 0;
 } catch (e) {
   S = null;
+  if (localStorage.getItem('gm6')) V.fmp = 1;
 }
+loadFileMods();
 try {
   if (!localStorage.getItem('gm_intro2')) V.intro = 1;
 } catch (e) {}
