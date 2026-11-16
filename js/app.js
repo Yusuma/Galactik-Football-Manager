@@ -779,6 +779,14 @@ const PTN = {
     cos: 'Équipe cosmopolite',
     cc: 'Carton plein',
     fan: 'Supporter n°1',
+    // Titres du jeu de cartes (Galactik Cartes)
+    tc_strat: 'Stratège galactique',
+    tc_maitre: 'Maître du duel',
+    tc_remont: 'Roi de la remontada',
+    tc_boost: 'Maître des boosters',
+    tc_coll: 'Archiviste galactique',
+    tc_galax: 'Collectionneur galactique',
+    tc_panth: 'Gardien du Panthéon',
   },
   KDEC = [
     ['star', 'Étoiles', 'champ'],
@@ -795,7 +803,7 @@ const PTN = {
         ? 'Vainqueurs de la Galactik Cup'
         : 'Vainqueurs de la Coupe de la Ligue'
       : TTN[x.k],
-  ttYr = (x) => x.k != 'cc' && x.k != 'fan',
+  ttYr = (x) => x.k != 'cc' && x.k != 'fan' && !/^tc_/.test(x.k),
   ttFull = (x) => ttName(x) + (ttYr(x) ? ' · ' + x.y : ''),
   ptFull = (x) =>
     PTN[x.k]
@@ -1170,6 +1178,13 @@ const TTH = {
     cos: 'Aligner 7 planètes différentes dans l’effectif.',
     cc: 'Gagner un match avec 5 buts d’écart ou plus.',
     fan: 'Un secret à découvrir.',
+    tc_strat: 'Galactik Cartes : gagner 25 duels.',
+    tc_maitre: 'Galactik Cartes : gagner 50 duels.',
+    tc_remont: 'Galactik Cartes : gagner un duel après avoir été mené de 2 buts.',
+    tc_boost: 'Galactik Cartes : ouvrir 50 boosters.',
+    tc_coll: 'Galactik Cartes : posséder 100 cartes différentes.',
+    tc_galax: 'Galactik Cartes : posséder toutes les cartes des boosters.',
+    tc_panth: 'Galactik Cartes : réunir toutes les cartes Légende.',
   },
   PTH = {
     g: 'Être le meilleur buteur de la saison (au moins 3 buts).',
@@ -1187,63 +1202,86 @@ const TTH = {
   gtw = (h, t) => `<span class="gtw" tabindex="0">${h}<span class="tip">${t}</span></span>`;
 // Page « Galerie » : titres, décorations de maillot et ballons à collectionner (les éléments non
 // débloqués restent en « ? ? ? »).
+// Galerie : identifiant d'une section, et lien d'un compteur du haut vers sa section (défilement + surbrillance).
+const gsId = (h) => h.normalize('NFD').replace(/[^a-zA-Z]+/g, '-').toLowerCase(),
+  gsGo = (h) => `role="button" tabindex="0" title="Aller à la section" onclick="gsJump('${gsId(h)}')" onkeydown="if(event.key=='Enter')this.click()"`;
+function gsJump(id) {
+  const e = document.getElementById('gs-' + id);
+  if (!e) return;
+  e.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.gsfl').forEach((x) => x.classList.remove('gsfl'));
+  void e.offsetWidth;
+  e.classList.add('gsfl');
+}
 function galView() {
   const R = RW(),
     t = me(),
     kk = kitOf(t),
-    chip = (x, h) => (h ? gtw(`<span class="glc">${x}</span>`, '<b>Débloqué</b> : ' + h) : `<span class="glc">${x}</span>`),
-    lk = (h) => (h ? gtw('<span class="glc lk">? ? ?</span>', '<b>À débloquer</b> : ' + h) : '<span class="glc lk" title="Pas encore débloqué">? ? ?</span>'),
-    card = (h, b) => `<div class="card"><b>${h}</b><div style="margin-top:6px">${b}</div></div>`;
-  const kinds = Object.keys(TTN),
+    card = (h, b) => `<div class="card"><b>${h}</b><div style="margin-top:6px">${b}</div></div>`,
+    // Tuile de succès : obtenu (doré) ou verrouillé, avec description, détail et pastilles de récompense.
+    tile = (ok, ic, name, desc, sub, pills, on) =>
+      `<div class="gai${ok ? ' ok' : ''}${on ? ' clk' : ''}"${on ? ` onclick="${on}" role="button" tabindex="0"` : ''}><div class="gaic">${ok ? ic : '🔒'}</div><div class="gaib"><b>${name}</b>${desc ? `<small>${desc}</small>` : ''}${sub || ''}</div>${pills ? `<span class="garw">${pills}</span>` : ''}</div>`,
+    okl = (x) => `<small class="gagot">${x}</small>`,
+    bar = (a, b) => `<span class="gabar"><i style="width:${Math.min(100, Math.round((a / Math.max(1, b)) * 100))}%"></i></span><span class="ganum">${Math.min(a, b)} / ${b}</span>`,
+    sec = (h, n, body, extra) => `<div class="card gsec" id="gs-${gsId(h)}"><div class="gsh"><b>${h}</b>${n ? `<span class="gsn">${n}</span>` : ''}</div>${extra || ''}<div class="gag">${body}</div></div>`;
+  const kinds = Object.keys(TTN).filter((k) => !/^tc_/.test(k)),
+    tck = Object.keys(TTN).filter((k) => /^tc_/.test(k)),
     own = [
       ...t.sq.map((p) => [p.n, p.tt || []]),
       ...(S.ret || []).map((r) => [r.n + ' (retraité)', r.tt || []]),
-    ].filter(([n, a]) => a.length),
-    got = new Set();
-  own.forEach(([n, a]) => a.forEach((x) => got.add(x.k)));
+    ].filter(([n, a]) => a.length);
   const pk = [...Object.keys(PTN), ...Object.keys(PTL)];
+  // Titres du club
+  const ttT = (k) => {
+    const g = R.tt.filter((x) => x.k == k),
+      sec0 = k == 'fan' && !g.length;
+    return tile(
+      g.length,
+      '🏆',
+      sec0 ? '? ? ?' : g.length ? ttName(g[g.length - 1]) : TTN[k],
+      TTH[k],
+      g.length ? okl('Obtenu' + (ttYr(g[0]) ? ' · ' + g.map((x) => x.y).join(', ') : '')) : '',
+      g.length > 1 ? `<span>×${g.length}</span>` : '',
+    );
+  };
+  const nTcS = tck.filter((k) => R.tt.some((x) => x.k == k)).length,
+    nClub = kinds.filter((k) => R.tt.some((x) => x.k == k)).length,
+    nTc = tck.filter((k) => R.tt.some((x) => x.k == k)).length;
+  // Titres des joueurs
+  const ptT = (k) => {
+    const hs = own.filter(([n, a]) => a.some((x) => x.k == k)).map(([n, a]) => n + (PTN[k] ? ' (' + a.filter((x) => x.k == k).map((x) => x.y).join(', ') + ')' : ''));
+    return tile(hs.length, '🎖️', PTN[k] || PTL[k], PTH[k], hs.length ? okl(hs.join(' · ')) : '');
+  };
+  const nPt = pk.filter((k) => own.some(([n, a]) => a.some((x) => x.k == k))).length;
+  // Succès de carrière
+  const A = S.ach || {},
+    achK = Object.keys(ACH),
+    nAch = achK.filter((k) => A[k]).length;
+  // Décorations de maillot et musiques
   const dec = KDEC.map((d) =>
-      unl('kd_' + d[0])
-        ? gtw(`<div class="glk" onclick="setKit('p','${d[0]}')">${jersey({ ...kk, p: d[0] }, null, '', 46)}<span>${d[1]}</span></div>`, `<b>Débloqué</b> : obtenir le titre « ${TTN[d[2]]} ». Touchez pour utiliser ce motif.`)
-        : gtw(`<div class="glk lk"><div style="width:46px;height:52px;display:flex;align-items:center;justify-content:center;font-size:22px">?</div><span>? ? ?</span></div>`, `<b>À débloquer</b> : obtenir le titre « ${TTN[d[2]]} » (${TTH[d[2]]})`),
+      tile(
+        unl('kd_' + d[0]),
+        `<span class="gajs">${jersey({ ...kk, p: d[0] }, null, '', 40)}</span>`,
+        d[1],
+        `Obtenir le titre « ${TTN[d[2]]} ».`,
+        unl('kd_' + d[0]) ? okl('Touchez pour utiliser ce motif') : '',
+        '',
+        unl('kd_' + d[0]) ? `setKit('p','${d[0]}')` : '',
+      ),
     ).join(''),
-    mus = MUS.filter((x) => x.lk)
-      .map((x) => (unl(x.lk) ? chip(x.t + ' · ' + x.a) : lk()))
-      .join('');
+    musL = MUS.filter((x) => x.lk),
+    mus = musL.map((x) => (unl(x.lk) ? tile(1, '🎵', x.t, x.a, okl('Débloquée')) : tile(0, '', '? ? ?', 'Un secret à découvrir.'))).join('');
   return (
-    `<div class="glw"><h1>Galerie</h1><div class="mu" style="margin-bottom:8px">Vos récompenses de cette carrière. Elles repartent de zéro avec une nouvelle carrière.</div><div class="gl">` +
-    card(
-      'Titres du club',
-      (R.tt.length
-        ? `<div style="margin-bottom:6px"><button onclick="V.ttl=1;render()">Choisir le titre affiché</button></div>`
-        : '') +
-        R.tt.map((x) => chip(ttFull(x), TTH[x.k])).join('') +
-        kinds
-          .filter((k) => !R.tt.some((x) => x.k == k))
-          .map((k) => lk(TTH[k]))
-          .join(''),
-    ) +
-    card(
-      'Titres des joueurs',
-      (own.length
-        ? own
-            .map(
-              ([n, a]) =>
-                `<div class="row"><span class="nm">${n}</span><span>${a
-                  .slice()
-                  .reverse()
-                  .map((x) => chip(ptFull(x), PTH[x.k]))
-                  .join('')}</span></div>`,
-            )
-            .join('')
-        : '') +
-        pk
-          .filter((k) => !got.has(k))
-          .map((k) => lk(PTH[k]))
-          .join(''),
-    ) +
-    card('Décorations de maillot', '<div class="gld">' + dec + '</div>') +
-    (mus ? card('Musiques bonus', mus) : '') +
+    `<div class="glw"><h1>Galerie</h1><div class="mu" style="margin-bottom:8px">Vos récompenses de cette carrière. Elles repartent de zéro avec une nouvelle carrière.</div>` +
+    `<div class="gstat"><div ${gsGo('Titres du club')}><b>${nClub} / ${kinds.length}</b>titres du club</div><div ${gsGo('Titres des joueurs')}><b>${nPt} / ${pk.length}</b>titres de joueurs</div><div ${gsGo('Succès de carrière')}><b>${nAch} / ${achK.length}</b>succès de carrière</div>${tcgOn() ? tcgGalStat(nTcS, tck.length) : ''}<div ${gsGo('Décorations de maillot')}><b>${KDEC.filter((d) => unl('kd_' + d[0])).length} / ${KDEC.length}</b>décorations de maillot</div>${musL.length ? `<div ${gsGo('Musiques bonus')}><b>${musL.filter((x) => unl(x.lk)).length} / ${musL.length}</b>musiques bonus</div>` : ''}<div ${gsGo('ballons')}><b>${ballStat().join(' / ')}</b>ballons</div></div>` +
+    `<div class="gl1">` +
+    sec('Titres du club', `${nClub} / ${kinds.length}`, kinds.map(ttT).join(''), R.tt.length ? `<div style="margin:2px 0 8px"><button onclick="V.ttl=1;render()">Choisir le titre affiché</button></div>` : '') +
+    sec('Titres des joueurs', `${nPt} / ${pk.length}`, pk.map(ptT).join('')) +
+    sec('Succès de carrière', `${nAch} / ${achK.length}`, achK.map((k) => tile(A[k], '🏆', ACH[k], '', A[k] ? okl('Obtenu') : '')).join('')) +
+    (tcgOn() || R.tt.some((x) => /^tc_/.test(x.k)) ? tcgGalView(tile, okl, bar, sec, tck, nTc) : '') +
+    sec('Décorations de maillot', `${KDEC.filter((d) => unl('kd_' + d[0])).length} / ${KDEC.length}`, dec) +
+    (mus ? sec('Musiques bonus', '', mus) : '') +
+    `</div><div class="gl" style="margin-top:10px">` +
     ballsCard() +
     ((S.ret || []).length
       ? card(
@@ -1258,8 +1296,7 @@ function galView() {
       : '') +
     '</div></div>'
   );
-}
-// Le brassard est mémorisé PAR ÉQUIPE (p.cpt = {nom d'équipe: 1}) : en mode « Les deux », le même joueur est dans le
+}// Le brassard est mémorisé PAR ÉQUIPE (p.cpt = {nom d'équipe: 1}) : en mode « Les deux », le même joueur est dans le
 // club et dans la sélection, chacun a son propre capitaine. (p.cap = ancien format, toujours lu.)
 const isCap = (p, t) => !!p && !!t && (p.cap === t.name || !!(p.cpt && p.cpt[t.name]));
 const putCap = (p, t) => {
@@ -1700,6 +1737,14 @@ function ballSvg(id, s) {
   return `<svg class="blsv" width="${s}" height="${s}" viewBox="0 0 100 100" aria-hidden="true"><defs><radialGradient id="${u}g" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="${C[0]}"/><stop offset="1" stop-color="${C[1]}"/></radialGradient><clipPath id="${u}c"><circle cx="50" cy="50" r="46"/></clipPath></defs><circle cx="50" cy="50" r="46" fill="url(#${u}g)"/><g clip-path="url(#${u}c)">${TB ? tp(TB[2], PC ? PC[1] : '#fff') + lgo(TB[1]) : D[id] || ''}<ellipse cx="36" cy="26" rx="20" ry="11" fill="#fff" opacity=".28" transform="rotate(-30 36 26)"/></g><circle cx="50" cy="50" r="46" fill="none" stroke="#0b1020" stroke-opacity=".55" stroke-width="3"/></svg>`;
 }
 // Carte « Ballons à collectionner » de la Galerie.
+// Ballons de la Galerie : nombre débloqué / nombre affiché (même liste que la section « Ballons à collectionner »).
+function ballStat() {
+  const hb = hidBalls(),
+    own = teamBall(),
+    L = BALLS.filter((z) => z[0] != own).map((z) => z[0]).concat(hb.map((z) => z[0])),
+    ok = (id) => id == 'cl' || BALL_PREVIEW || hb.some((z) => z[0] == id) || unl('bl_' + id);
+  return [L.filter(ok).length + 2, L.length + 2];
+}
 function ballsCard() {
   const cur = ST.bl || '',
     hb = hidBalls(),
@@ -1718,7 +1763,7 @@ function ballsCard() {
     bs = hd('Autres équipes') + gT.map(one).join('') + hd('Ballons spéciaux') + gS.concat(hb.map((z) => [z[0], z[1]])).map(one).join(''),
     tb = teamBall(),
     eq = `<div class="glk${cur ? '' : ' bsel'}" onclick="selBall('')" title="Le ballon blanc de base. La couleur de l’équipe qui a la possession s’affiche autour.">${ballSvg('df', 52)}<span>${cur ? '' : '✓ '}Ballon par défaut</span></div><div class="glk${cur == 'team' ? ' bsel' : ''}" onclick="selBall('team')" title="Le ballon de ton équipe, avec son écusson.">${ballSvg(tb || 'df', 52)}<span>${cur == 'team' ? '✓ ' : ''}Ballon équipe</span></div>`;
-  return `<div class="card" style="grid-column:1/-1"><b>Ballons à collectionner</b><div class="mu" style="margin-top:4px">Touchez un ballon débloqué pour l’utiliser en match.</div>${BORI[cur == 'team' ? tb : cur] ? `<div class="mu" style="margin-top:4px"><b>${cur == 'team' ? 'Ballon équipe' : (BALLS.find((z) => z[0] == cur) || [])[1]}</b> : ${BORI[cur == 'team' ? tb : cur]}</div>` : ''}<div style="margin-top:6px"><div class="gld bgd">${eq}${bs}</div></div></div>`;
+  return `<div class="card gsec" id="gs-ballons" style="grid-column:1/-1"><b>Ballons à collectionner</b><div class="mu" style="margin-top:4px">Touchez un ballon débloqué pour l’utiliser en match.</div>${BORI[cur == 'team' ? tb : cur] ? `<div class="mu" style="margin-top:4px"><b>${cur == 'team' ? 'Ballon équipe' : (BALLS.find((z) => z[0] == cur) || [])[1]}</b> : ${BORI[cur == 'team' ? tb : cur]}</div>` : ''}<div style="margin-top:6px"><div class="gld bgd">${eq}${bs}</div></div></div>`;
 }
 // Prépare le moteur sonore (effets), si les sons sont activés.
 function sfxInit() {
@@ -1992,8 +2037,9 @@ const recoT = () => {
 // Bibliothèque d'icônes dessinées en SVG. Pour ajouter une icône : ajouter un <symbol> ici et son
 // emoji dans la table EMJ.
 const SPR =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute"><defs><linearGradient id="gy" gradientUnits="userSpaceOnUse" x1="2" y1="1" x2="22" y2="23"><stop offset="0" style="stop-color:var(--ac,#7c5cff)"/><stop offset="1" style="stop-color:var(--ac2,#e4338f)"/></linearGradient></defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M12 2.5 1.5 12H5v9h5.5v-6h3v6H19v-9h3.5z"/></symbol><symbol id="i-dash" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="8.5" height="10.5" rx="2"/><rect x="13" y="2.5" width="8.5" height="6" rx="2"/><rect x="13" y="10.5" width="8.5" height="11" rx="2"/><rect x="2.5" y="15" width="8.5" height="6.5" rx="2"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5"/><path d="M3 7.5l9 6.5 9-6.5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-clip" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="18" rx="3.5"/><rect x="8" y="1.5" width="8" height="4.5" rx="2"/><path d="M8 12h8M8 16h5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4.2"/><path d="M1 21.5c0-5 3.2-8 8-8s8 3 8 8z"/><circle cx="18" cy="9" r="3" opacity=".7"/><path d="M18.5 14c3 .3 4.8 2.600 4.800 7.500H19c0-3-.4-5.500-1.600-7.200z" opacity=".7"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="17.500" rx="3.5"/><rect x="6.500" y="1.500" width="3" height="5.500" rx="1.500"/><rect x="14.500" y="1.500" width="3" height="5.500" rx="1.500"/><path d="M2.500 10h19" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/><rect x="12.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M2 7.500 7.500 2v3.500H21v4H7.500V13z"/><path d="M22 16.500 16.500 22v-3.500H3v-4h13.500V11z" opacity=".75"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.800"/><path d="M2.500 22c0-6 4-9.500 9.500-9.500S21.500 16 21.500 22z"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 2.500h10v6.500a5 5 0 0 1-10 0z"/><path d="M2.500 4h4v2.200h-1.800c.2 1.800 1 2.800 2.300 3.300V12C4.200 11.400 2.500 8.800 2.500 4zM21.500 4h-4v2.200h1.800c-.2 1.800-1 2.800-2.300 3.300V12c2.800-.6 4.500-3.200 4.500-8z"/><rect x="10.500" y="14" width="3" height="4.500"/><rect x="6.500" y="18" width="11" height="3.500" rx="1.700"/></symbol><symbol id="i-stadium" viewBox="0 0 24 24"><path d="M1.500 10c0-3 4.500-5 10.500-5s10.500 2 10.500 5v8c0 1.500-4.500 3.500-10.500 3.500S1.500 19.500 1.500 18z"/><ellipse cx="12" cy="10.500" rx="6.500" ry="2.600" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M14.800 8.800c-.4-1.200-1.500-1.800-2.800-1.800-1.600 0-2.800.8-2.800 2.100 0 3 5.800 1.500 5.800 4.600 0 1.400-1.300 2.300-3 2.300-1.400 0-2.600-.7-3-2M12 5.500V7M12 17v1.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500" style="fill:#f2f5fa"/><path d="M12 7.200l4 2.900-1.500 4.700h-5L8 10.100z" fill="rgba(0,0,0,.42)"/><path d="M12 7.200V2M16 10.100l5-1.600M14.500 14.800l3 4.200M9.500 14.800l-3 4.200M8 10.100 3 8.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M9 9.500a3 3 0 1 1 4.600 2.500c-1 .7-1.600 1.200-1.600 2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.700" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M3.500 2.500h13l4 4v15h-17z"/><rect x="7" y="2.500" width="9" height="6" fill="rgba(0,0,0,.42)"/><rect x="7" y="13" width="10" height="8.500" rx="1.200" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.800l8.500 3.200v6.200c0 5.200-3.600 9.200-8.500 11-4.900-1.800-8.500-5.800-8.500-11V5z"/><path d="M8 11.800l2.800 2.800L16 9.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bank" viewBox="0 0 24 24"><path d="M12 1.500 1.500 7.500v2.500h21V7.500z"/><rect x="3.500" y="11.500" width="3.500" height="7"/><rect x="10.250" y="11.500" width="3.500" height="7"/><rect x="17" y="11.500" width="3.500" height="7"/><rect x="1.500" y="19.800" width="21" height="3" rx="1.200"/></symbol><symbol id="i-textsz" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 21 9 3h2.200l7 18h-2.600l-1.500-4H6.100L4.600 21zM7 15h5.600L9.800 7.500z"/><path d="M19 8h3M20.500 6.500v3" stroke="rgba(0,0,0,.42)" stroke-width="0" /></symbol><symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M12 1.500a10.500 10.500 0 0 0 0 21z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2.500a7.500 7.500 0 1 0 4.500 13.500l5.200 5.200 2-2-5.200-5.200A7.500 7.500 0 0 0 10 2.500zm0 2.600a4.900 4.900 0 1 1 0 9.800 4.900 4.900 0 0 1 0-9.800z"/></symbol><symbol id="i-import" viewBox="0 0 24 24"><path d="M9.800 2h4.400v7.200h4L12 16 5.800 9.200h4z"/><path d="M2.500 14.500h3.200v4.800h12.600v-4.800h3.200v8H2.500z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M9.800 2.500h4.400v7.300h7.300v4.400h-7.300v7.300H9.800v-7.300H2.500V9.800h7.300z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M5.500 2.500 21 12 5.500 21.500z"/></symbol><symbol id="i-ff" viewBox="0 0 24 24"><path d="M1.500 4 11.500 12 1.500 20zM12 4 22.500 12 12 20z"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="4.500" y="3" width="5.500" height="18" rx="1.800"/><rect x="14" y="3" width="5.500" height="18" rx="1.800"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 1.500c4.200 2.200 6.300 6.200 6.300 11.500l-3 3.200H8.700L5.700 13C5.700 7.700 7.800 3.700 12 1.500z"/><circle cx="12" cy="9.500" r="2.200" fill="rgba(0,0,0,.42)"/><path d="M5.700 13.500 2 18l4.500-1zM18.300 13.500 22 18l-4.500-1zM9.800 18h4.400L12 22.500z" opacity=".8"/></symbol><symbol id="i-fluid" viewBox="0 0 24 24"><path d="M12 2.500a9.500 9.500 0 1 0 9.500 9.500h-3.200A6.300 6.300 0 1 1 12 5.700z"/><path d="M12 8a4 4 0 1 0 4 4h-2.300A1.700 1.700 0 1 1 12 10.300z" opacity=".7"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.800l3.100 6.600 7.200.9-5.300 4.900 1.400 7.100L12 17.800l-6.400 3.500 1.400-7.100L1.700 9.300l7.200-.9z"/></symbol><symbol id="i-band" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="0.500" y="7.500" width="23" height="9" rx="4.500"/><rect x="8" y="7.500" width="8" height="9" fill="rgba(255,255,255,.45)"/><circle cx="11" cy="10.500" r=".9" fill="rgba(0,0,0,.42)"/><circle cx="13" cy="13.500" r=".9" fill="rgba(0,0,0,.42)"/></g></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 1.500c1 4.200 6.500 6.300 6.500 12.300a6.500 6.500 0 0 1-13 0c0-3.200 1.800-4.500 3.300-7.300 1 1 1.400 2.200 1.200 3.600 2-1.800 2.200-5.200 2-8.600z"/></symbol><symbol id="i-footr" viewBox="0 0 24 24"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></symbol><symbol id="i-footl" viewBox="0 0 24 24"><g transform="translate(24 0) scale(-1 1)"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></g></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 3v12.500A3.500 3.500 0 1 0 11 18.500V8l8-2v7.500A3.500 3.500 0 1 0 21 16.500V2z"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="2.500" y="9" width="19" height="12.500" rx="2.500"/><path d="M2.500 4.500 19 2l1.300 4.200L3.800 8.800z"/></symbol><symbol id="i-loan" viewBox="0 0 24 24"><path d="M3.500 12A8.500 8.500 0 0 1 18 6l2.500-2.500v7.500h-7.500l2.700-2.700A5.300 5.300 0 0 0 6.700 12z"/><path d="M20.500 12A8.500 8.500 0 0 1 6 18l-2.500 2.500V13H11l-2.700 2.700A5.300 5.300 0 0 0 17.300 12z" opacity=".75"/></symbol><symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 2h3c0 5 9 6 9 11.500V22h-3c0-5.500-9-6-9-11.500zM18 2h-3c0 5-9 6-9 11.500V22h3c0-5.500 9-6 9-11.500z" fill-rule="evenodd" opacity=".95"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(0 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(135 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(180 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(225 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(270 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.500 1.500 4 14h6.200l-1.200 8.500L20 10h-6.200z"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 1.500c.8 5.500 3.800 8.500 10.500 10.500-6.700 2-9.700 5-10.500 10.500C11.200 17 8.200 14 1.500 12 8.200 10 11.200 7 12 1.500z"/></symbol><symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.800"/><path class="s" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20.500 6.500C23 9 20 15.500 12 19.500 5 23 0.800 21 3.500 17.500"/><ellipse cx="12" cy="12" rx="11" ry="4.200" transform="rotate(-28 12 12)" class="s" stroke-width="1.700"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M7 12.500l3.500 3.500 6.500-7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-cross" viewBox="0 0 24 24"><path d="M4.500 2.500 12 10l7.500-7.500 2 2L14 12l7.500 7.500-2 2L12 14l-7.500 7.500-2-2L10 12 2.500 4.500z"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 2h6l1 2h5v2.500H3V4h5z"/><path d="M4.800 8h14.400l-1 13.500H5.800z"/><path d="M10 11.500v7M14 11.500v7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M2 5.500A2.500 2.500 0 0 1 4.500 3h5l2.500 3h7.500A2.500 2.500 0 0 1 22 8.500v10a2.500 2.500 0 0 1-2.500 2.500h-15A2.500 2.500 0 0 1 2 18.500z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.500" width="16" height="11.500" rx="3"/><path d="M7.500 10.500V7.500a4.500 4.500 0 0 1 9 0v3" class="s" stroke-width="2.600" stroke-linecap="round"/><circle cx="12" cy="16" r="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.200 22.800 21H1.200z" stroke-linejoin="round"/><path d="M12 9v5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.600" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4.500"/><path d="M6 8l4.500 4.500 3-3 4.500 5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-build" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20.500" rx="2.500"/><rect x="7.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M2.500 9.500v5.500h4l9 5.500V4L6.500 9.500z"/><path class="s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" d="M18.500 8.500c2.200 2.200 2.200 5.800 0 8"/></symbol><symbol id="i-case" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14.500" rx="3"/><path d="M8.500 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" class="s" stroke-width="2"/><path d="M2 13h20" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-siren" viewBox="0 0 24 24"><path d="M5.500 18A6.500 6.500 0 0 1 18.500 18z"/><rect x="3.500" y="18" width="17" height="3.500" rx="1.400"/><path class="s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.500v3M3.800 5.200l2 2M20.200 5.200l-2 2"/></symbol><symbol id="i-cross2" viewBox="0 0 24 24"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><rect x="2.500" y="3.500" width="19" height="17" rx="3"/><path d="M6.500 8.500h11M6.500 12.500h11M6.500 16.500h6.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9.500 4.500 2.500 11l7 6.500v-4c5.500 0 9 1.300 11.500 6 0-7-3.800-12.500-11.500-12.500z"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M7.500 14.500c1 2.800 3 4 4.500 4s3.500-1.200 4.500-4" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 15.500c1.200 1.600 2.600 2.200 4 2.200s2.800-.6 4-2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-meh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 16.200h8" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-angry" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.500 7.200l4 2M17.500 7.200l-4 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.600" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="15.400" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><path d="M8 17c1-1.500 2.300-2.200 4-2.200s3 .7 4 2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-sick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.800 9.500l3 1.200-3 1.200M17.200 9.500l-3 1.200 3 1.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.500 16.200c1-1 1.800-1 2.800 0s1.800 1 2.800 0 1.800-1 2.800 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-snow" viewBox="0 0 24 24"><path class="s" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.800v20.400M3.200 6.900l17.600 10.200M3.200 17.100 20.800 6.900M8.800 3.800 12 6l3.200-2.200M8.800 20.200 12 18l3.200 2.200"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.500 14.800A9.500 9.500 0 0 1 9.200 3.500 9.500 9.500 0 1 0 20.500 14.800z"/></symbol><symbol id="i-robot" viewBox="0 0 24 24"><rect x="3.500" y="7.500" width="17" height="13.500" rx="4.500"/><rect x="11" y="3" width="2" height="4.500"/><circle cx="12" cy="2.800" r="1.700"/><circle cx="8.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><path d="M9 18h6" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-palm" viewBox="0 0 24 24"><path d="M11 22.500c0-6.500 1-10 2.200-13.500h1.200c-1.100 3.500-1.800 7-1.800 13.500z"/><path d="M12.800 9C8.800 4.500 4.500 5 2 8.500c3-1 6 0 10.800.5zM12.800 9c0-5.500 4-7.700 8.500-6.500-3.200 1-5.500 3.200-6.500 7zM12.800 9c4-3 8.500-1.500 10 3-3-1.500-6-1.300-9.500.2zM12.800 9c-3.500 1.500-5 5-4 8.500 1.200-3.500 2.700-5.800 5-7.300z"/></symbol><symbol id="i-rock" viewBox="0 0 24 24"><path d="M2.500 18.500 6.800 8l5.200-4.500 6.500 3 3 8.500-4.300 5.500H6.500z"/><path d="M7 9.500l5 3 6-5M12 12.500v7.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-alien" viewBox="0 0 24 24"><path d="M12 2c5.500 0 9.500 4.200 9.500 9.500 0 5.500-4.200 10.500-9.500 10.500S2.500 17 2.500 11.500C2.500 6.200 6.500 2 12 2z"/><ellipse cx="8" cy="11" rx="2.600" ry="1.500" transform="rotate(20 8 11)" fill="rgba(0,0,0,.42)"/><ellipse cx="16" cy="11" rx="2.600" ry="1.500" transform="rotate(-20 16 11)" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-tiger" viewBox="0 0 24 24"><path d="M2.500 3 8 6.200h8L21.500 3v9.500c0 5.500-4 9.500-9.500 9.500S2.500 18 2.500 12.500z"/><path d="M12 7v3M7 8.500l1.500 2M17 8.500l-1.500 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.300" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><circle cx="15.700" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><path d="M10 17.500c1 .8 3 .8 4 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 1.800a9.500 9.500 0 0 0-5.500 17.200v2.700h11V19A9.500 9.500 0 0 0 12 1.800z"/><circle cx="8.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><path d="M10 17.500v2.500M14 17.500v2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-battery" viewBox="0 0 24 24"><rect x="1.500" y="6.500" width="18.500" height="11" rx="3"/><rect x="20.800" y="9.800" width="2" height="4.400" rx="1"/><path d="M12 8.200 8.300 12.500h3l-.8 3.500 3.700-4.500h-3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M0.800 12C3.800 6 7.800 3.800 12 3.800s8.200 2.200 11.200 8.200c-3 6-7 8.200-11.200 8.200S3.800 18 0.800 12z"/><circle cx="12" cy="12" r="4.400" fill="rgba(0,0,0,.42)"/><circle cx="13.200" cy="10.800" r="1.400" fill="#fff"/></symbol><symbol id="i-comet" viewBox="0 0 24 24"><circle cx="16.500" cy="7.500" r="5.500"/><path d="M12.500 10.500 1.800 17.800l4-.8-.9 4.300z" opacity=".85"/><path d="M11.200 12.500 5 22l1-5z" opacity=".5"/></symbol><symbol id="i-cap" viewBox="0 0 24 24"><path d="M12 3 1 9l11 6 9-4.900V17h2V9z"/><path d="M5.500 13v4c0 2 3 4 6.500 4s6.500-2 6.500-4v-4l-6.500 3.500z" opacity=".8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M3 3.500h18V16H10.500L5.500 20.500V16H3z"/><circle cx="8" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="16" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-medal" viewBox="0 0 24 24"><path d="M6.500 1.500h4l1.500 6-3.500 1.500zM17.500 1.500h-4L12 7.500l3.500 1.500z" opacity=".75"/><circle cx="12" cy="15" r="6.500"/><path d="m12 11.300 1.100 2.300 2.500.3-1.800 1.700.5 2.500-2.300-1.300-2.300 1.300.5-2.500-1.800-1.700 2.500-.3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="12" r="7" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="3.800"/><circle cx="12" cy="12" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-glove" viewBox="0 0 24 24"><path d="M6 22v-7.500L3.500 10a1.700 1.700 0 0 1 3-1.600L8 10.500V4.500a1.500 1.500 0 0 1 3 0V3.500a1.500 1.500 0 0 1 3 0V4.500a1.500 1.500 0 0 1 3 0V12l1.200-1.800a1.700 1.700 0 0 1 2.800 1.900L19 17.500V22z"/><path d="M6 19h13" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.600" stroke-linecap="round"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.500 3.500 4.800v6.500c0 5.200 3.600 9.600 8.500 11.200 4.900-1.600 8.500-6 8.500-11.200V4.800z"/><path d="m8.200 12 2.800 2.800 4.800-5.300" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><rect x="2.500" y="12" width="5" height="9.500" rx="1.200"/><rect x="9.500" y="2.500" width="5" height="19" rx="1.200"/><rect x="16.500" y="7.500" width="5" height="14" rx="1.200"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 1.800 2.800 12H8v10h8V12h5.200z"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="8" y="1.500" width="8" height="13" rx="4"/><path d="M4.500 11a7.500 7.500 0 0 0 15 0M12 18.500v3.500M8 22h8" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.500 5.500h11a5 5 0 0 1 5 4.500l.9 5.500a3.300 3.300 0 0 1-5.800 2.600L16.200 16H7.800l-1.400 2.100A3.300 3.300 0 0 1 .6 15.500L1.500 10a5 5 0 0 1 5-4.500z"/><path d="M7.500 8.800v4.400M5.300 11h4.400" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.800" stroke-linecap="round"/><circle cx="16" cy="10" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="18.700" cy="12.300" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dice" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="7.800" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="7.800" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.800 3 12.800A5.800 5.800 0 0 1 12 5.800a5.800 5.800 0 0 1 9 7z"/></symbol><symbol id="i-speaker" viewBox="0 0 24 24"><path d="M2 8.800h4.800L13 3.500v17l-6.200-5.300H2z"/><path d="M16.500 8.300a5 5 0 0 1 0 7.400M19.800 5a9.500 9.500 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="1.500" y="3" width="21" height="14" rx="2.800"/><path d="M8 21h8M12 17.500V21" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bed" viewBox="0 0 24 24"><path d="M1.500 4h2.500v8h16.500a2.500 2.500 0 0 1 2.500 2.500V19h-2.500v-2.500H4V19H1.500z"/><rect x="5.500" y="6.500" width="5.500" height="3.800" rx="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dumb" viewBox="0 0 24 24"><rect x="1.500" y="8" width="3.500" height="8" rx="1"/><rect x="4.500" y="5.500" width="3.500" height="13" rx="1.200"/><rect x="8" y="10.800" width="8" height="2.400"/><rect x="16" y="5.500" width="3.500" height="13" rx="1.200"/><rect x="19" y="8" width="3.500" height="8" rx="1"/></symbol><symbol id="i-seed" viewBox="0 0 24 24"><path d="M11 22V12h2v10z"/><path d="M12 12C12 6 8 3.500 2.500 4c0 5 3.500 8 9.500 8z"/><path d="M13 14c0-5 3.500-8 8.500-7.500 0 4.500-3 7.500-8.500 7.500z" opacity=".75"/></symbol><symbol id="i-apple" viewBox="0 0 24 24"><path d="M12 7c2-1.800 5-1.500 6.700.7 2 2.700 1 8-1.500 11.300-1.300 1.700-2.500 2-3.300 1.500-.9-.5-1.700-.5-2.600 0-.8.500-2 .2-3.300-1.500C5.500 16.200 4.500 10.900 6.500 8.200 8.200 5.500 10.800 5.200 12 7z"/><path d="M12 7c0-2.300 1-3.700 3-4.500 0 2.300-1 3.800-3 4.500z" opacity=".75"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><rect x="11" y="3" width="2" height="16" rx="1"/><rect x="6" y="19" width="12" height="2.500" rx="1.200"/><rect x="3" y="5.800" width="18" height="2" rx="1"/><path d="M1.500 13.500 5 7.500l3.500 6c0 1.800-1.600 3-3.500 3s-3.500-1.200-3.500-3zM15.500 13.500l3.500-6 3.500 6c0 1.800-1.600 3-3.500 3s-3.500-1.200-3.500-3z"/></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M16.500 7.500 13.500 13.500 7.500 16.500 10.500 10.500z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M7 11V5.500a1.500 1.500 0 0 1 3 0V10h.5V3.500a1.500 1.500 0 0 1 3 0V10h.5V4.500a1.500 1.500 0 0 1 3 0V11h.5V7.500a1.500 1.500 0 0 1 3 0V15c0 4.500-3 7.500-7.500 7.500-3.500 0-5.500-1.800-7-4.500L2.700 13.500c-.6-1.200.9-2.500 2-1.500z"/></symbol><symbol id="i-lizard" viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="6" ry="3.500"/><circle cx="18.500" cy="10.500" r="2.800"/><path d="M5.500 14C3 15 2 17.500 1.500 21c2-2.500 4-3.500 6.500-4z"/><path class="s" d="M8 15.500l-2 4M14 15.500l2 4M9 10.500 7 7M14 10.500l1.500-3.500" stroke-width="2" stroke-linecap="round"/></symbol><symbol id="i-lion" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="13" r="5.500" fill="rgba(255,255,255,.45)"/><circle cx="9.800" cy="12" r="1" fill="rgba(0,0,0,.42)"/><circle cx="14.200" cy="12" r="1" fill="rgba(0,0,0,.42)"/><path d="M10.800 15h2.400l-1.200 1.500z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-power" viewBox="0 0 24 24"><path class="s" d="M12 3v8M6.300 6.500a8 8 0 1 0 11.400 0" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="2.800" rx="1.400"/><rect x="3" y="10.600" width="18" height="2.800" rx="1.400"/><rect x="3" y="16.200" width="18" height="2.800" rx="1.400"/></symbol><symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 22.200 2.800 12H8V2h8v10h5.200z"/></symbol></svg>',
+    '<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute"><defs><linearGradient id="gy" gradientUnits="userSpaceOnUse" x1="2" y1="1" x2="22" y2="23"><stop offset="0" style="stop-color:var(--ac,#7c5cff)"/><stop offset="1" style="stop-color:var(--ac2,#e4338f)"/></linearGradient></defs><symbol id="i-home" viewBox="0 0 24 24"><path d="M12 2.5 1.5 12H5v9h5.5v-6h3v6H19v-9h3.5z"/></symbol><symbol id="i-dash" viewBox="0 0 24 24"><rect x="2.5" y="2.5" width="8.5" height="10.5" rx="2"/><rect x="13" y="2.5" width="8.5" height="6" rx="2"/><rect x="13" y="10.5" width="8.5" height="11" rx="2"/><rect x="2.5" y="15" width="8.5" height="6.5" rx="2"/></symbol><symbol id="i-mail" viewBox="0 0 24 24"><rect x="1.5" y="4.5" width="21" height="15" rx="3.5"/><path d="M3 7.5l9 6.5 9-6.5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-clip" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="18" rx="3.5"/><rect x="8" y="1.5" width="8" height="4.5" rx="2"/><path d="M8 12h8M8 16h5" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4.2"/><path d="M1 21.5c0-5 3.2-8 8-8s8 3 8 8z"/><circle cx="18" cy="9" r="3" opacity=".7"/><path d="M18.5 14c3 .3 4.8 2.600 4.800 7.500H19c0-3-.4-5.500-1.600-7.200z" opacity=".7"/></symbol><symbol id="i-cal" viewBox="0 0 24 24"><rect x="2.5" y="4.5" width="19" height="17.500" rx="3.5"/><rect x="6.500" y="1.500" width="3" height="5.500" rx="1.500"/><rect x="14.500" y="1.500" width="3" height="5.500" rx="1.500"/><path d="M2.500 10h19" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/><rect x="12.500" y="13" width="3.500" height="3" rx=".8" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-swap" viewBox="0 0 24 24"><path d="M2 7.500 7.500 2v3.500H21v4H7.500V13z"/><path d="M22 16.500 16.500 22v-3.500H3v-4h13.500V11z" opacity=".75"/></symbol><symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.800"/><path d="M2.500 22c0-6 4-9.500 9.500-9.500S21.500 16 21.500 22z"/></symbol><symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 2.500h10v6.500a5 5 0 0 1-10 0z"/><path d="M2.500 4h4v2.200h-1.800c.2 1.800 1 2.800 2.300 3.300V12C4.200 11.400 2.500 8.800 2.500 4zM21.500 4h-4v2.200h1.800c-.2 1.800-1 2.800-2.300 3.300V12c2.800-.6 4.500-3.200 4.500-8z"/><rect x="10.500" y="14" width="3" height="4.500"/><rect x="6.500" y="18" width="11" height="3.500" rx="1.700"/></symbol><symbol id="i-stadium" viewBox="0 0 24 24"><path d="M1.500 10c0-3 4.500-5 10.500-5s10.500 2 10.500 5v8c0 1.500-4.500 3.500-10.500 3.500S1.500 19.500 1.500 18z"/><ellipse cx="12" cy="10.500" rx="6.500" ry="2.600" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-coin" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M14.800 8.800c-.4-1.200-1.500-1.800-2.800-1.800-1.600 0-2.800.8-2.800 2.100 0 3 5.800 1.500 5.800 4.600 0 1.400-1.300 2.300-3 2.300-1.400 0-2.600-.7-3-2M12 5.500V7M12 17v1.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500" style="fill:#f2f5fa"/><path d="M12 7.200l4 2.900-1.500 4.700h-5L8 10.100z" fill="rgba(0,0,0,.42)"/><path d="M12 7.200V2M16 10.100l5-1.600M14.500 14.800l3 4.200M9.500 14.800l-3 4.200M8 10.100 3 8.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M9 9.500a3 3 0 1 1 4.600 2.500c-1 .7-1.600 1.200-1.600 2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.700" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-save" viewBox="0 0 24 24"><path d="M3.500 2.500h13l4 4v15h-17z"/><rect x="7" y="2.500" width="9" height="6" fill="rgba(0,0,0,.42)"/><rect x="7" y="13" width="10" height="8.500" rx="1.200" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.800l8.500 3.200v6.200c0 5.200-3.600 9.200-8.500 11-4.900-1.800-8.500-5.800-8.500-11V5z"/><path d="M8 11.800l2.800 2.800L16 9.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bank" viewBox="0 0 24 24"><path d="M12 1.500 1.500 7.500v2.500h21V7.500z"/><rect x="3.500" y="11.500" width="3.500" height="7"/><rect x="10.250" y="11.500" width="3.500" height="7"/><rect x="17" y="11.500" width="3.500" height="7"/><rect x="1.500" y="19.800" width="21" height="3" rx="1.200"/></symbol><symbol id="i-textsz" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 21 9 3h2.200l7 18h-2.600l-1.500-4H6.100L4.600 21zM7 15h5.600L9.800 7.500z"/><path d="M19 8h3M20.500 6.500v3" stroke="rgba(0,0,0,.42)" stroke-width="0" /></symbol><symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M12 1.500a10.500 10.500 0 0 0 0 21z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-search" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2.500a7.500 7.500 0 1 0 4.500 13.500l5.200 5.200 2-2-5.200-5.200A7.500 7.500 0 0 0 10 2.500zm0 2.600a4.900 4.900 0 1 1 0 9.800 4.900 4.900 0 0 1 0-9.800z"/></symbol><symbol id="i-import" viewBox="0 0 24 24"><path d="M9.800 2h4.400v7.200h4L12 16 5.800 9.200h4z"/><path d="M2.500 14.500h3.200v4.800h12.600v-4.800h3.200v8H2.500z"/></symbol><symbol id="i-plus" viewBox="0 0 24 24"><path d="M9.800 2.500h4.400v7.300h7.300v4.400h-7.300v7.300H9.800v-7.300H2.500V9.800h7.300z"/></symbol><symbol id="i-play" viewBox="0 0 24 24"><path d="M5.500 2.500 21 12 5.500 21.500z"/></symbol><symbol id="i-ff" viewBox="0 0 24 24"><path d="M1.500 4 11.500 12 1.500 20zM12 4 22.500 12 12 20z"/></symbol><symbol id="i-pause" viewBox="0 0 24 24"><rect x="4.500" y="3" width="5.500" height="18" rx="1.800"/><rect x="14" y="3" width="5.500" height="18" rx="1.800"/></symbol><symbol id="i-rocket" viewBox="0 0 24 24"><path d="M12 1.500c4.200 2.200 6.300 6.200 6.300 11.500l-3 3.200H8.700L5.700 13C5.700 7.700 7.800 3.700 12 1.500z"/><circle cx="12" cy="9.500" r="2.200" fill="rgba(0,0,0,.42)"/><path d="M5.700 13.500 2 18l4.500-1zM18.300 13.500 22 18l-4.500-1zM9.800 18h4.400L12 22.500z" opacity=".8"/></symbol><symbol id="i-fluid" viewBox="0 0 24 24"><path d="M12 2.500a9.500 9.500 0 1 0 9.500 9.500h-3.200A6.300 6.300 0 1 1 12 5.700z"/><path d="M12 8a4 4 0 1 0 4 4h-2.300A1.700 1.700 0 1 1 12 10.300z" opacity=".7"/></symbol><symbol id="i-star" viewBox="0 0 24 24"><path d="M12 1.800l3.100 6.600 7.200.9-5.300 4.900 1.400 7.100L12 17.800l-6.400 3.500 1.400-7.100L1.700 9.300l7.200-.9z"/></symbol><symbol id="i-band" viewBox="0 0 24 24"><g transform="rotate(-45 12 12)"><rect x="0.500" y="7.500" width="23" height="9" rx="4.500"/><rect x="8" y="7.500" width="8" height="9" fill="rgba(255,255,255,.45)"/><circle cx="11" cy="10.500" r=".9" fill="rgba(0,0,0,.42)"/><circle cx="13" cy="13.500" r=".9" fill="rgba(0,0,0,.42)"/></g></symbol><symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 1.500c1 4.200 6.500 6.300 6.500 12.300a6.500 6.500 0 0 1-13 0c0-3.200 1.800-4.500 3.300-7.300 1 1 1.400 2.200 1.200 3.600 2-1.800 2.200-5.200 2-8.600z"/></symbol><symbol id="i-footr" viewBox="0 0 24 24"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></symbol><symbol id="i-footl" viewBox="0 0 24 24"><g transform="translate(24 0) scale(-1 1)"><path d="M5 3h6v8c0 1 .6 1.600 1.500 2l6.500 3c1.500.7 2.500 2 2.500 3.500V21H3V5c0-1.100.8-2 2-2z"/></g></symbol><symbol id="i-music" viewBox="0 0 24 24"><path d="M9 3v12.500A3.500 3.500 0 1 0 11 18.500V8l8-2v7.500A3.500 3.500 0 1 0 21 16.500V2z"/></symbol><symbol id="i-film" viewBox="0 0 24 24"><rect x="2.500" y="9" width="19" height="12.500" rx="2.500"/><path d="M2.500 4.500 19 2l1.300 4.200L3.800 8.800z"/></symbol><symbol id="i-loan" viewBox="0 0 24 24"><path d="M3.500 12A8.500 8.500 0 0 1 18 6l2.500-2.500v7.500h-7.500l2.700-2.700A5.300 5.300 0 0 0 6.700 12z"/><path d="M20.500 12A8.500 8.500 0 0 1 6 18l-2.500 2.500V13H11l-2.700 2.700A5.300 5.300 0 0 0 17.300 12z" opacity=".75"/></symbol><symbol id="i-dna" viewBox="0 0 24 24"><path d="M6 2h3c0 5 9 6 9 11.500V22h-3c0-5.500-9-6-9-11.500zM18 2h-3c0 5-9 6-9 11.500V22h3c0-5.500 9-6 9-11.500z" fill-rule="evenodd" opacity=".95"/></symbol><symbol id="i-gear" viewBox="0 0 24 24"><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(0 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(45 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(90 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(135 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(180 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(225 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(270 12 12)"/><rect x="10" y="1.5" width="4" height="5" rx="1" transform="rotate(315 12 12)"/><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="3" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.500 1.500 4 14h6.200l-1.200 8.500L20 10h-6.200z"/></symbol><symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 1.500c.8 5.500 3.800 8.500 10.500 10.500-6.700 2-9.700 5-10.500 10.500C11.200 17 8.200 14 1.500 12 8.200 10 11.200 7 12 1.500z"/></symbol><symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.800"/><path class="s" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M20.500 6.500C23 9 20 15.500 12 19.500 5 23 0.800 21 3.500 17.500"/><ellipse cx="12" cy="12" rx="11" ry="4.200" transform="rotate(-28 12 12)" class="s" stroke-width="1.700"/></symbol><symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M7 12.500l3.500 3.500 6.500-7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-cross" viewBox="0 0 24 24"><path d="M4.500 2.500 12 10l7.500-7.500 2 2L14 12l7.500 7.500-2 2L12 14l-7.500 7.500-2-2L10 12 2.500 4.500z"/></symbol><symbol id="i-trash" viewBox="0 0 24 24"><path d="M9 2h6l1 2h5v2.500H3V4h5z"/><path d="M4.800 8h14.400l-1 13.500H5.800z"/><path d="M10 11.500v7M14 11.500v7" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-folder" viewBox="0 0 24 24"><path d="M2 5.500A2.500 2.500 0 0 1 4.500 3h5l2.500 3h7.500A2.500 2.500 0 0 1 22 8.500v10a2.500 2.500 0 0 1-2.500 2.500h-15A2.500 2.500 0 0 1 2 18.500z"/></symbol><symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.500" width="16" height="11.500" rx="3"/><path d="M7.500 10.500V7.500a4.500 4.500 0 0 1 9 0v3" class="s" stroke-width="2.600" stroke-linecap="round"/><circle cx="12" cy="16" r="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2.200 22.800 21H1.200z" stroke-linejoin="round"/><path d="M12 9v5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.600" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-down" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="4.500"/><path d="M6 8l4.500 4.500 3-3 4.500 5.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-build" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20.500" rx="2.500"/><rect x="7.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="7.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="5.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="10.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/><rect x="13.5" y="15.5" width="3" height="3" rx=".7" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-mega" viewBox="0 0 24 24"><path d="M2.500 9.500v5.500h4l9 5.500V4L6.500 9.500z"/><path class="s" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" d="M18.500 8.500c2.200 2.200 2.200 5.800 0 8"/></symbol><symbol id="i-case" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14.500" rx="3"/><path d="M8.500 7V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2" class="s" stroke-width="2"/><path d="M2 13h20" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-siren" viewBox="0 0 24 24"><path d="M5.500 18A6.500 6.500 0 0 1 18.500 18z"/><rect x="3.500" y="18" width="17" height="3.500" rx="1.400"/><path class="s" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.500v3M3.800 5.200l2 2M20.200 5.200l-2 2"/></symbol><symbol id="i-cross2" viewBox="0 0 24 24"><path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z"/></symbol><symbol id="i-news" viewBox="0 0 24 24"><rect x="2.500" y="3.500" width="19" height="17" rx="3"/><path d="M6.500 8.500h11M6.500 12.500h11M6.500 16.500h6.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-undo" viewBox="0 0 24 24"><path d="M9.500 4.500 2.500 11l7 6.500v-4c5.500 0 9 1.300 11.500 6 0-7-3.800-12.500-11.500-12.500z"/></symbol><symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M7.500 14.500c1 2.800 3 4 4.500 4s3.500-1.200 4.500-4" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-ok" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 15.500c1.200 1.600 2.600 2.200 4 2.200s2.800-.6 4-2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-meh" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.5"/><circle cx="8.3" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><circle cx="15.7" cy="10" r="1.4" fill="rgba(0,0,0,.42)"/><path d="M8 16.200h8" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-angry" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.500 7.200l4 2M17.500 7.200l-4 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.600" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="15.400" cy="11" r="1.300" fill="rgba(0,0,0,.42)"/><path d="M8 17c1-1.500 2.300-2.200 4-2.200s3 .7 4 2.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-sick" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M6.800 9.500l3 1.200-3 1.200M17.200 9.500l-3 1.200 3 1.200" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.500 16.200c1-1 1.800-1 2.800 0s1.800 1 2.800 0 1.800-1 2.800 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-snow" viewBox="0 0 24 24"><path class="s" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 1.800v20.400M3.200 6.900l17.600 10.200M3.200 17.100 20.800 6.900M8.800 3.800 12 6l3.200-2.200M8.800 20.200 12 18l3.200 2.200"/></symbol><symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.500 14.800A9.500 9.500 0 0 1 9.200 3.500 9.500 9.500 0 1 0 20.500 14.800z"/></symbol><symbol id="i-robot" viewBox="0 0 24 24"><rect x="3.500" y="7.500" width="17" height="13.500" rx="4.500"/><rect x="11" y="3" width="2" height="4.500"/><circle cx="12" cy="2.800" r="1.700"/><circle cx="8.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="13" r="2" fill="rgba(0,0,0,.42)"/><path d="M9 18h6" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-palm" viewBox="0 0 24 24"><path d="M11 22.500c0-6.500 1-10 2.200-13.500h1.200c-1.100 3.500-1.800 7-1.800 13.500z"/><path d="M12.800 9C8.800 4.500 4.500 5 2 8.500c3-1 6 0 10.800.5zM12.800 9c0-5.500 4-7.700 8.500-6.500-3.200 1-5.500 3.200-6.500 7zM12.800 9c4-3 8.500-1.500 10 3-3-1.500-6-1.300-9.500.2zM12.800 9c-3.500 1.500-5 5-4 8.500 1.200-3.500 2.700-5.800 5-7.300z"/></symbol><symbol id="i-rock" viewBox="0 0 24 24"><path d="M2.500 18.500 6.800 8l5.200-4.500 6.500 3 3 8.500-4.300 5.500H6.500z"/><path d="M7 9.500l5 3 6-5M12 12.500v7.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-alien" viewBox="0 0 24 24"><path d="M12 2c5.500 0 9.500 4.200 9.500 9.500 0 5.500-4.200 10.500-9.500 10.500S2.500 17 2.500 11.500C2.500 6.200 6.500 2 12 2z"/><ellipse cx="8" cy="11" rx="2.600" ry="1.500" transform="rotate(20 8 11)" fill="rgba(0,0,0,.42)"/><ellipse cx="16" cy="11" rx="2.600" ry="1.500" transform="rotate(-20 16 11)" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-tiger" viewBox="0 0 24 24"><path d="M2.500 3 8 6.200h8L21.500 3v9.500c0 5.500-4 9.500-9.500 9.500S2.500 18 2.500 12.500z"/><path d="M12 7v3M7 8.500l1.500 2M17 8.500l-1.500 2" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.300" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><circle cx="15.700" cy="13" r="1.500" fill="rgba(0,0,0,.42)"/><path d="M10 17.500c1 .8 3 .8 4 0" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-skull" viewBox="0 0 24 24"><path d="M12 1.800a9.500 9.500 0 0 0-5.500 17.200v2.700h11V19A9.500 9.500 0 0 0 12 1.800z"/><circle cx="8.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><circle cx="15.500" cy="11.500" r="2.400" fill="rgba(0,0,0,.42)"/><path d="M10 17.500v2.500M14 17.500v2.500" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-battery" viewBox="0 0 24 24"><rect x="1.500" y="6.500" width="18.500" height="11" rx="3"/><rect x="20.800" y="9.800" width="2" height="4.400" rx="1"/><path d="M12 8.200 8.300 12.500h3l-.8 3.500 3.700-4.500h-3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-eye" viewBox="0 0 24 24"><path d="M0.800 12C3.800 6 7.800 3.800 12 3.800s8.200 2.200 11.200 8.200c-3 6-7 8.200-11.200 8.200S3.800 18 0.800 12z"/><circle cx="12" cy="12" r="4.400" fill="rgba(0,0,0,.42)"/><circle cx="13.200" cy="10.800" r="1.400" fill="#fff"/></symbol><symbol id="i-comet" viewBox="0 0 24 24"><circle cx="16.500" cy="7.500" r="5.500"/><path d="M12.500 10.500 1.800 17.800l4-.8-.9 4.300z" opacity=".85"/><path d="M11.200 12.500 5 22l1-5z" opacity=".5"/></symbol><symbol id="i-cap" viewBox="0 0 24 24"><path d="M12 3 1 9l11 6 9-4.900V17h2V9z"/><path d="M5.500 13v4c0 2 3 4 6.500 4s6.500-2 6.500-4v-4l-6.500 3.500z" opacity=".8"/></symbol><symbol id="i-chat" viewBox="0 0 24 24"><path d="M3 3.500h18V16H10.500L5.500 20.500V16H3z"/><circle cx="8" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="16" cy="9.800" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-medal" viewBox="0 0 24 24"><path d="M6.500 1.500h4l1.500 6-3.500 1.500zM17.500 1.500h-4L12 7.500l3.500 1.500z" opacity=".75"/><circle cx="12" cy="15" r="6.500"/><path d="m12 11.300 1.100 2.300 2.500.3-1.800 1.700.5 2.500-2.300-1.300-2.300 1.300.5-2.500-1.800-1.700 2.500-.3z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="12" r="7" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="3.800"/><circle cx="12" cy="12" r="1.400" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-glove" viewBox="0 0 24 24"><path d="M6 22v-7.500L3.500 10a1.700 1.700 0 0 1 3-1.600L8 10.500V4.500a1.500 1.500 0 0 1 3 0V3.500a1.500 1.500 0 0 1 3 0V4.500a1.500 1.500 0 0 1 3 0V12l1.200-1.800a1.700 1.700 0 0 1 2.800 1.900L19 17.500V22z"/><path d="M6 19h13" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.600" stroke-linecap="round"/></symbol><symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 1.500 3.500 4.800v6.500c0 5.200 3.600 9.600 8.500 11.200 4.900-1.600 8.500-6 8.500-11.200V4.800z"/><path d="m8.200 12 2.800 2.800 4.800-5.300" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-chart" viewBox="0 0 24 24"><rect x="2.500" y="12" width="5" height="9.500" rx="1.200"/><rect x="9.500" y="2.500" width="5" height="19" rx="1.200"/><rect x="16.500" y="7.500" width="5" height="14" rx="1.200"/></symbol><symbol id="i-up" viewBox="0 0 24 24"><path d="M12 1.800 2.800 12H8v10h8V12h5.200z"/></symbol><symbol id="i-mic" viewBox="0 0 24 24"><rect x="8" y="1.500" width="8" height="13" rx="4"/><path d="M4.500 11a7.500 7.500 0 0 0 15 0M12 18.500v3.500M8 22h8" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-pad" viewBox="0 0 24 24"><path d="M6.500 5.500h11a5 5 0 0 1 5 4.500l.9 5.500a3.300 3.300 0 0 1-5.800 2.600L16.200 16H7.800l-1.400 2.100A3.300 3.300 0 0 1 .6 15.500L1.500 10a5 5 0 0 1 5-4.500z"/><path d="M7.500 8.800v4.400M5.300 11h4.400" fill="none" stroke="rgba(0,0,0,.42)" stroke-width="1.800" stroke-linecap="round"/><circle cx="16" cy="10" r="1.300" fill="rgba(0,0,0,.42)"/><circle cx="18.700" cy="12.300" r="1.300" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dice" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="7.800" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="7.800" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="12" cy="12" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="7.800" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/><circle cx="16.200" cy="16.200" r="1.700" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21.800 3 12.800A5.800 5.800 0 0 1 12 5.800a5.800 5.800 0 0 1 9 7z"/></symbol><symbol id="i-speaker" viewBox="0 0 24 24"><path d="M2 8.800h4.800L13 3.500v17l-6.200-5.300H2z"/><path d="M16.500 8.300a5 5 0 0 1 0 7.400M19.800 5a9.500 9.500 0 0 1 0 14" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-screen" viewBox="0 0 24 24"><rect x="1.500" y="3" width="21" height="14" rx="2.800"/><path d="M8 21h8M12 17.500V21" fill="none" stroke="currentColor" stroke-width="2.100" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-bed" viewBox="0 0 24 24"><path d="M1.500 4h2.500v8h16.500a2.500 2.500 0 0 1 2.500 2.500V19h-2.500v-2.500H4V19H1.500z"/><rect x="5.500" y="6.500" width="5.500" height="3.800" rx="1.800" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-dumb" viewBox="0 0 24 24"><rect x="1.500" y="8" width="3.500" height="8" rx="1"/><rect x="4.500" y="5.500" width="3.500" height="13" rx="1.200"/><rect x="8" y="10.800" width="8" height="2.400"/><rect x="16" y="5.500" width="3.500" height="13" rx="1.200"/><rect x="19" y="8" width="3.500" height="8" rx="1"/></symbol><symbol id="i-cards" viewBox="0 0 24 24"><rect x="3" y="5" width="11" height="15" rx="2" transform="rotate(-10 8.5 12.5)" opacity=".55"/><rect x="9" y="3" width="12" height="17" rx="2"/><path d="M15 8.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z" fill="var(--bg,#0f121d)"/></symbol><symbol id="i-seed" viewBox="0 0 24 24"><path d="M11 22V12h2v10z"/><path d="M12 12C12 6 8 3.500 2.500 4c0 5 3.500 8 9.500 8z"/><path d="M13 14c0-5 3.500-8 8.500-7.500 0 4.500-3 7.500-8.500 7.500z" opacity=".75"/></symbol><symbol id="i-apple" viewBox="0 0 24 24"><path d="M12 7c2-1.800 5-1.500 6.700.7 2 2.700 1 8-1.500 11.300-1.300 1.700-2.500 2-3.300 1.500-.9-.5-1.700-.5-2.600 0-.8.500-2 .2-3.300-1.500C5.500 16.200 4.500 10.900 6.500 8.200 8.200 5.500 10.800 5.200 12 7z"/><path d="M12 7c0-2.300 1-3.700 3-4.500 0 2.300-1 3.800-3 4.500z" opacity=".75"/></symbol><symbol id="i-scale" viewBox="0 0 24 24"><rect x="11" y="3" width="2" height="16" rx="1"/><rect x="6" y="19" width="12" height="2.500" rx="1.200"/><rect x="3" y="5.800" width="18" height="2" rx="1"/><path d="M1.500 13.500 5 7.500l3.500 6c0 1.800-1.600 3-3.500 3s-3.500-1.200-3.500-3zM15.500 13.500l3.500-6 3.500 6c0 1.800-1.600 3-3.500 3s-3.500-1.200-3.500-3z"/></symbol><symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><path d="M16.500 7.500 13.500 13.500 7.500 16.500 10.500 10.500z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-hand" viewBox="0 0 24 24"><path d="M7 11V5.500a1.500 1.500 0 0 1 3 0V10h.5V3.500a1.500 1.500 0 0 1 3 0V10h.5V4.500a1.500 1.500 0 0 1 3 0V11h.5V7.500a1.500 1.500 0 0 1 3 0V15c0 4.500-3 7.500-7.500 7.500-3.500 0-5.500-1.800-7-4.500L2.700 13.500c-.6-1.200.9-2.500 2-1.500z"/></symbol><symbol id="i-lizard" viewBox="0 0 24 24"><ellipse cx="11" cy="13" rx="6" ry="3.500"/><circle cx="18.500" cy="10.500" r="2.800"/><path d="M5.500 14C3 15 2 17.500 1.500 21c2-2.500 4-3.500 6.500-4z"/><path class="s" d="M8 15.500l-2 4M14 15.500l2 4M9 10.500 7 7M14 10.500l1.500-3.500" stroke-width="2" stroke-linecap="round"/></symbol><symbol id="i-lion" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.500"/><circle cx="12" cy="13" r="5.500" fill="rgba(255,255,255,.45)"/><circle cx="9.800" cy="12" r="1" fill="rgba(0,0,0,.42)"/><circle cx="14.200" cy="12" r="1" fill="rgba(0,0,0,.42)"/><path d="M10.800 15h2.400l-1.200 1.500z" fill="rgba(0,0,0,.42)"/></symbol><symbol id="i-power" viewBox="0 0 24 24"><path class="s" d="M12 3v8M6.300 6.500a8 8 0 1 0 11.400 0" stroke-width="2.400" stroke-linecap="round" stroke-linejoin="round"/></symbol><symbol id="i-menu" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="2.800" rx="1.400"/><rect x="3" y="10.600" width="18" height="2.800" rx="1.400"/><rect x="3" y="16.200" width="18" height="2.800" rx="1.400"/></symbol><symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 22.200 2.800 12H8V2h8v10h5.200z"/></symbol></svg>',
   EMJ = {
+    '🃏': 'cards',
     '💰': 'coin',
     '🏆': 'trophy',
     '⚽': 'ball',
@@ -2438,7 +2484,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.48.0.0';
+  GV = '1.49.0.0';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -2494,6 +2540,9 @@ function lgRepair(o, cx) {
 }
 const hyd = (s) => {
   MG = null;
+  // Sauvegardes créées avant le jeu de cartes : le mode Galactik Cartes y est activé automatiquement
+  // (une carrière où il a été décoché à la création garde tcg = null et reste sans jeu de cartes).
+  if (s && s.tcg === undefined) s.tcg = { on: 1 };
   // Les interviews ne passent plus par la messagerie (fenêtre de conférence de presse) : on retire les anciens mails d'interview.
   if (s && Array.isArray(s.mail)) s.mail = s.mail.filter((m) => !/^Interview/.test(m.t || ''));
   // Planètes renommées pour coller à la série (Rykhar, Électra, Cyclos, Xéna) : remplacées partout dans la sauvegarde.
@@ -3481,7 +3530,6 @@ const POS = ['GK', 'DEF', 'MID', 'ATT'],
   })(),
   MENT = ['Défensive', 'Équilibrée', 'Offensive'];
 // Table de correspondance entre noms d'équipes.
-const NM = { 'Pirates (équipe)': 'Pirates', 'Technoid / Technodroids': 'Technodroids' };
 // POUVOIRS SPÉCIAUX DE CHAQUE ÉQUIPE (Fluide) : nom, description et effet. Modifier ici pour
 // changer un pouvoir.
 // Part des actions où le fluide contourne la construction du jeu (téléportation, paralysie, bulles...) et mène droit à la frappe.
@@ -3751,6 +3799,7 @@ function init(ti, mode, ni) {
     season: 1,
     res: [],
     evt: V.evt !== 0,
+    tcg: V.tcg !== 0 ? { on: 1 } : null,
     cash: 5000,
     staff: { c: 1, k: 1, a: 1, y: 1 },
     cup: null,
@@ -4499,6 +4548,8 @@ function fin(M) {
     if (t == me()) {
       try {
         rwMatch(g, c, M.t[j].name);
+        tcgAward(g, c);
+        tcgEvents(g, c, M.t[j].name);
         if (S.coaches && S.coaches.length) tx('Salaires des coachs', -12 * S.coaches.length);
       } catch (e) {}
       tx('Droits TV', 80);
@@ -5673,6 +5724,10 @@ const RMP = [
   ['Dossier mods et transfert d’équipes', 'Équipes de fichiers dans le choix des clubs, export et import d’un fichier d’équipes entre appareils.', 'Disponible (bêta)'],
   ['Icônes à la place des emojis', 'Une bibliothèque d’icônes dessinées pour tout le jeu.', 'Disponible (bêta)'],
   ['Succès expliqués', 'Pop-ups au survol des balles, titres et décorations pour savoir comment les débloquer.', 'Disponible (bêta)'],
+  ['Galactik Cartes', 'Jeu de cartes à collectionner dans la carrière : boosters après chaque match, raretés, decks, duels contre l’IA.', 'Disponible (bêta)'],
+  ['Succès, Collector et Légendes', 'Succès du jeu de cartes avec crédits, titres et cartes Légende ; Légendes débloquées par des exploits en match.', 'Disponible (bêta)'],
+  ['Galerie en tuiles', 'Toutes les récompenses de la carrière en tuiles, avec compteurs qui mènent à chaque section.', 'Disponible (bêta)'],
+  ['Illustration du club au menu', 'Une image propre à chaque club sur la tuile « Continuer la carrière ».', 'En cours'],
   [
     'Mode multijoueur 1 contre 1',
     'Affronter un autre joueur en match 1 contre 1 : votre équipe de sauvegarde contre l’équipe de la sauvegarde d’un autre joueur.',
@@ -7662,7 +7717,7 @@ function render() {
   }
   const t = me(),
     end = S.md >= S.fx.length;
-  let h = `<h1>${t.em} ${t.name}${ft(t.name)} <span class="mu">· Saison ${S.season} · Journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length} · ${fmtDay(S.day)}</span></h1><nav>${[['club', 'Club'], ['tac', 'Tactique'], ['match', 'Match'], ['cal', 'Cal.'], ['mail', '✉️' + (S.mail.filter((m) => m.u).length || '')], ['mkt', 'Marché'], ['gest', 'Gestion'], ...(S.mode == 'C' ? [] : [['form', 'Formation']]), ['ent', 'Entraîn.'], ['fin', 'Finances'], ['car', 'Carrière'], ['table', 'Class.'], ['stat', 'Stats'], ['tuto', 'Aide ?']].map(([k, l]) => `<button class="${V.tab == k ? 'on' : ''}" onclick="V.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
+  let h = `<h1>${t.em} ${t.name}${ft(t.name)} <span class="mu">· Saison ${S.season} · Journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length} · ${fmtDay(S.day)}</span></h1><nav>${[['club', 'Club'], ['tac', 'Tactique'], ['match', 'Match'], ['cal', 'Cal.'], ['mail', '✉️' + (S.mail.filter((m) => m.u).length || '')], ['mkt', 'Marché'], ['gest', 'Gestion'], ...(S.mode == 'C' ? [] : [['form', 'Formation']]), ['ent', 'Entraîn.'], ...(tcgOn() ? [['tcg', 'Cartes' + (tcgN() ? ' (' + tcgN() + ')' : '')]] : []), ['fin', 'Finances'], ['car', 'Carrière'], ['table', 'Class.'], ['stat', 'Stats'], ['tuto', 'Aide ?']].map(([k, l]) => `<button class="${V.tab == k ? 'on' : ''}" onclick="V.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
   if (V.tab == 'club') {
     h += eqSub();
     const sb = V.eq || 'liste';
@@ -7699,6 +7754,8 @@ function render() {
     h += acView();
   } else if (V.tab == 'ent') {
     h += entView();
+  } else if (V.tab == 'tcg') {
+    h += tcgView();
   } else if (V.tab == 'adv') {
     h += advView();
   } else if (V.tab == 'stat') {
@@ -11268,9 +11325,6 @@ const lite = () => !!(ST.anlite || ST.rm);
   /* ---------- ballon selon le segment ---------- */
   // Convertit une position du terrain en mètres pour la vue 3D (105 × 68).
   const P3 = (x, y) => [(x - 0.5) * 105, (y - 0.5) * 68];
-  function holderPos(h) {
-    return h ? st.pos[h.t][h.k] : [0.5, 0.5];
-  }
   // Mouvement du ballon pendant un segment de scène.
   function seg(g, u, dt) {
     const A = st.plan.A,
@@ -13999,7 +14053,7 @@ const HELP = {
   cap: 'Le capitaine porte le brassard. Il apporte un petit bonus à toute l’équipe (plus il est expérimenté, plus il pèse) et aide dans les matchs serrés en fin de rencontre. S’il est blessé, suspendu ou sur le banc, l’équipe perd un peu de cohésion. Un nouveau capitaine met quelques matchs à s’imposer et l’ancien le vit mal. Par défaut, c’est le joueur le plus expérimenté et le mieux noté.',
   kit: 'Choisissez le motif et les couleurs du maillot de votre club. Il s’affiche sur les fiches de vos joueurs avec leur numéro et leur nom, et vos couleurs sont reprises sur le terrain.',
   m_new: 'Lance une nouvelle partie : choix du club, de la difficulté et des événements.',
-  m_cont: 'Reprend votre carrière en cours là où vous l’avez laissée. La carte affiche votre club, la journée et les mails à traiter.',
+  m_cont: 'Reprend votre carrière en cours là où vous l’avez laissée. La carte affiche une illustration de votre club, la journée et les mails à traiter.',
   m_load: 'Charge l’une de vos 5 sauvegardes ou la sauvegarde automatique.',
   m_ed: 'Créez vos propres équipes, joueurs et Fluides (mods).',
   m_tuto: 'Le tutoriel complet du jeu, section par section, avec l’aide sur les mails et les adversaires.',
@@ -14007,15 +14061,13 @@ const HELP = {
     'Ouvre sur YouTube une vidéo d’environ 14 minutes, réalisée par @andsboy (tous droits réservés à son auteur), qui présente l’histoire et l’univers de Galactik Football, pour ceux qui découvrent la série. Lien externe, sans rapport avec le jeu.',
   heat: 'Carte de chaleur : les zones du terrain où le joueur évolue le plus (plus la couleur est vive, plus il y passe de temps). Elle se construit match après match selon son poste, sa position dans votre composition et son pied fort. Sans historique, c’est une projection d’après son poste.',
   foot: 'Le pied fort (gauche, droit ou ambidextre) influence légèrement le rendement : un joueur placé du côté de son pied fort gagne un peu, un joueur placé du côté opposé perd un peu. Les ambidextres n’ont aucun malus.',
-  m_tour: 'Une visite guidée de l’interface, racontée par Clamp, étape par étape.',
+  m_tour: 'Une visite guidée de l’interface, racontée par Clamp, étape par étape, Galerie et jeu de cartes compris.',
   m_pref: 'Affichage des joueurs, événements et difficulté par défaut des nouvelles parties.',
-  m_more: 'Autres accès : tutoriel, visite guidée, éditeur de mods, sauvegardes.',
   m_news: 'Les dernières nouveautés du jeu.',
   m_road: 'Les mises à jour prévues, présentées sous forme de chronologie.',
   ed_em:
     'Le symbole qui représente le club à côté de son nom (classement, calendrier, messages). Choisissez un modèle, puis changez la forme, le motif, le symbole et les couleurs.',
   m_fb: 'Signalez un bug ou proposez une idée. Le rapport inclut automatiquement la version du jeu.',
-  sv_info: 'Où sont enregistrées vos parties et comment elles évoluent avec les mises à jour du jeu.',
   t_form: 'Vos jeunes talents : axe de formation, mentor et promotion.',
   t_stat: 'Bilan du club, joueurs, finances et records.',
   stat: 'Toutes les statistiques de votre partie : bilan du club, joueurs, finances et records. Elles sont enregistrées à chaque match.',
@@ -14106,14 +14158,15 @@ const HELP = {
   col: 'Couleur principale = fond et accent de l’interface quand vous dirigez cette équipe ; couleur secondaire = accents et boutons secondaires. Le contraste du texte est ajusté automatiquement. Évitez une couleur trop proche d’une autre équipe pour la reconnaître facilement.',
   df: 'Facile : adversaires −2 de niveau, revenus +20 %, salaires −15 %. Difficile : adversaires +2, revenus −15 %, salaires +15 %. Fixé à la création de la partie.',
   car1: 'Si la confiance du conseil tombe trop bas après un objectif manqué, vous êtes licencié. Une seule « dernière chance » est accordée par partie.',
-  ord: 'Consignes par ligne : Ligne haute = plus de pression au milieu mais défense plus exposée ; Passes courtes = plus de possession, Jeu direct = plus d’attaque mais moins de ballon ; Tirs lointains = plus de tirs mais moins précis, En profondeur = moins de tirs mais plus dangereux.',
-  ind: 'Consigne individuelle : Offensif = tire plus souvent mais couvre moins ; Défensif = tire peu et renforce la défense. Normal = comportement habituel.',
   fo: 'Consigne d’usage du Fluide : Économisé = environ 4 actions sur 10, plus fréquent en fin de match, peu de fatigue ; Modéré = environ 55 % des actions ; Abondance = environ 3 actions sur 4 mais vos joueurs se fatiguent plus vite. Le taux monte avec la mentalité offensive, le pressing haut et quand vous êtes menés, et baisse quand vous menez.',
+  tcgon: 'Active le jeu de cartes Galactik Cartes pour cette carrière : un onglet Cartes, un booster de 3 cartes à la fin de chaque match, une collection et des duels contre l’IA. Ce choix est fixé à la création de la partie.',
+  tcg: 'Le jeu de cartes de votre carrière. Ouvrez vos boosters, construisez vos decks et affrontez l’IA en duel : 3 buts pour gagner. Succès, Collector et cartes Légende se suivent dans la Galerie.',
+  t_tcg: 'Jeu de cartes : boosters, collection, decks, duels et règles expliquées par Clamp.',
+  t_gal: 'Galerie : titres, succès, décorations, ballons et récompenses du jeu de cartes, en tuiles.',
   evt: 'Active ou désactive les événements rares inspirés de la série (descente de police, sabotages, météorites…). Ce choix est fixé à la création de la partie.',
   spn: 'Un sponsor verse des crédits à chaque match de championnat pendant la durée du contrat (10 matchs, 1 saison ou 2 saisons ; la durée d’une saison dépend du nombre d’équipes dans la Ligue, la liste indique les matchs restants). Maximum 3 sponsors ; les offres changent à chaque journée.',
   shp: 'Investir dans la boutique augmente les ventes de maillots, écharpes, mugs et posters à chaque match. Le revenu dépend aussi de la confiance du conseil.',
   fin2: 'Tous vos transferts et prêts de la saison : joueur, note, club concerné, montant et date. Les chiffres du bas résument vos dépenses et vos gains.',
-  fin3: 'Chaque barre montre la part d’une catégorie dans le total des revenus ou des dépenses de la saison.',
   mt2: 'Les transferts entre clubs adverses de la saison : joueur, note, club de départ, club d’arrivée, montant et date.',
   chm: 'Le classement de la Ligue. La pastille verte marque les places dans l’objectif fixé par le conseil, la dorée le leader. « Forme » donne les 5 derniers résultats (vert = victoire, gris = nul, rouge = défaite).',
   chm2: 'Les meilleurs de votre club cette saison. La note moyenne porte sur les 5 derniers matchs.',
@@ -14265,7 +14318,7 @@ const TU = [
   ],
   [
     'Les onglets',
-    'Club : effectif et prochain match. Tactique : formation et placement. Match : le match en direct. Cal. : calendrier et scores. ✉️ : messages du club. Transferts : offres, ventes, prêts et staff. Formation : centre de formation. Entraînement : programmes et réglages par joueur. Gestion : stade, sponsors et boutique. Finances : revenus et dépenses. Class. : classement et coupe. Adversaires : fiches et tactiques de tous les clubs. Aide : cette page.',
+    'Club : effectif et prochain match. Galerie : récompenses de la carrière. Cartes : le jeu de cartes Galactik Cartes (s’il est activé). Tactique : formation et placement. Match : le match en direct. Cal. : calendrier et scores. ✉️ : messages du club. Transferts : offres, ventes, prêts et staff. Formation : centre de formation. Entraînement : programmes et réglages par joueur. Gestion : stade, sponsors et boutique. Finances : revenus et dépenses. Class. : classement et coupe. Adversaires : fiches et tactiques de tous les clubs. Aide : cette page.',
   ],
   [
     'Jouer une journée',
@@ -14388,6 +14441,26 @@ const TU = [
     'L’onglet Adversaires liste tous les clubs, classés. Tapez un nom de club ou de joueur pour chercher. La fiche affiche le classement, la forme, la prochaine rencontre, la tactique (formation avec et sans ballon, mentalité, pressing, style, consignes), les joueurs à surveiller, la composition probable et les cartes des joueurs. Les clubs de l’ordinateur jouent avec des formations variées et un style cohérent avec elle (mentalité, pressing, consignes). Le même volet s’ouvre depuis le classement ou depuis l’icône de l’adversaire dans « Prochain match ».',
   ],
   [
+    'La Galerie',
+    'L’onglet Galerie rassemble toutes les récompenses de la carrière : titres du club et des joueurs, succès, décorations de maillot, musiques bonus, ballons et, si le jeu de cartes est activé, ses succès, ses titres, le Collector et les cartes Légende. Chaque récompense est une tuile : dorée avec 🏆 quand elle est obtenue, avec un cadenas 🔒 sinon, sa condition et sa progression. Les compteurs en haut de la page mènent directement à chaque section. Touchez une décoration de maillot débloquée pour l’utiliser, et choisissez le titre affiché sous le nom du club avec « Choisir le titre affiché ».',
+  ],
+  [
+    'Galactik Cartes : le jeu de cartes',
+    'Galactik Cartes est un jeu de cartes à collectionner intégré à la carrière. Il s’active à la création d’une carrière (case cochée par défaut) et il est activé d’office dans les anciennes sauvegardes. Tout se passe dans l’onglet « Cartes » : Accueil, Boosters, Collection, Mes decks, Succès et Règles. À la première visite, choisissez votre deck de départ parmi les 14 clubs de base : ce choix est définitif. Pendant un duel, le bouton « Continuer » de la carrière est grisé : terminez le duel avant de faire avancer la saison.',
+  ],
+  [
+    'Galactik Cartes : boosters et collection',
+    'Chaque match de votre club rapporte un booster de 3 cartes : Victoire (le plus de Mythiques), Match nul ou Défaite (le plus de Classiques). Les boosters s’accumulent : ouvrez-les quand vous voulez. Les raretés : Classique (1 étoile), Chromatique (2, bordure arc-en-ciel et filigrane éclair), Prismatique (3, bordure nacrée et filigrane), Mythique (4, dorée). Les personnages de la série portent en plus un filigrane « œuvre originale ». Dans Collection, « Vendre les doublons » revend les exemplaires en trop pour des crédits, en gardant au moins un exemplaire et ceux utilisés dans vos decks. Survolez une carte (ou appui long) pour la voir en grand.',
+  ],
+  [
+    'Galactik Cartes : decks et duels',
+    'Un deck compte 40 cartes plus un gardien, dont au moins 20 cartes Joueur, avec 3 exemplaires au maximum par carte. Créez-en plusieurs dans « Mes decks ». Un duel se joue contre l’IA : chaque tour, chacun pose 3 cartes face cachée ; l’attaquant additionne ses valeurs d’attaque (rouges), le défenseur ses valeurs de défense (bleues). Les liens de même équipe ou de même planète donnent +5, les deux à la fois +10. Les gardiens et les Tactiques ont des effets. Le premier à 3 buts gagne. Le bouton « Règles » ouvre les règles complètes, expliquées par Clamp.',
+  ],
+  [
+    'Galactik Cartes : succès, Collector et Légendes',
+    'Les succès du jeu de cartes (duels gagnés, boosters ouverts, collection…) rapportent des crédits pour le club, des titres à afficher sous le nom du club et des cartes Légende. Le Collector : réunissez tous les joueurs et gardiens d’une équipe pour débloquer les Légendes de ses personnages de la série. Les Légendes d’événement se débloquent par des exploits pendant les matchs de la carrière (par exemple, gagner un match avec les Snow Kids débloque Aarch). Les cartes Légende ne sortent jamais des boosters : un joueur Légende gagne +5 en attaque et en défense, un gardien Légende active son effet avec un joueur de moins. Tout se suit dans la Galerie.',
+  ],
+  [
     'Glossaire',
     'Niveau : force d’un joueur. Énergie : forme du moment. Fl : Fluide du joueur. Crédits : argent du club. Confiance : avis du conseil. Pressing : intensité de récupération du ballon. Titulaire : joueur sur le terrain. Remplaçant : joueur sur le banc.',
   ],
@@ -14414,7 +14487,7 @@ function tutoView() {
       .join('')
   );
 }
-// Étapes de la visite guidée (17 étapes) racontées par Clamp : [page affichée, titre, texte]. Chaque étape ouvre la page
+// Étapes de la visite guidée racontées par Clamp (l'étape Galactik Cartes n'apparaît que si le jeu de cartes est activé) : [page affichée, titre, texte]. Chaque étape ouvre la page
 // dont elle parle ; {N} est remplacé par le nombre d'étapes.
 const TOUR = [
   [
@@ -14498,19 +14571,31 @@ const TOUR = [
     'Chaque match te rapporte de l’expérience. À chaque niveau, tu gagnes un point de compétence à investir dans l’arbre de l’onglet Manager : 2 branches au choix sur 5, des bonus passifs, et des personnages qui gagnent en confiance.',
   ],
   [
+    'gal',
+    'La Galerie',
+    'Ici, c’est ta vitrine à trophées ! Titres du club et des joueurs, succès, décorations de maillot, ballons… Tout ce que tu as gagné brille en doré, et ce qui reste à décrocher est sous cadenas, avec la condition pour l’obtenir. Touche un compteur en haut de la page pour filer directement à la bonne section.',
+  ],
+  [
+    'tcg',
+    'Galactik Cartes',
+    'Et voici mon petit plaisir : Galactik Cartes, le jeu de cartes à collectionner ! Chaque match de ton club te rapporte un booster (Victoire, Nul ou Défaite) à ouvrir ici. Choisis d’abord ton deck de départ, puis affronte l’IA en duel : 3 cartes face cachée par tour, attaque contre défense, le premier à 3 buts gagne. Collectionne les raretés, construis tes decks, et vise les cartes Légende : succès, Collector… et même certains exploits en match ! Le bouton « Règles » ? C’est encore moi qui t’explique tout.',
+  ],
+  [
     'tuto',
     'Besoin d’aide ?',
     'Voilà, tu sais l’essentiel ! L’onglet Aide contient un tutoriel complet, et tu peux relancer cette visite quand tu veux. Le jeu se sauvegarde automatiquement dans ton navigateur, mais exporte une sauvegarde de temps en temps pour la garder ou la retrouver sur un autre appareil. Tu aimes créer ? L’éditeur de mods, sur l’écran de départ, permet de fabriquer tes équipes et de les transférer d’un appareil à l’autre avec un simple fichier. Bon match, manager !',
   ],
 ];
+// Étapes réellement proposées (sans le jeu de cartes s'il n'est pas activé dans la partie).
+const TOURL = () => TOUR.filter((s) => s[0] != 'tcg' || (typeof tcgOn == 'function' && S && tcgOn()));
 // Passe à une étape de la visite guidée.
 function tourGo(i) {
-  if (i >= TOUR.length) {
+  if (i >= TOURL().length) {
     tourEnd();
     return;
   }
   V.tour = i;
-  V.tab = TOUR[i][0];
+  V.tab = TOURL()[i][0];
   // Retire les notifications en cours : elles masqueraient l'encadré de la visite.
   NQ.length = 0;
   document.querySelectorAll('.mtoast').forEach((e) => e.classList.remove('on'));
@@ -14529,9 +14614,10 @@ function tourEnd() {
 function tourBox() {
   const i = V.tour;
   if (i == null) return '';
-  const t = TOUR[i][1],
-    x = TOUR[i][2].replace('{N}', TOUR.length);
-  return `<div class="tourg"></div><div class="card tourb"><div class="tourh"><div class="toura"><svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#3a1a6a"/><circle cx="50" cy="42" r="20" fill="#d9a066"/><path d="M26 48l-10-22 18 8 6-20 14 14 14-14 6 20 18-8-10 22z" fill="#9a9aa4"/><path d="M10 100c4-26 20-36 40-36s36 10 40 36z" fill="#4b2d6e"/></svg><img src="img/clamp.jpg" alt="Clamp" onerror="this.remove()"></div><div class="tourn"><b>Clamp</b><span class="mu">Ton guide · étape ${i + 1}/${TOUR.length}</span></div></div><div class="tourt"><b>${t}</b><div style="margin:4px 0 8px">${x}</div></div><div class="ctl">${i ? `<button onclick="tourGo(${i - 1})" aria-label="Étape précédente">← <span class="tl2">Précédent</span></button>` : ''}<button class="p" onclick="tourGo(${i + 1})">${i == TOUR.length - 1 ? 'Terminer' : 'Suivant →'}</button><button onclick="tourEnd()">Passer<span class="tl2"> la visite</span></button></div></div>`;
+  const L = TOURL(),
+    t = L[i][1],
+    x = L[i][2].replace('{N}', L.length);
+  return `<div class="tourg"></div><div class="card tourb"><div class="tourh"><div class="toura"><svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="#3a1a6a"/><circle cx="50" cy="42" r="20" fill="#d9a066"/><path d="M26 48l-10-22 18 8 6-20 14 14 14-14 6 20 18-8-10 22z" fill="#9a9aa4"/><path d="M10 100c4-26 20-36 40-36s36 10 40 36z" fill="#4b2d6e"/></svg><img src="img/clamp.jpg" alt="Clamp" onerror="this.remove()"></div><div class="tourn"><b>Clamp</b><span class="mu">Ton guide · étape ${i + 1}/${L.length}</span></div></div><div class="tourt"><b>${t}</b><div style="margin:4px 0 8px">${x}</div></div><div class="ctl">${i ? `<button onclick="tourGo(${i - 1})" aria-label="Étape précédente">← <span class="tl2">Précédent</span></button>` : ''}<button class="p" onclick="tourGo(${i + 1})">${i == L.length - 1 ? 'Terminer' : 'Suivant →'}</button><button onclick="tourEnd()">Passer<span class="tl2"> la visite</span></button></div></div>`;
 }
 // Carte joueur TOUJOURS en mode « carte » (même si l'affichage est en liste).
 function pcC(...a) {
@@ -15493,20 +15579,20 @@ function evRoll(M) {
     us = M.h == S.t || M.a == S.t,
     r = Math.random();
   let e = null;
-  if ((A.name == 'Pirates' || B.name == 'Pirates') && r < 0.09) e = 'pol';
-  else if ((A.name == 'Shadows' || B.name == 'Shadows') && r < 0.09) e = 'sab';
+  if ((A.name == 'Pirates' || B.name == 'Pirates') && r < 0.04) e = 'pol';
+  else if ((A.name == 'Shadows' || B.name == 'Shadows') && r < 0.04) e = 'sab';
   else {
     const q = Math.random();
     e =
-      q < 0.01
+      q < 0.005
         ? 'met'
-        : q < 0.02
+        : q < 0.01
           ? 'bla'
-          : q < 0.03
+          : q < 0.015
             ? 'sup'
-            : q < 0.04
+            : q < 0.02
               ? 'kid'
-              : us && q < 0.05
+              : us && q < 0.025
                 ? 'cor'
                 : null;
   }
@@ -16920,7 +17006,7 @@ function mcCmp() {
           ([k, n, lg, d]) =>
             `<button class="${(V.nm || 'L') == k ? 'on' : ''}" onclick="V.nm='${k}';render()">${lg ? `<img src="${lg}" alt="">` : `<span class="two"><img src="${LGL}" alt=""><img src="${LGC}" alt=""></span>`}<b>${n}</b><span class="mu">${d}</span></button>`,
         )
-        .join('')}</div></div><div class="card" style="display:flex;align-items:center;gap:10px"><label class="stl" style="flex:1;border:0;padding:0"><span><b>🎬 Événements spéciaux</b><span class="mu">Événements rares inspirés de la série : descente de police, sabotages, météorites…</span></span><span class="sw"><input type="checkbox" ${V.evt !== 0 ? 'checked' : ''} onchange="V.evt=this.checked?1:0"><i></i></span></label>${hp('evt')}</div><button class="p mcnx" onclick="V.cr.step=4;render()">Suivant →</button></div>`;
+        .join('')}</div></div><div class="card" style="display:flex;align-items:center;gap:10px"><label class="stl" style="flex:1;border:0;padding:0"><span><b>🎬 Événements spéciaux</b><span class="mu">Événements rares inspirés de la série : descente de police, sabotages, météorites…</span></span><span class="sw"><input type="checkbox" ${V.evt !== 0 ? 'checked' : ''} onchange="V.evt=this.checked?1:0"><i></i></span></label>${hp('evt')}</div><div class="card" style="display:flex;align-items:center;gap:10px"><label class="stl" style="flex:1;border:0;padding:0"><span><b>🃏 Jeu de cartes Galactik Cartes</b><span class="mu">Un onglet Cartes : chaque match rapporte un booster, collectionnez les joueurs et affrontez l’IA en duel. Facultatif, et fixé pour toute la carrière.</span></span><span class="sw"><input type="checkbox" ${V.tcg !== 0 ? 'checked' : ''} onchange="V.tcg=this.checked?1:0"><i></i></span></label>${hp('tcgon')}</div><button class="p mcnx" onclick="V.cr.step=4;render()">Suivant →</button></div>`;
 }
 // Liste de tous les clubs choisissables (série, nouvelles équipes, et club caché s'il est débloqué).
 function clbData() {
@@ -17891,6 +17977,7 @@ const sbTog = () => {
   },
   goLab = () => {
     const e = nextEv();
+    if (typeof tcgBusy == 'function' && tcgBusy()) return '🃏 Duel en cours';
     return V.m && !V.m.done
       ? '⚽ Match en cours'
       : !V.m && mailReq().length
@@ -17918,6 +18005,7 @@ function seasonOver() {
 // Bouton principal « Continuer » / « Jouer le match ».
 function cont2() {
   if (seasonOver()) return;
+  if (typeof tcgBusy == 'function' && tcgBusy()) return; // duel de cartes en cours : le finir d'abord
   if (V.m && V.m.done) return cont();
   if (V.m) {
     V.tab = 'match';
@@ -17955,6 +18043,7 @@ function shell(c) {
         ]
           .concat(S.mode == 'C' ? [] : [['form', '🎓', 'Formation']])
           .concat([['ent', '🏋️', 'Entraînement']])
+          .concat(tcgOn() ? [['tcg', '🃏', 'Cartes']] : [])
           .concat([
             ['fin', '💰', 'Finances'],
             ['stat', '📊', 'Statistiques'],
@@ -17978,14 +18067,14 @@ function shell(c) {
         l
           .map(
             ([k, i, n]) =>
-              `<button class="si ${V.tab == k ? 'on' : ''}" title="${n}${HELP['t_' + k] ? ' — ' + HELP['t_' + k] : ''}" onclick="go2('${k}')"><span class="si1">${i}</span><span class="lb" style="flex:1">${n}</span>${k == 'car' && skPts() > 0 ? `<b class="ch" style="padding:0 7px">${skPts()}</b>` : ''}${k == 'mail' && un ? `<b class="ch" style="padding:0 7px;background:var(--ac2,#d33);color:var(--onac2,#fff)">${un}</b>` : ''}</button>`,
+              `<button class="si ${V.tab == k ? 'on' : ''}" title="${n}${HELP['t_' + k] ? ' — ' + HELP['t_' + k] : ''}" onclick="go2('${k}')"><span class="si1">${i}</span><span class="lb" style="flex:1">${n}</span>${k == 'car' && skPts() > 0 ? `<b class="ch" style="padding:0 7px">${skPts()}</b>` : ''}${k == 'mail' && un ? `<b class="ch" style="padding:0 7px;background:var(--ac2,#d33);color:var(--onac2,#fff)">${un}</b>` : ''}${k == 'tcg' && tcgN() ? `<b class="ch tcgch" title="Boosters à ouvrir">${tcgN()}</b>` : ''}</button>`,
           )
           .join(''),
     ).join('');
   const foc = V.tab == 'match' && V.m; // MODE MATCH : plein écran, sans menus, jusqu'au bouton « Continuer »
   if (foc)
     return `<div class="sh foc"><div class="mn"><div class="tb"><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt=""><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span style="flex:1"></span>${V.m.done ? '' : `<button onclick="stop();V.menu=1;render()" title="Met le match en pause et ouvre le menu principal.">🏠 Menu</button>`}</div><div class="ct">${c}</div></div></div>`;
-  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div></aside><div class="mn"><div class="tb"><button class="hb" onclick="V.sb=!V.sb;render()">☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()" ${seasonOver() ? 'disabled title="La saison est terminée : lancez une nouvelle saison depuis le Championnat."' : ''}>${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
+  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div></aside><div class="mn"><div class="tb"><button class="hb${tcgN() ? ' tcgdot' : ''}" onclick="V.sb=!V.sb;render()" ${tcgN() ? 'title="Boosters à ouvrir dans l’onglet Cartes"' : ''}>☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()" ${seasonOver() ? 'disabled title="La saison est terminée : lancez une nouvelle saison depuis le Championnat."' : typeof tcgBusy == 'function' && tcgBusy() ? 'disabled title="Terminez votre duel de cartes avant de continuer la carrière."' : ''}>${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
 }
 // Dessine une jauge en arc (confiance, moral, note globale…).
 function gg(v, o = {}) {
@@ -19128,11 +19217,28 @@ function mReadAll() {
   render();
 }
 // MENU D'ACCUEIL : carrière, chargement, éditeur, tutoriel, visite guidée, vidéo.
+// Image de la tuile « Continuer la carrière » selon le club joué. Les clubs sans image dédiée utilisent l'image par défaut.
+// Pour ajouter un club : 'Nom du club': ['img/equipes/fichier.jpg', 'cadrage CSS (x y)'].
+const TEAM_IMG = {
+  'Snow Kids': ['img/equipes/snow-kids.jpg', '0% 12%'],
+  Shadows: ['img/equipes/shadows.jpg', '54% 22%'],
+  Lightnings: ['img/equipes/lightnings.jpg', '57% 14%'],
+  Wambas: ['img/equipes/wambas.jpg', '52% 16%'],
+  Pirates: ['img/equipes/pirates.jpg', '50% 24%'],
+  Rykers: ['img/equipes/rykers.jpg', '38% 22%'],
+  'Tigres Rouges': ['img/equipes/tigres-rouges.jpg', '58% 14%'],
+  Elektras: ['img/equipes/elektras.jpg', '49% 10%'],
+};
+const TEAM_IMG_DEF = ['img/equipes/defaut.jpg', '58% 18%'];
+function teamPh(n) {
+  const [u, pos] = TEAM_IMG[n] || TEAM_IMG_DEF;
+  return `<span class="ph tph" style="background-image:url('${u}');background-position:${pos}"></span>`;
+}
 function menuView() {
   const au = slotMeta('gmauto'),
     has = !!S;
   const nw = V.nw
-    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Tutoriel de l’accueil réparé</b> : la tuile « Tutoriel » ouvre maintenant la page d’aide, avec un bouton « ← Menu » pour revenir. Le bouton « Lancer la visite guidée » apparaît quand une partie est en cours.</li><li><b>Reprise du 1.47</b> : nouvelle carrière en 5 étapes, onglets Entraînement et Vente, dossier mods et icônes à la place des émojis.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
+    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Galactik Cartes, le jeu de cartes à collectionner</b> : un nouvel onglet « Cartes » dans la carrière (activé par défaut à la création, et d’office dans les anciennes sauvegardes). Choisissez votre deck de départ parmi les 14 clubs, puis affrontez l’IA en duel : 3 cartes face cachée par tour, attaque contre défense, le premier à 3 buts gagne.</li><li><b>Boosters après chaque match</b> : chaque match de votre club rapporte un booster Victoire, Match nul ou Défaite, avec ses propres illustrations et une ouverture animée (halo, particules, cartes à retourner).</li><li><b>Raretés et collection</b> : Classique, Chromatique, Prismatique et Mythique, avec étoiles, bordures animées et filigranes ; filigrane « œuvre originale » pour les personnages de la série. Revente des doublons contre des crédits, zoom des cartes au survol, plusieurs decks.</li><li><b>Cartes illustrées</b> : nouveaux modèles de cartes pour les gardiens, défenseurs, milieux, attaquants et tactiques, aux couleurs de chaque poste, avec le logo de l’équipe ; cartes de but sur le plateau.</li><li><b>Succès, Collector et Légendes</b> : 22 succès qui rapportent des crédits, des titres et des cartes Légende (+5 en attaque et en défense) ; Collector par équipe ; Légendes d’événement débloquées par des exploits en match (par exemple, une victoire avec les Snow Kids débloque Aarch).</li><li><b>Galerie refaite</b> : toutes les récompenses en tuiles (dorées quand elles sont obtenues), compteurs cliquables qui mènent à chaque section, et nouveaux titres Galactik Cartes à afficher sous le nom du club.</li><li><b>Image de club au menu</b> : la tuile « Continuer la carrière » affiche une illustration du club joué (Snow Kids, Shadows, Lightnings, Wambas, Pirates, Rykers, Tigres Rouges, Elektras ; une image commune pour les autres).</li><li><b>Règles avec Clamp</b> : les règles du duel sont expliquées par Clamp étape par étape ; le tutoriel et la visite guidée présentent aussi la Galerie et le jeu de cartes.</li><li><b>Confort</b> : le bouton « Continuer » est grisé pendant un duel de cartes ; événements spéciaux (pluie de météores, enlèvement…) plus rares ; code allégé.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
     : '';
   const ins = V.ins
     ? `<div class="mo" onclick="V.ins=0;render()"><div class="card" style="max-width:460px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">📥 Télécharger et installer sur PC</b><p class="mu">Deux façons de jouer hors du navigateur par défaut :</p><p><b>1. Télécharger</b> : un dossier à extraire, avec un lanceur Windows.</p><div class="ctl"><button class="p" onclick="pcDl()">⬇ Télécharger pour PC (.zip)</button>${PWA ? '<button onclick="pwaI();V.ins=0;render()">Installer maintenant</button>' : ''}</div><p class="mu">${V.pcm || 'Le dossier contient le jeu et un lanceur Windows qui l’ouvre dans sa propre fenêtre (Edge ou Chrome), sans toucher à votre navigateur par défaut.'}</p><p><b>2. Installer comme application</b> :</p><ol style="line-height:1.5;padding-left:20px"><li>Ouvrez le jeu dans <b>Chrome</b> ou <b>Edge</b>, directement depuis son lien.</li><li>Cliquez sur l’icône d’installation à droite de la barre d’adresse, ou sur le menu ⋮ puis <b>« Installer Galactik Manager »</b>.</li></ol><p class="mu">Si l’option n’apparaît pas, le navigateur ne la propose pas pour cette page. Firefox et Safari ne permettent pas cette installation sur PC.</p><button onclick="V.ins=0;V.pcm='';render()">Fermer</button></div></div>`
@@ -19155,11 +19261,11 @@ function menuView() {
     rq = has ? mailReq().length : 0,
     ur = has ? S.mail.filter((m) => m.u && !m.x).length : 0,
     cont = has
-      ? T('m c1', `${PH}<span class="bd">${me().em}</span>`, 'Continuer la carrière', `${me().name} · saison ${S.season} · journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length}${rq ? `<br>${rq} mail${rq > 1 ? 's' : ''} à traiter` : ur ? `<br>${ur} non lu${ur > 1 ? 's' : ''}` : ''}`, 'V.menu=0;render()', 'm_cont')
+      ? T('m c1', `${teamPh(me().name)}<span class="bd">${me().em}</span>`, 'Continuer la carrière', `${me().name} · saison ${S.season} · journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length}${rq ? `<br>${rq} mail${rq > 1 ? 's' : ''} à traiter` : ur ? `<br>${ur} non lu${ur > 1 ? 's' : ''}` : ''}`, 'V.menu=0;render()', 'm_cont')
       : au
-        ? T('m c1', `${PH}<span class="bd">▶</span>`, 'Reprendre la sauvegarde auto', `${au.t} · saison ${au.sn} · journée ${au.md + 1} · ${au.dt}`, "slotAct('l',0)", 'm_cont')
+        ? T('m c1', `${teamPh(au.t)}<span class="bd">▶</span>`, 'Reprendre la sauvegarde auto', `${au.t} · saison ${au.sn} · journée ${au.md + 1} · ${au.dt}`, "slotAct('l',0)", 'm_cont')
         : T('m c1 off', `${PH}<span class="bd">–</span>`, 'Continuer la carrière', 'Aucune partie en cours. Lancez une nouvelle carrière.', '', 'm_cont');
-  return `<div class="mm"><div class="mbg"></div><div class="mw gx gxa2"><div class="mh"><h1>GFM</h1><small class="gv">${GV}</small><span class="gxi">${[['V.nw=1', '✨', 'Les nouveautés', 'm_news'], ['V.rm=1', '🚀', 'Roadmap', 'm_road'], ...(PWAS() ? [] : [['V.mob=1', '📲', 'Installer sur mobile / tablette', 'm_mob']]), ['V.fb=1', '💬', 'Signaler un bug / une idée', 'm_fb'], ...(PWAS() || !PCON ? [] : [['pwaI()', '📥', 'Télécharger / installer sur PC', 'm_inst']]), ['V.stp=1', '⚙️', 'Paramètres', 'm_pref'], ['quit()', '⏻', 'Quitter', 'm_quit']].map(([f, ic, t, k]) => `<button class="gxb" onclick="${f};render()" title="${t}" aria-label="${t}">${ic}<span>${t}</span></button>`).join('')}</span></div><div class="mtg">${cont}${T('m c2', `${PH}<span class="bd">+</span>`, 'Nouvelle carrière', mkU() ? '15 clubs · 15 planètes' : '14 clubs · 14 planètes', 'menuNew()', 'm_new')}${T('m ch', '', 'Charger une partie', '5 emplacements et sauvegarde automatique', "V.sv=1;V.sn='';render()", 'm_load')}${T('n md', '', 'Éditeur de mods', 'Équipes, joueurs, Fluides, couleurs', 'V.menu=0;V.ed=1;V.et=null;render()', 'm_ed')}${T('n tu', '', 'Tutoriel', 'Effectif, tactique, Fluides, finances', 'V.hv=1;V.menu=0;render()', 'm_tuto')}${T('n v', '', 'Visite guidée', TOUR.length + ' étapes avec Clamp', 'menuTour()', 'm_tour')}${O('▶', 'Découvrir la série', 'Vidéo de @andsboy · 14 min · YouTube', "window.open('https://www.youtube.com/watch?v=3w1j_jVfzYE','_blank','noopener')", 'm_vid')}${O('⚙️', 'Paramètres', '', 'V.stp=1;render()', 'm_pref')}${O('⏻', 'Quitter', '', 'quit()', 'm_quit')}</div><div class="gxz"><div class="gxc"><span>${mkU() ? 15 : 14} clubs</span><span>${mkU() ? 15 : 14} planètes</span><span>2 compétitions</span><span>7 contre 7</span></div><div class="gxw"><b>Projet de fans non officiel</b> · gratuit et sans aucun but lucratif · non affilié aux ayants droit de « Galactik Football ».</div><div class="gxf">${legLinks()}</div></div></div>${nw}${rmb}${mob}${ins}${bye}</div>`;
+  return `<div class="mm"><div class="mbg"></div><div class="mw gx gxa2"><div class="mh"><h1>GFM</h1><small class="gv">${GV}</small><span class="gxi">${[['V.nw=1', '✨', 'Les nouveautés', 'm_news'], ['V.rm=1', '🚀', 'Roadmap', 'm_road'], ...(PWAS() ? [] : [['V.mob=1', '📲', 'Installer sur mobile / tablette', 'm_mob']]), ['V.fb=1', '💬', 'Signaler un bug / une idée', 'm_fb'], ...(PWAS() || !PCON ? [] : [['pwaI()', '📥', 'Télécharger / installer sur PC', 'm_inst']]), ['V.stp=1', '⚙️', 'Paramètres', 'm_pref'], ['quit()', '⏻', 'Quitter', 'm_quit']].map(([f, ic, t, k]) => `<button class="gxb" onclick="${f};render()" title="${t}" aria-label="${t}">${ic}<span>${t}</span></button>`).join('')}</span></div><div class="mtg">${cont}${T('m c2', `${PH}<span class="bd">+</span>`, 'Nouvelle carrière', mkU() ? '15 clubs · 15 planètes' : '14 clubs · 14 planètes', 'menuNew()', 'm_new')}${T('m ch', '', 'Charger une partie', '5 emplacements et sauvegarde automatique', "V.sv=1;V.sn='';render()", 'm_load')}${T('n md', '', 'Éditeur de mods', 'Équipes, joueurs, Fluides, couleurs', 'V.menu=0;V.ed=1;V.et=null;render()', 'm_ed')}${T('n tu', '', 'Tutoriel', 'Effectif, tactique, Fluides, finances', 'V.hv=1;V.menu=0;render()', 'm_tuto')}${T('n v', '', 'Visite guidée', TOURL().length + ' étapes avec Clamp', 'menuTour()', 'm_tour')}${O('▶', 'Découvrir la série', 'Vidéo de @andsboy · 14 min · YouTube', "window.open('https://www.youtube.com/watch?v=3w1j_jVfzYE','_blank','noopener')", 'm_vid')}${O('⚙️', 'Paramètres', '', 'V.stp=1;render()', 'm_pref')}${O('⏻', 'Quitter', '', 'quit()', 'm_quit')}</div><div class="gxz"><div class="gxc"><span>${mkU() ? 15 : 14} clubs</span><span>${mkU() ? 15 : 14} planètes</span><span>2 compétitions</span><span>7 contre 7</span></div><div class="gxw"><b>Projet de fans non officiel</b> · gratuit et sans aucun but lucratif · non affilié aux ayants droit de « Galactik Football ».</div><div class="gxf">${legLinks()}</div></div></div>${nw}${rmb}${mob}${ins}${bye}</div>`;
 }
 // Bouton « Quitter » : sauvegarde automatique puis message d'au revoir.
 function quit() {
