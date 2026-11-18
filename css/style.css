@@ -1348,7 +1348,7 @@ body.nohp .hp {
   transition: transform 0.12s;
 }
 #app:has(.sh) .tb {
-  border-width: 3px;
+  border-width: 1.5px;
 }
 #app:has(.sh) th {
   background: var(--ac);
@@ -5064,3 +5064,36 @@ body.tcgon{overflow:hidden}
 .gsec{scroll-margin-top:12px}
 .gsec.gsfl{animation:gsfl 1.4s ease-out}
 @keyframes gsfl{0%,30%{box-shadow:0 0 0 3px var(--ac),0 0 24px var(--ac)}100%{box-shadow:none}}
+
+/* Menu latéral : sélection et survol en rectangle plein sur toute la largeur (sans coins arrondis) */
+/* forme reprise du bouton « Aller à la Cup » : rectangle aux coins arrondis (12 px), en retrait de 12 px de chaque côté */
+#app:has(.sh) .sb button.si {
+  border-radius: 12px;
+  border: 0;
+  margin-left: 12px;
+  margin-right: 12px;
+  width: calc(100% - 24px);
+}
+#app:has(.sh) .sb button.si:not(.on):hover,
+#app:has(.sh) .sb button.si:not(.on):focus-visible {
+  background: color-mix(in srgb, var(--ac) 22%, transparent);
+  transform: none;
+  outline: 0;
+}
+#app:has(.sh) .sb:not(.mini) .sbft > button {
+  border-radius: 12px !important;
+}
+#app:has(.sh) .sb:not(.mini) .sbft > button:hover {
+  background: color-mix(in srgb, var(--ac) 22%, transparent) !important;
+  filter: none;
+}
+/* Avatar photo (Callie Mystic, Arcadia News) dans la boîte de réception */
+.av:has(.avp) { overflow: hidden; background: #2a1840 !important; }
+.av .avp { width: 100%; height: 100%; object-fit: cover; object-position: 55% 18%; display: block; }
+/* Nom du joueur dont parle le mail (rumeurs…) : surligné */
+mark.mhl { background: color-mix(in srgb, var(--ac) 35%, transparent); color: inherit; font-weight: 800; padding: 0 4px; border-radius: 4px; box-shadow: 0 0 0 1px color-mix(in srgb, var(--ac) 60%, transparent); }
+/* Classement : évolution depuis la dernière journée */
+.rkm { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 800; padding: 1px 6px; border-radius: 999px; vertical-align: middle; white-space: nowrap; }
+.rkm.up { color: #2fd27a; background: #2fd27a22; }
+.rkm.dn { color: #ff5a5a; background: #ff5a5a22; }
+.rkm.eq { color: #f5a623; background: #f5a62322; }

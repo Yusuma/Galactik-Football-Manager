@@ -3,7 +3,7 @@
 Jeu de gestion **7 contre 7** inspiré de *Galactik Football*. Dirigez un club de la Galactik League, la sélection d’une planète dans la Galactik Cup, ou les deux.
 
 > **Projet de fan, gratuit et sans but lucratif.** Non affilié aux ayants droit de la série.
-> Version actuelle : **1.49.0.0 (bêta)**
+> Version actuelle : **1.50.0.0 (bêta)**
 
 > **Avertissement** : Galactik Manager est un **projet de fans non officiel**, entièrement **gratuit et sans aucun but lucratif**. Il n’est ni affilié, ni approuvé, ni sponsorisé par les ayants droit de « Galactik Football », dont les noms, personnages et univers restent la propriété de leurs titulaires. Pour toute demande de modification ou de retrait, contactez l’auteur.
 
@@ -23,6 +23,7 @@ Ouvrez l’adresse GitHub Pages du dépôt (*Settings → Pages*). Le jeu foncti
 - **Gestion du club** : finances, sponsors, staff, installations, objectifs, conseil d’administration.
 - **Manager personnalisé** : nom, apparence et passé avec des bonus de carrière.
 - **Messagerie** : boîte de réception type webmail (recherche, dossiers, suivis, sélection multiple, corbeille).
+- **Presse et Galactik Cup** : articles et rumeurs d’Arcadia News signés Callie Mystic, tirage au sort des poules de la Galactik Cup par le meilleur homme du match, évolution des clubs au classement.
 - **Statistiques** : bilan du club, joueurs, finances, records et graphiques.
 - **Aperçu** : tableau de bord avec jauges, prochain match et informations clés.
 - **Éditeur de mods** : équipes, joueurs, Fluides, couleurs et compétitions.

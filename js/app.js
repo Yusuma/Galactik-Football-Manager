@@ -2484,7 +2484,7 @@ function buildNat(ni) {
 // DV = numéro du format de sauvegarde. GV = numéro de version affiché dans le jeu (À CHANGER à
 // chaque mise à jour).
 const DV = 1,
-  GV = '1.49.0.0';
+  GV = '1.50.0.0';
 // Message à afficher lors d'une migration de vieille sauvegarde.
 let MG = null;
 // Transforme la partie en texte pour l'enregistrer.
@@ -2543,6 +2543,14 @@ const hyd = (s) => {
   // Sauvegardes créées avant le jeu de cartes : le mode Galactik Cartes y est activé automatiquement
   // (une carrière où il a été décoché à la création garde tcg = null et reste sans jeu de cartes).
   if (s && s.tcg === undefined) s.tcg = { on: 1 };
+  // Contenu caché : fenêtre d'apparition (journées 4 à 10 de la saison 1 ; anciennes sauvegardes : prochaine fenêtre possible).
+  if (s && s.mkl === undefined && !s.mk) {
+    const lg = s.ctx == 'C' && s.alt ? s.alt : s,
+      md = lg.md || 0,
+      late = (s.season || 1) > 1 || md > 3,
+      left = (lg.fx || []).length - md;
+    s.mkl = late ? (left >= 4 ? { st: 'wait', ws: s.season || 1, wm: Math.max(3, md) } : { st: 'wait', ws: (s.season || 1) + 1, wm: 3 }) : { st: 'wait', ws: 1, wm: 3 };
+  }
   // Les interviews ne passent plus par la messagerie (fenêtre de conférence de presse) : on retire les anciens mails d'interview.
   if (s && Array.isArray(s.mail)) s.mail = s.mail.filter((m) => !/^Interview/.test(m.t || ''));
   // Planètes renommées pour coller à la série (Rykhar, Électra, Cyclos, Xéna) : remplacées partout dans la sauvegarde.
@@ -3231,67 +3239,22 @@ function nbPick(i) {
   if (!p || p.inj) return;
   const n = nbS(),
     x = nbNext();
+  // Tenue de l'adversaire : couleurs fixes tirées de son nom (joueurs de l'ombre, sans club).
+  const OPK = [['#1b1b22', '#ff4d4d'], ['#2b0f3a', '#c86bff'], ['#0d2a2a', '#39e6c8'], ['#3a2a0a', '#ffb21f'], ['#0a1f3d', '#ff5fa2'], ['#262626', '#9cff3a']];
+  let hs = 0;
+  for (const ch of x.n) hs = (hs * 31 + ch.charCodeAt(0)) % 9973;
+  const k = OPK[hs % OPK.length];
   V.nd = {
     p,
-    op: { n: x.n, o: x.o },
+    op: { n: x.n, o: x.o, a: k[0], b: k[1], num: 1 + (hs % 98) },
     sc: [0, 0],
     r: 0,
-    v: x.v,
-    att: Math.random() < 0.5 ? 0 : 1,
-    lg: [],
     done: 0,
     fl: 0,
-    ef: 0.7 + (0.3 * p.e) / 100,
     rd: n.k % 3,
     hurt: 0,
+    key: Date.now(),
   };
-  render();
-}
-// Contenu caché.
-function nbAct(c) {
-  const d = V.nd;
-  if (!d || d.done || (d.att == 0 && c > 2)) return;
-  const p = d.p,
-    pa = d.att == 0,
-    s = pa ? c : [0, 1, 1, 2][(Math.random() * 4) | 0],
-    g = pa ? (Math.random() < 0.15 ? 3 : [0, 1, 1, 2][(Math.random() * 4) | 0]) : c,
-    A = pa ? NBA(p) * d.ef : d.op.o,
-    D = pa ? d.op.o * 0.97 : NBD(p) * d.ef;
-  let pg = Math.max(0.08, Math.min(0.7, 0.36 + (A - D) / 150));
-  pg += d.v == 'O' ? [-0.08, 0, 0.12][s] : [0.05, 0, -0.03][s];
-  const SN = ['puissant', 'placé', 'courbe'],
-    who = pa ? p.n : d.op.n + ' ' + FIC;
-  let note = '';
-  if (g == 3) {
-    if (Math.random() < 0.5) {
-      pg = 0;
-      note = 'obstruction réussie, le tir est stoppé. ';
-    } else {
-      pg += 0.12;
-      note = 'obstruction ratée. ';
-    }
-    if (!pa) d.fl++;
-    else if (Math.random() < 0.06) d.hurt = 1;
-  } else if (g == s) {
-    pg *= 0.3;
-    note = 'tir lu par le défenseur. ';
-  }
-  const goal = Math.random() < pg;
-  if (goal) {
-    d.sc[pa ? 0 : 1]++;
-    sfx('goal');
-  }
-  d.lg.unshift(
-    d.r + 1 + '. ' + who + ' tente un tir ' + SN[s] + ' — ' + note + (goal ? 'BUT !' : 'pas de but.'),
-  );
-  d.r++;
-  d.att ^= 1;
-  const [a, b] = d.sc;
-  if (a >= 3 || b >= 3 || (d.r >= 12 && a != b) || d.r >= 20) {
-    d.done = 1;
-    d.win = a > b || (a == b && Math.random() < 0.5);
-    nbFin(d);
-  }
   render();
 }
 // Contenu caché.
@@ -3332,29 +3295,23 @@ function nbView() {
     due = n.k < 6 && S.day >= dN(n.k),
     RD = ['Quart de finale', 'Demi-finale', 'Finale'];
   HELP.nb =
-    'Duel 1 contre 1 dans une arène sphérique. Chaque échange : l’attaquant choisit un tir, le défenseur devine ou tente une obstruction. Le premier à 3 buts l’emporte.';
-  let h = `<div class="card nbh"><img class="nbl" src="${LGN}" alt="${NB}"><div><b style="font-size:18px">${NB}</b> ${hp('nb')}<div class="mu">Duel 1 contre 1 · arène sphérique · deux trous · tir uniquement</div><div class="mu">Bilan : ${n.w} victoires · ${n.l} défaites · ${n.t} tournoi${n.t > 1 ? 's' : ''} remporté${n.t > 1 ? 's' : ''}</div></div></div>`;
+    'Duel 1 contre 1 en temps réel dans une salle fermée, à jouer à la manette, au clavier ou au tactile. Le premier à 3 buts l’emporte. Tout est permis : tacles, lobs, crochets, tirs par la bande. Des obstacles surgissent du sol en cours de match.';
+  let h = `<div class="card nbh"><img class="nbl" src="${LGN}" alt="${NB}"><div><b style="font-size:18px">${NB}</b> ${hp('nb')}<div class="mu">Duel 1 contre 1 en temps réel · salle fermée · deux trous · tout est permis</div><div class="mu">Bilan : ${n.w} victoires · ${n.l} défaites · ${n.t} tournoi${n.t > 1 ? 's' : ''} remporté${n.t > 1 ? 's' : ''}</div></div></div>`;
   const d = V.nd;
-  if (d) {
-    const t = me();
-    h += `<div class="card"><div class="mu" style="text-align:center">${RD[d.rd]} · ${d.v == 'R' ? 'Arène classique' : 'Arène à obstacles'} · échange ${Math.min(d.r + 1, 20)}</div><div class="score">${d.sc[0]} - ${d.sc[1]}</div><div style="text-align:center"><b>${d.p.n}</b> contre <b>${d.op.n} ${FIC}</b> <span class="mu">(niveau ${d.op.o})</span></div>`;
-    if (d.done)
-      h += `<div style="text-align:center;margin:10px 0"><b>${d.win ? 'Victoire ! Vous restez le maître de l’arène.' : 'Défaite. Vous êtes éliminé de ce tournoi.'}</b></div><button class="p" onclick="nbEnd()">Continuer</button>`;
-    else if (d.att == 0)
-      h += `<div class="mu" style="margin:8px 0">À vous d’attaquer : choisissez votre tir.</div><div class="ctl"><button class="p" onclick="nbAct(0)" title="Puissant, bon en arène classique.">Tir puissant</button><button class="p" onclick="nbAct(1)" title="Précis, jamais risqué.">Tir placé</button><button class="p" onclick="nbAct(2)" title="Contourne les obstacles, plus faible en arène classique.">Tir courbe</button></div>`;
-    else
-      h += `<div class="mu" style="margin:8px 0">${d.op.n} attaque : devinez son tir, ou tentez l’obstruction (faute autorisée, mais risquée).</div><div class="ctl"><button class="p" onclick="nbAct(0)">Contrer le tir puissant</button><button class="p" onclick="nbAct(1)">Contrer le tir placé</button><button class="p" onclick="nbAct(2)">Contrer le tir courbe</button><button onclick="nbAct(3)">⚠ Obstruction (faute)</button></div>`;
-    h += `</div><div class="card log">${
-      d.lg
-        .slice(0, 8)
-        .map((l) => `<div>${l}</div>`)
-        .join('') || '<div class="mu">Le duel commence.</div>'
-    }</div>`;
+  if (d && !d.done) {
+    // Le duel se joue dans la salle, posée sur cet emplacement (même principe que Galactik Cartes).
+    h += `<div class="tcgw"><div id="arSlot" class="tcgslot"><div class="mu">Ouverture de la salle…</div></div></div>`;
+    n.seen = 1;
+    return h;
+  } else if (d) {
+    const S2 = d.st || { shots: [0, 0], saves: [0, 0], tackles: [0, 0], fouls: [0, 0] },
+      row = (l, k) => `<tr><td>${l}</td><td style="text-align:center"><b>${S2[k][0]}</b></td><td style="text-align:center"><b>${S2[k][1]}</b></td></tr>`;
+    h += `<div class="card"><div class="mu" style="text-align:center">${RD[d.rd]}</div><div class="score">${d.sc[0]} - ${d.sc[1]}</div><div style="text-align:center"><b>${d.p.n}</b> contre <b>${d.op.n} ${FIC}</b> <span class="mu">(niveau ${d.op.o})</span></div><div style="text-align:center;margin:10px 0"><b>${d.win ? 'Victoire ! Vous restez le maître de l’arène.' : 'Défaite. Vous êtes éliminé de ce tournoi.'}</b>${d.hurt ? `<div class="mu">${d.p.n} s’est blessé pendant le duel.</div>` : ''}</div><table style="margin:0 auto 10px;border-spacing:14px 4px"><tr><td></td><td class="mu">Vous</td><td class="mu">Adv.</td></tr>${row('Tirs', 'shots')}${row('Arrêts', 'saves')}${row('Tacles réussis', 'tackles')}${row('Mises au sol', 'fouls')}</table><button class="p" onclick="nbEnd()">Continuer</button></div>`;
   } else if (due) {
     const x = nbNext(),
       t = me();
     h +=
-      `<div class="card"><b>🌑 ${RD[n.k % 3]}</b><div class="mu">Adversaire : <b>${x.n} ${FIC}</b> · niveau ${x.o} · ${x.v == 'R' ? 'arène classique' : 'arène à obstacles (le tir courbe y est favorisé)'}</div><div class="mu" style="margin-top:6px">Choisissez votre champion dans l’effectif. Sa fatigue et ses blessures comptent pour votre équipe.</div></div><div class="card"><div class="pg">` +
+      `<div class="card"><b>🌑 ${RD[n.k % 3]}</b><div class="mu">Adversaire : <b>${x.n} ${FIC}</b> · niveau ${x.o}</div><div class="mu" style="margin-top:6px">Choisissez votre champion dans l’effectif : c’est vous qui le contrôlez. Son attaque renforce ses tirs, sa défense ses tacles, et son énergie actuelle est celle du début du duel. Sa fatigue et ses blessures comptent pour votre équipe.</div></div><div class="card"><div class="pg">` +
       t.sq
         .map((p, i) => [p, i])
         .filter(([p]) => !p.inj)
@@ -3365,7 +3322,7 @@ function nbView() {
       `</div></div>`;
   } else
     h += `<div class="card">${n.k < 6 ? `Prochaine soirée : <b>${fmtDay(dN(n.k))}</b> · ${RD[n.k % 3]} du tournoi ${Math.floor(n.k / 3) + 1}.` : n.k >= 6 ? 'Plus de soirée cette saison. Rendez-vous à la prochaine.' : 'Les soirées ont lieu les jours sans match de votre équipe.'}<div class="ctl" style="margin-top:8px">${due ? '' : ''}</div></div>`;
-  h += `<div class="card"><b>Règles</b><div class="mu" style="margin-top:4px;line-height:1.6">Une balle, deux trous : ce sont les buts. Pas de passes, pas de Fluide : seul le tir compte. Les fautes sont autorisées. Deux variantes d’arène : classique ou à obstacles. Le vainqueur reste « maître » et le perdant est éliminé. Chaque tournoi compte trois duels : quart, demi, finale.<br>À chaque échange, l’attaquant choisit un tir (puissant, placé ou courbe) ; le défenseur tente de le deviner ou d’obstruer. Premier à 3 buts.</div></div>`;
+  h += `<div class="card"><b>Règles</b><div class="mu" style="margin-top:4px;line-height:1.6">Une salle fermée, une balle, deux trous dans les murs : ce sont les buts. Pas de passes, pas de Fluide. La balle rebondit sur les murs et le plafond, et des obstacles surgissent du sol en cours de match. Tout est permis : un tacle qui fauche l’adversaire le met au sol et libère la balle (chaque mise au sol subie peut blesser votre champion). Premier à 3 buts. Le vainqueur reste « maître » et le perdant est éliminé. Chaque tournoi compte trois duels : quart, demi, finale.<br><b>Commandes</b> · manette : stick gauche pour courir et viser, A pour tirer (maintenir pour charger) ou tacler, Y pour le lob, B ou X pour le crochet, gâchettes pour sprinter, stick droit pour l’effet · clavier : ZQSD ou flèches, Espace, I, K, Maj, J et L · tactile : joystick et boutons à l’écran.</div></div>`;
   n.seen = 1;
   return h;
 }
@@ -3555,7 +3512,7 @@ let FX = {
     n: 'Bottes cybernétiques',
     d: 'Pas de Fluide : de temps à autre, vitesse et agilité accrues, avec des frappes plus précises et plus puissantes. À partir de la saison 2, ils maîtrisent le Souffle d’Akillian.',
   },
-  Pirates: { t: 'd', k: 'steal', n: 'Vol de flux', d: 'En défense, vole le ballon et contre-attaque.' },
+  Pirates: { t: 'n', k: 'none', n: 'Aucun Fluide', d: 'Sans Fluide, les Pirates compensent par la rage, le physique et l’endurance.' }, // aucun pouvoir en match
   Elektras: { t: 'a', k: 'bubble', n: 'Vague d’Hektonïa', d: 'Fluide de seconde catégorie : bulles qui permettent de glisser, de sauter très haut et d’enfermer le ballon.' },
   Cyclopes: { t: 'a', k: 'confuse', n: 'Onde cérébrale', d: 'Fluide de seconde catégorie : des cercles verts sèment la confusion chez la personne visée.' },
   Nocturnes: { t: 'a', k: 'smog', n: 'Smog', d: 'Fluide de troisième catégorie : force accrue et téléportation qui contourne la défense.' },
@@ -3591,6 +3548,8 @@ const T0 = JSON.parse(JSON.stringify(T)),
   FX0 = JSON.parse(JSON.stringify(FX)),
   BR = {};
 Object.values(FX).forEach((f) => (BR[f.k] = f));
+// Ancien pouvoir des Pirates, gardé pour les équipes créées dans l'éditeur qui l'utilisent.
+BR.steal = BR.steal || { t: 'd', k: 'steal', n: 'Vol de flux', d: 'En défense, vole le ballon et contre-attaque.' };
 BR.aura = {
   t: 'a',
   k: 'aura',
@@ -3800,6 +3759,7 @@ function init(ti, mode, ni) {
     res: [],
     evt: V.evt !== 0,
     tcg: V.tcg !== 0 ? { on: 1 } : null,
+    mkl: { st: 'wait', ws: 1, wm: 3 },
     cash: 5000,
     staff: { c: 1, k: 1, a: 1, y: 1 },
     cup: null,
@@ -5412,6 +5372,36 @@ function chLd(ti, ic, pool, k, withClub) {
     ).join('') || '<div class="chlr mu">–</div>'
   }</div>`;
 }
+// Évolution au classement de la Ligue depuis la dernière journée jouée.
+// S.rkh = { k: saison et journée, cur: classement actuel, prev: classement après la journée précédente }
+function rkOrder() {
+  return S.teams
+    .slice()
+    .sort((a, b) => b.pts - a.pts || b.gf - b.ga - (a.gf - a.ga) || b.gf - a.gf)
+    .map((t) => t.name);
+}
+function rkTick() {
+  if (!S || S.ctx == 'C' || !S.teams) return;
+  const k = (S.season || 1) * 1000 + (S.md || 0), // journée de Ligue terminée
+    h = S.rkh;
+  if (h && h.k == k) return;
+  const cur = {};
+  rkOrder().forEach((n, i) => (cur[n] = i + 1));
+  S.rkh = { k, cur, prev: h && k > h.k && Math.floor(h.k / 1000) == Math.floor(k / 1000) ? h.cur : null };
+}
+function rkMv(n) {
+  if (S.ctx == 'C') return '';
+  rkTick();
+  const h = S.rkh,
+    a = h && h.prev && h.prev[n],
+    b = h && h.cur[n];
+  const d = a && b ? a - b : 0;
+  return d > 0
+    ? `<span class="rkm up" title="${d} place${d > 1 ? 's' : ''} gagnée${d > 1 ? 's' : ''} depuis la dernière journée">▲ +${d}</span>`
+    : d < 0
+      ? `<span class="rkm dn" title="${-d} place${d < -1 ? 's' : ''} perdue${d < -1 ? 's' : ''} depuis la dernière journée">▼ −${-d}</span>`
+      : '<span class="rkm eq" title="Même place qu’après la journée précédente">=</span>';
+}
 // Page complète du championnat.
 function champView() {
   const o = S.teams
@@ -5435,7 +5425,7 @@ function champView() {
   const rows = o
       .map(([t, i], k) => {
         const z = k == 0 ? 'ch1' : obj && k + 1 <= obj ? 'cho' : '';
-        return `<tr class="${i == S.t ? 'me' : ''}"><td><span class="chk ${z}" title="${k == 0 ? 'Leader' : z ? 'Dans l’objectif du conseil' : ''}">${k + 1}</span></td><td class="chc"${i == S.t ? '' : ` data-n="${mkEsc(t.name)}" onclick="opOpen(this.dataset.n)" style="cursor:pointer" title="Voir la fiche du club"`}>${t.em} <b>${t.name}</b>${ft(t.name)}</td><td>${t.pl}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}</td><td>${t.ga}</td><td>${t.gf - t.ga > 0 ? '+' : ''}${t.gf - t.ga}</td><td class="chpt">${t.pts}</td><td class="chfc">${chForm(t)}</td></tr>`;
+        return `<tr class="${i == S.t ? 'me' : ''}"><td><span class="chk ${z}" title="${k == 0 ? 'Leader' : z ? 'Dans l’objectif du conseil' : ''}">${k + 1}</span></td><td class="chc"${i == S.t ? '' : ` data-n="${mkEsc(t.name)}" onclick="opOpen(this.dataset.n)" style="cursor:pointer" title="Voir la fiche du club"`}>${t.em} <b>${t.name}</b>${ft(t.name)}${rkMv(t.name)}</td><td>${t.pl}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}</td><td>${t.ga}</td><td>${t.gf - t.ga > 0 ? '+' : ''}${t.gf - t.ga}</td><td class="chpt">${t.pts}</td><td class="chfc">${chForm(t)}</td></tr>`;
       })
       .join(''),
     cards = (k) => mine.reduce((a, [p]) => a + rkV(p, k), 0),
@@ -5696,38 +5686,7 @@ function pwaI() {
 // CONTENU DE LA ROADMAP du menu d'accueil : [titre, description, statut]. Statuts : « Disponible
 // (bêta) » ou « À venir ». Modifier ici pour mettre la feuille de route à jour.
 const RMP = [
-  ['Attributs qui influencent le match', 'Finition, Réflexes, Passe, Vision, Tacle, Physique, Vitesse, Dribble et Détermination ont un effet réel ; l’entraînement par axe les fait progresser.', 'Disponible (bêta)'],
-  ['Jauge d’expérience et potentiel', 'Barre de progression des joueurs et marge de progression pour presque tous les joueurs.', 'Disponible (bêta)'],
-  ['Transferts par offres et contre-propositions', 'Offres au club vendeur, conditions du joueur (prime, salaire, prime de titre, durée) et contre-propositions.', 'Disponible (bêta)'],
-  ['Notes des joueurs après chaque match', 'Une note par joueur, remplaçants compris, et un récapitulatif du match.', 'Disponible (bêta)'],
-  ['Éditeur d’écusson', 'Créer l’écusson de son club dans l’éditeur de mods.', 'Disponible (bêta)'],
-  ['Placement individuel des joueurs', 'Hauteur (cinq niveaux) et décalage latéral (trois niveaux) réglables joueur par joueur, avec un vrai effet sur le match.', 'Disponible (bêta)'],
-  ['Fluides propres à chaque origine', 'Multifluide pour Paradisia (compatible avec tout), aucun Fluide pour les Pirates (compensés par leurs attributs).', 'Disponible (bêta)'],
-  ['Notifications en couleurs', 'Une couleur par type de notification : mails, musique, déblocages, manager, sauvegarde, système.', 'Disponible (bêta)'],
-  ['Formations libres', '7 formations possibles (de 1 à 3 joueurs par poste) pour laisser chacun explorer son style de jeu.', 'Disponible (bêta)'],
-  ['Écran de match plein écran', 'Vue 3D en plein écran avec tableau des scores, panneaux Stats, Journal, Compo et Consignes et fenêtre de compositions avant le match.', 'Disponible (bêta)'],
-  ['Conférences de presse', 'Questions variées de Callie Mystic avant et après chaque match, dont des interviews sur les buteurs, dans une fenêtre dédiée.', 'Disponible (bêta)'],
-  ['Réponses aux mails obligatoires', 'Une réponse attendue bloque la suite de la partie : le bouton « Continuer » mène au mail concerné.', 'Disponible (bêta)'],
-  ['Scouting des adversaires', 'Onglet Adversaires : recherche de clubs et de joueurs, tactiques, composition et cartes de tous les clubs, à tout moment.', 'Disponible (bêta)'],
-  ['Nouveau menu principal et visite avec Clamp', 'Menu en tuiles illustrées et visite guidée racontée par Clamp.', 'Disponible (bêta)'],
-  ['Gestion du club façon site web', 'Stade, billet, sponsors et boutique présentés comme une page web aux couleurs du club, avec illustrations.', 'Disponible (bêta)'],
-  ['Boutique et sponsors illustrés', 'Produits dérivés aux couleurs et au logo du club, et un logo pour chacun des 8 sponsors.', 'Disponible (bêta)'],
-  ['Staff en encadrés', 'Entraîneur, kiné, analyste et centre de formation séparés, avec pictogrammes et jauges de niveau.', 'Disponible (bêta)'],
-  ['Fenêtres de match flottantes', 'Stats, Journal, Compo et Consignes déplaçables, épinglables et semi-transparentes pendant le match.', 'Disponible (bêta)'],
-  ['Avance jour par jour', 'Le bouton « Continuer » fait passer un jour à la fois jusqu’au match.', 'Disponible (bêta)'],
-  ['Marché façon Football Manager', 'Tableau triable, prix calculé, numéros de maillot et séparation Ligue/Coupe.', 'Disponible (bêta)'],
-  ['Tactique en match', 'Terrain, instructions et rôles modifiables pendant la pause d’un match.', 'Disponible (bêta)'],
-  ['Réserve et base de joueurs', 'Jusqu’à 15 joueurs de réserve utilisables hors match, et un moteur de recherche pour consulter tous les joueurs du jeu.', 'Disponible (bêta)'],
-  ['Onglet Entraînement', 'Programmes d’équipe, repos automatique et réglages par joueur (intensité, axe, reconversion de poste).', 'Disponible (bêta)'],
-  ['Vente de joueurs', 'Mise en vente avec conditions, offres des clubs étudiées dans un onglet dédié, paiement comptant ou en deux fois.', 'Disponible (bêta)'],
-  ['Création de carrière en 5 étapes', 'Manager, passé, compétition, planète et club, emplacement de sauvegarde.', 'Disponible (bêta)'],
-  ['Dossier mods et transfert d’équipes', 'Équipes de fichiers dans le choix des clubs, export et import d’un fichier d’équipes entre appareils.', 'Disponible (bêta)'],
-  ['Icônes à la place des emojis', 'Une bibliothèque d’icônes dessinées pour tout le jeu.', 'Disponible (bêta)'],
-  ['Succès expliqués', 'Pop-ups au survol des balles, titres et décorations pour savoir comment les débloquer.', 'Disponible (bêta)'],
-  ['Galactik Cartes', 'Jeu de cartes à collectionner dans la carrière : boosters après chaque match, raretés, decks, duels contre l’IA.', 'Disponible (bêta)'],
-  ['Succès, Collector et Légendes', 'Succès du jeu de cartes avec crédits, titres et cartes Légende ; Légendes débloquées par des exploits en match.', 'Disponible (bêta)'],
-  ['Galerie en tuiles', 'Toutes les récompenses de la carrière en tuiles, avec compteurs qui mènent à chaque section.', 'Disponible (bêta)'],
-  ['Illustration du club au menu', 'Une image propre à chaque club sur la tuile « Continuer la carrière ».', 'En cours'],
+  ['Illustration du club au menu', 'Une image propre à chaque club sur la tuile « Continuer la carrière » : 12 clubs sur 14 sont prêts, il reste les Vortex et les Comet.', 'En cours'],
   [
     'Mode multijoueur 1 contre 1',
     'Affronter un autre joueur en match 1 contre 1 : votre équipe de sauvegarde contre l’équipe de la sauvegarde d’un autre joueur.',
@@ -6472,7 +6431,11 @@ function stPost(M) {
         best = p;
       }
     });
-    if (best) stP(best).mm++;
+    if (best) {
+      const o = stP(best);
+      o.mm++;
+      if (S.ctx == 'C') o.mmc = (o.mmc || 0) + 1; // homme du match en Galactik Cup (pour le tirage des poules)
+    }
     // Note de match de chaque titulaire (pour « Perfs récentes » de la fiche joueur).
     const RT = [[], []];
     T2.forEach((t, s) => {
@@ -6555,6 +6518,18 @@ function stPost(M) {
 }
 // Fin de saison : archive les statistiques de la saison dans l'historique.
 function stRoll() {
+  // Classement des hommes du match de la Galactik Cup (pour le tirage des poules de la saison suivante).
+  try {
+    const W = cupW();
+    if (W) {
+      const ps = [];
+      W.teams.forEach((t) => (t.sq || []).filter(Boolean).forEach((p) => p.ss && p.ss.mmc > 0 && ps.push([p, t])));
+      S.cupMM = ps
+        .sort(([a], [b]) => b.ss.mmc - a.ss.mmc || (b.g || 0) + (b.ss.a || 0) - ((a.g || 0) + (a.ss.a || 0)))
+        .slice(0, 10)
+        .map(([p, t]) => ({ n: p.n, tm: t.name, mm: p.ss.mmc, s: S.season }));
+    }
+  } catch (e) {}
   try {
     const roll = (teams, K, mine, cx, X) => {
       const ps = [];
@@ -7676,7 +7651,7 @@ function render() {
   if (S && S.teams && !S._og) {
     S.teams.forEach((t) =>
       t.sq.forEach((p) => {
-        if (!p.og) p.og = p.ln ? S.teams[p.ln.own].name : t.name;
+        if (!p.og) p.og = p.ln && S.teams[p.ln.own] ? S.teams[p.ln.own].name : t.name;
       }),
     );
     S._og = 1;
@@ -7717,7 +7692,7 @@ function render() {
   }
   const t = me(),
     end = S.md >= S.fx.length;
-  let h = `<h1>${t.em} ${t.name}${ft(t.name)} <span class="mu">· Saison ${S.season} · Journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length} · ${fmtDay(S.day)}</span></h1><nav>${[['club', 'Club'], ['tac', 'Tactique'], ['match', 'Match'], ['cal', 'Cal.'], ['mail', '✉️' + (S.mail.filter((m) => m.u).length || '')], ['mkt', 'Marché'], ['gest', 'Gestion'], ...(S.mode == 'C' ? [] : [['form', 'Formation']]), ['ent', 'Entraîn.'], ...(tcgOn() ? [['tcg', 'Cartes' + (tcgN() ? ' (' + tcgN() + ')' : '')]] : []), ['fin', 'Finances'], ['car', 'Carrière'], ['table', 'Class.'], ['stat', 'Stats'], ['tuto', 'Aide ?']].map(([k, l]) => `<button class="${V.tab == k ? 'on' : ''}" onclick="V.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
+  let h = `<h1>${t.em} ${t.name}${ft(t.name)} <span class="mu">· Saison ${S.season} · Journée ${Math.min(S.md + 1, S.fx.length)}/${S.fx.length} · ${fmtDay(S.day)}</span></h1><nav>${[['club', 'Club'], ['tac', 'Tactique'], ['match', 'Match'], ...(tcgOn() ? [['tcg', 'Cartes' + (tcgN() ? ' (' + tcgN() + ')' : '')]] : []), ['cal', 'Cal.'], ['mail', '✉️' + (S.mail.filter((m) => m.u).length || '')], ['mkt', 'Marché'], ['gest', 'Gestion'], ...(S.mode == 'C' ? [] : [['form', 'Formation']]), ['ent', 'Entraîn.'], ['fin', 'Finances'], ['car', 'Carrière'], ['table', 'Class.'], ['stat', 'Stats'], ['tuto', 'Aide ?']].map(([k, l]) => `<button class="${V.tab == k ? 'on' : ''}" onclick="V.tab='${k}';render()">${l}</button>`).join('')}</nav>`;
   if (V.tab == 'club') {
     h += eqSub();
     const sb = V.eq || 'liste';
@@ -8084,10 +8059,34 @@ function mkSync() {
   else if (!wt && it >= 0) TN.splice(it, 1);
   useT();
 }
+// Contenu caché : arrivée du club après le prêt.
+function mkJoinLn(k) {
+  const u = me(),
+    kp = u.sq.find((p) => p.n == MKD.b && p.ln && p.ln.own == -1) || k.back || mkRos().find((p) => p.n == MKD.b);
+  if (u.sq.includes(kp)) rmP(u, kp);
+  delete kp.ln;
+  kp.e = 100;
+  kp.og = MKD.nat;
+  const t = { name: MKD.n, em: MKD.em, sq: mkRos().filter((p) => p.n != MKD.b).concat([kp]), form: '2-3-1', m: 1, lu: [], pts: 0, pl: 0, gf: 0, ga: 0, w: 0, d: 0, l: 0 };
+  autoLU(t);
+  S.teams.push(t);
+  k.in = S.season + 1;
+  delete k.back;
+  try {
+    localStorage.setItem('gm_mk', '1');
+  } catch (e) {}
+  mkSync();
+  mail(
+    'Message de ' + MKD.n,
+    'Manager,\n\nMerci d’avoir accueilli ' + MKD.b + ' le temps de son prêt. ' + MKD.n + ' fait son entrée dans la Galactik League cette saison, et ' + MKD.b + ' est de retour parmi nous.\n\nNous nous retrouverons sur le terrain.',
+  );
+  S.mail[0].f = { n: 'Direction de ' + MKD.n, e: 'direction@' + slug(MKD.n) + '.gal', i: MKD.em, k: MKD.pal[1] };
+}
 // Contenu caché.
 function mkJoin() {
   const k = S.mk;
   if (!k || k.in || S.ctx == 'C' || S.teams.some((t) => t.name == MKD.n)) return;
+  if (k.ln) return mkJoinLn(k);
   const t = {
       name: MKD.n,
       em: MKD.em,
@@ -8206,17 +8205,6 @@ function mkt() {
     };
   if (r() < 0.3) put(RARE, 0);
   if (r() < 0.1) put(PRISM, 1);
-  if (S && S.ctx != 'C' && !S.mk && !mkU() && !U.has(MKD.b) && r() < 0.025) {
-    const b = MKD.ro.find((x) => x[0] == MKD.b);
-    if (b) {
-      put([[b[0], b[1], b[2], MKD.nat, b[3]]], 1);
-      const q = L.find((x) => x.n == b[0]);
-      if (q) {
-        q.mkb = 1;
-        q.age = b[4];
-      }
-    }
-  }
   return L;
 }
 // Page « Transferts » de la League : marché, staff, coachs, prêts.
@@ -9484,6 +9472,138 @@ function sponsor() {
     'Des sponsors vous attendent : consultez l’onglet Gestion pour signer jusqu’à 3 contrats.',
   );
 }
+/* ===== TIRAGE DES POULES DE LA GALACTIK CUP =====
+   7 jours avant le premier match de Cup : invitation si le joueur choisi pour le tirage est dans la sélection du joueur.
+   3 jours avant : mail de Callie Mystic avec le tirage des poules.
+   Le tirage est fait par le joueur le plus souvent homme du match de la Cup la saison précédente
+   (saison 1 : un joueur tiré au sort). Si l'invitation est refusée, c'est le suivant du classement qui tire. */
+const CDR_INV = 7,
+  CDR_MAIL = 3;
+// Monde de la Cup (la partie elle-même en mode Coupe, ou la moitié « Cup » en mode Ligue + Coupe).
+const cupW = () => (S.mode == 'C' ? S : S.mode == 'D' && S.alt ? (S.ctx == 'C' ? S : S.alt) : null);
+// Retrouve un joueur (et son équipe) dans les sélections de la Cup.
+function cdrFind(n, W) {
+  for (const t of W.teams) {
+    const p = (t.sq || []).find((x) => x && x.n == n);
+    if (p) return [p, t];
+  }
+  return null;
+}
+// Liste des joueurs pouvant faire le tirage, dans l'ordre.
+function cdrList(W) {
+  const R = (S.cupMM || []).filter((x) => x.s == S.season - 1 && cdrFind(x.n, W)).map((x) => ({ ...x, r: 1 }));
+  if (R.length) return R;
+  const all = [];
+  W.teams.forEach((t) => (t.sq || []).filter(Boolean).forEach((p) => all.push({ n: p.n, tm: t.name, r: 0 })));
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all.slice(0, 10);
+}
+// Appelé chaque jour : envoie l'invitation puis le mail du tirage au bon moment.
+function cdrTick() {
+  try {
+    const W = cupW();
+    if (!W || !W.teams || W.md > 0) return;
+    const d0 = dOf('C', 0),
+      my = W.teams[W.t];
+    let C = S.cdr && S.cdr.s == S.season ? S.cdr : null;
+    if (!C && S.day >= d0 - CDR_INV) {
+      C = S.cdr = { s: S.season, c: cdrList(W), i: 0, st: 'ok' };
+      const x = C.c[0],
+        f = x && cdrFind(x.n, W);
+      if (f && f[1] === my) {
+        C.st = 'inv';
+        mail(
+          'Galactik Cup : invitation au tirage des poules',
+          `Le comité de la Galactik Cup a le plaisir d’inviter ${x.n} à effectuer le tirage au sort des poules, ` +
+            (x.r ? `en tant que joueur le plus souvent élu homme du match de la dernière Galactik Cup (${x.mm} fois). ` : 'tiré au sort pour cette première édition. ') +
+            `La cérémonie aura lieu dans 4 jours, devant toute la galaxie.
+
+Acceptez-vous d’envoyer votre joueur ? S’il y va, son moral et l’image de votre sélection en profiteront. Sinon, c’est le joueur suivant qui sera invité.`,
+          [
+            [`Envoyer ${x.n} au tirage`, 'cdy'],
+            ['Décliner l’invitation', 'cdn'],
+          ],
+        );
+      }
+    }
+    if (C && C.st != 'done' && S.day >= d0 - CDR_MAIL) {
+      if (C.st == 'inv') C.i = 1; // invitation restée sans réponse : le suivant tire
+      C.st = 'done';
+      cdrMail(W);
+    }
+  } catch (e) {}
+}
+// Réponse à l'invitation.
+function actCdr(i, j) {
+  const m = S.mail[i],
+    a = m.a[j],
+    C = S.cdr,
+    W = cupW();
+  if (!C || !W) {
+    m.a = null;
+    return render();
+  }
+  const x = C.c[0],
+    f = cdrFind(x.n, W);
+  if (a[1] == 'cdy' && f) {
+    const p = f[0];
+    p.mo = Math.min(100, (p.mo ?? 60) + 15);
+    S.conf = Math.min(100, (S.conf || 0) + 3);
+    tx('Prime d’image (tirage de la Cup)', 500);
+    C.st = 'acc';
+    C.acc = 1;
+    m.b += `
+
+→ ${x.n} fera le tirage. Bonus : moral +15 pour ${x.n}, confiance du conseil +3, prime d’image de 500 crédits.`;
+  } else {
+    C.i = 1;
+    C.st = 'dec';
+    const nx = C.c[1];
+    m.b += `
+
+→ Invitation déclinée. ${nx ? nx.n + ' (' + nx.tm + ') fera le tirage à sa place.' : 'Un autre joueur fera le tirage.'}`;
+  }
+  m.a = null;
+  save();
+  render();
+}
+// Mail de Callie Mystic : le tirage des poules.
+function cdrMail(W) {
+  const C = S.cdr,
+    x = C.c[C.i] || C.c[0] || { n: 'un ancien champion', tm: '', r: 0 },
+    my = W.teams[W.t],
+    G = [0, 1, 2, 3].map((g) => W.teams.filter((t) => t.g === g)),
+    mg = my.g,
+    opp = (G[mg] || []).filter((t) => t !== my).map((t) => t.name),
+    k0 = (W.fx || []).findIndex((R) => R.some((r) => r.includes(W.t))),
+    pr = k0 >= 0 ? W.fx[k0].find((r) => r.includes(W.t)) : null,
+    first = pr ? W.teams[pr[0] == W.t ? pr[1] : pr[0]].name : '',
+    dd = k0 >= 0 ? dOf('C', k0) - S.day : 0;
+  const who =
+    C.i == 0 && C.acc
+      ? `C’est votre joueur, ${x.n}, qui a eu l’honneur de tirer les boules`
+      : `C’est ${x.n}${x.tm ? ' (' + x.tm + ')' : ''} qui a eu l’honneur de tirer les boules`;
+  const why = x.r ? `, en tant que joueur le plus souvent élu homme du match de la dernière Galactik Cup (${x.mm} fois)` : C.i > 0 ? ', à la place du joueur invité' : ', tiré au sort parmi tous les joueurs de la Cup pour cette première édition';
+  mail(
+    'Galactik Cup : le tirage des poules',
+    `Bonjour ! Ici Callie Mystic, en direct de la cérémonie du tirage au sort de la Galactik Cup. ${who}${why}.
+
+` +
+      G.map((a, g) => `Poule ${GN[g]} : ${a.map((t) => t.name).join(', ')}`).join('\n') +
+      `
+
+Votre sélection, ${my.name}, est dans la poule ${GN[mg]}` +
+      (opp.length ? `, avec ${opp.slice(0, -1).join(', ')}${opp.length > 1 ? ' et ' : ''}${opp[opp.length - 1]}` : '') +
+      `.` +
+      (first ? ` Votre premier match aura lieu dans ${dd} jours, contre ${first}.` : '') +
+      `
+
+Le programme : phase de poules (les deux premiers de chaque poule se qualifient), puis quarts de finale, demi-finales et finale. Bonne chance !`,
+  );
+}
 // Réponse du joueur à un mail avec choix.
 function act(i, j) {
   const m = S.mail[i],
@@ -9494,6 +9614,7 @@ function act(i, j) {
   if (a[1] == 'mo' || a[1] == 'no2') return actMo(i, j);
   if (a[1] == 'md') return actMd(i, j);
   if (a[1] == 'pz') return actPz(i, j);
+  if (a[1] == 'cdy' || a[1] == 'cdn') return actCdr(i, j);
   m.b += a[1] == 'sp' ? '\n\n→ Offre acceptée (+' + a[2] + '/match).' : '\n\n→ Offre refusée.';
   if (a[1] == 'sp') S.sp = a[2];
   m.a = null;
@@ -14168,7 +14289,7 @@ const HELP = {
   shp: 'Investir dans la boutique augmente les ventes de maillots, écharpes, mugs et posters à chaque match. Le revenu dépend aussi de la confiance du conseil.',
   fin2: 'Tous vos transferts et prêts de la saison : joueur, note, club concerné, montant et date. Les chiffres du bas résument vos dépenses et vos gains.',
   mt2: 'Les transferts entre clubs adverses de la saison : joueur, note, club de départ, club d’arrivée, montant et date.',
-  chm: 'Le classement de la Ligue. La pastille verte marque les places dans l’objectif fixé par le conseil, la dorée le leader. « Forme » donne les 5 derniers résultats (vert = victoire, gris = nul, rouge = défaite).',
+  chm: 'Le classement de la Ligue. La pastille verte marque les places dans l’objectif fixé par le conseil, la dorée le leader. « Forme » donne les 5 derniers résultats (vert = victoire, gris = nul, rouge = défaite). La flèche à côté de la place montre l’évolution depuis la journée précédente : ▲ +N vert, ▼ −N rouge, = orange.',
   chm2: 'Les meilleurs de votre club cette saison. La note moyenne porte sur les 5 derniers matchs.',
   rtn: 'Chaque titulaire reçoit une note sur 10 en fin de match, selon ses buts, passes décisives, arrêts, le résultat de l’équipe et les buts encaissés. L’étoile marque l’homme du match. La note moyenne des 5 derniers matchs apparaît sur la fiche du joueur.',
   mt3: 'Une offre comporte deux parties. Le club vendeur répond d’abord sous 2 à 4 jours sur le montant du transfert (accord, refus ou contre-offre). Ensuite le joueur étudie ses conditions : prime de signature, salaire par match, prime de titre (versée si vous gagnez le championnat) et durée du contrat. Il peut accepter, refuser ou demander un meilleur salaire ; chaque contre-proposition est à traiter sous 3 jours. Rien n’est payé avant l’accord final.',
@@ -14318,7 +14439,7 @@ const TU = [
   ],
   [
     'Les onglets',
-    'Club : effectif et prochain match. Galerie : récompenses de la carrière. Cartes : le jeu de cartes Galactik Cartes (s’il est activé). Tactique : formation et placement. Match : le match en direct. Cal. : calendrier et scores. ✉️ : messages du club. Transferts : offres, ventes, prêts et staff. Formation : centre de formation. Entraînement : programmes et réglages par joueur. Gestion : stade, sponsors et boutique. Finances : revenus et dépenses. Class. : classement et coupe. Adversaires : fiches et tactiques de tous les clubs. Aide : cette page.',
+    'Le menu latéral est rangé en trois groupes. Général : Aperçu (accueil et prochain match), Boîte de réception (messages du club), Tactique (formation et placement), Équipe (effectif), Adversaires (fiches et tactiques de tous les clubs), Calendrier (journées et scores). Club : Transferts (offres, ventes, prêts et staff), Manager (carrière et compétences), Championnat (classement et coupe), Gestion du club (stade, sponsors et boutique), Formation (centre de formation), Entraînement (programmes et réglages par joueur), Finances (revenus et dépenses), Statistiques, Galerie (récompenses). Match et aide : Match (le match en direct), Cartes (le jeu Galactik Cartes, s’il est activé), Paramètres, Aide (cette page).',
   ],
   [
     'Jouer une journée',
@@ -14338,15 +14459,15 @@ const TU = [
   ],
   [
     'Les Fluides',
-    'Chaque équipe possède un pouvoir spécial différent, décrit dans l’onglet Club. Il se déclenche au hasard pendant le match et est annoncé dans le commentaire (✨ pour une attaque, 🌀 pour une défense). Dans Tactique ou pendant le match, réglez l’usage du Fluide : Économisé, Modéré ou Abondance.',
+    'Chaque équipe possède un pouvoir spécial différent, décrit dans l’onglet Équipe, sauf les Pirates, qui n’ont aucun Fluide (ils compensent par le physique et l’endurance). Il se déclenche au hasard pendant le match et est annoncé dans le commentaire (✨ pour une attaque, 🌀 pour une défense). Dans Tactique ou pendant le match, réglez l’usage du Fluide : Économisé, Modéré ou Abondance.',
   ],
   [
     'Calendrier et classement',
-    'Chaque équipe joue toutes les autres deux fois (aller-retour). Victoire = 3 points, nul = 1, défaite = 0. Le calendrier montre les scores des autres équipes. À la fin de la saison, cliquez sur « Nouvelle saison » dans Class.. Le calendrier se présente en grille par mois : touchez un jour pour voir son détail.',
+    'Chaque équipe joue toutes les autres deux fois (aller-retour). Victoire = 3 points, nul = 1, défaite = 0. Le calendrier montre les scores des autres équipes. Dans le Championnat, une flèche indique l’évolution de chaque club depuis la journée précédente : ▲ +N en vert quand il gagne des places, ▼ −N en rouge quand il en perd, = en orange quand il ne bouge pas. À la fin de la saison, cliquez sur « Nouvelle saison » dans le Championnat. Le calendrier se présente en grille par mois : touchez un jour pour voir son détail.',
   ],
   [
     'Les messages (✉️)',
-    'Le club vous écrit : bienvenue, objectifs, offres de sponsors (à accepter ou refuser), blessures, réactions de la presse et du conseil, bilan de saison. Un chiffre indique les messages non lus. La messagerie fonctionne comme une boîte mail : dossiers (non lus, suivis ⭐, à traiter, corbeille), recherche, et des réponses au choix pour certains messages (conseil, service médical, presse, centre de formation). Un message qui attend une réponse porte le badge « Réponse requise » : tant que vous n’y avez pas répondu, le bouton « Continuer » devient « Répondre au mail » et la partie ne peut pas avancer. Après votre réponse, un encadré vert ou rouge résume ce qu’elle a changé.',
+    'Le club vous écrit : bienvenue, objectifs, offres de sponsors (à accepter ou refuser), blessures, réactions de la presse et du conseil, bilan de saison. Un chiffre indique les messages non lus. La messagerie fonctionne comme une boîte mail : dossiers (non lus, suivis ⭐, à traiter, corbeille), recherche, et des réponses au choix pour certains messages (conseil, service médical, presse, centre de formation). Un message qui attend une réponse porte le badge « Réponse requise » : tant que vous n’y avez pas répondu, le bouton « Continuer » devient « Répondre au mail » et la partie ne peut pas avancer. Après votre réponse, un encadré vert ou rouge résume ce qu’elle a changé. Les articles de presse viennent d’Arcadia News et sont signés par la journaliste Callie Mystic. Quand un mail parle d’un joueur (rumeur de prêt, par exemple), sa carte est affichée sous le message et son nom est surligné dans le texte.',
   ],
   [
     'Argent, transferts et staff',
@@ -14362,7 +14483,7 @@ const TU = [
   ],
   [
     'La coupe',
-    'Une fois le championnat terminé, lancez la Coupe de la Ligue depuis Class. : les 8 meilleures équipes s’affrontent en élimination directe.',
+    'Une fois le championnat terminé, lancez la Coupe de la Ligue depuis le Championnat : les 8 meilleures équipes s’affrontent en élimination directe. La Galactik Cup, elle, se joue comme une Coupe du monde : phase de poules, puis quarts, demies et finale. 7 jours avant son début, le joueur le plus souvent élu homme du match de la dernière Galactik Cup est invité à tirer les poules : s’il joue dans votre sélection, vous choisissez de l’envoyer (moral, confiance du conseil et prime d’image en bonus) ou de décliner. 3 jours avant, Callie Mystic vous envoie le tirage avec vos adversaires et la date de votre premier match.',
   ],
   [
     'Éditeur de mods et transfert d’équipes',
@@ -14523,7 +14644,7 @@ const TOUR = [
   [
     'ov',
     'Lancer un match',
-    'Le bouton « Continuer », en haut, fait avancer le calendrier ; quand un match est prévu, il devient « Jouer le match ». L’Aperçu précise si tu joues à domicile ou à l’extérieur. Avant le coup d’envoi, la journaliste Callie Mystic, de la Galactik Post, peut te réserver une conférence de presse : tes réponses influencent le moral et la confiance du conseil. Les autres matchs de la journée sont simulés en même temps.',
+    'Le bouton « Continuer », en haut, fait avancer le calendrier ; quand un match est prévu, il devient « Jouer le match ». L’Aperçu précise si tu joues à domicile ou à l’extérieur. Avant le coup d’envoi, la journaliste Callie Mystic, d’Arcadia News, peut te réserver une conférence de presse : tes réponses influencent le moral et la confiance du conseil. Les autres matchs de la journée sont simulés en même temps.',
   ],
   [
     'ov',
@@ -14553,7 +14674,7 @@ const TOUR = [
   [
     'table',
     'Championnat',
-    'Le classement détaillé, la forme récente de chaque équipe, les leaders de la ligue et le suivi de tes prochains adversaires. Clique sur un club pour ouvrir sa fiche : composition, tactique et cartes de ses joueurs.',
+    'Le classement détaillé, avec une flèche qui montre combien de places chaque club a gagnées ou perdues depuis la dernière journée, la forme récente de chaque équipe, les leaders de la ligue et le suivi de tes prochains adversaires. Clique sur un club pour ouvrir sa fiche : composition, tactique et cartes de ses joueurs.',
   ],
   [
     'fin',
@@ -14655,7 +14776,9 @@ function pc(p, cls, onclk, extra) {
           ? 'mk'
           : onclk.startsWith("nk('cv'")
             ? 'nv'
-            : onclk.startsWith('pr')
+            : onclk.startsWith('prn(')
+              ? 'ml'
+              : onclk.startsWith('pr')
               ? 'ed'
               : 'sq',
     ix = onclk.split(',').pop().replace(/\D/g, '');
@@ -14968,7 +15091,55 @@ const lfee = (p, m) => Math.round(price(p) * 0.012 * m),
 // Joueur d'un autre club proposé en prêt.
 function lop(i) {
   const o = (S.lo || [])[i];
-  return o ? S.teams[o[0]].sq.find((p) => p.n == o[1]) : null;
+  if (o && o[0] == -1) return S.mkl && S.mkl.p && S.mkl.st == 'shown' ? S.mkl.p : null; // contenu caché
+  return o && S.teams[o[0]] ? S.teams[o[0]].sq.find((p) => p.n == o[1]) : null;
+}
+// Renouvelle la liste des prêts à chaque journée (avec rumeur d'Arcadia News pour les joueurs les plus forts).
+function loRefresh() {
+  if (!S || S.ctx == 'C') return;
+  if (S.lod === S.md && S.lo) return;
+  S.lo = offers();
+  S.lod = S.md;
+  mkLoan();
+  try {
+    const seen = (S.lorm = S.lorm || []),
+      avg = me().sq.reduce((a, p) => a + p.o, 0) / Math.max(1, me().sq.length),
+      best = S.lo
+        .map((o, i) => [lop(i), o])
+        .filter(([p, o]) => p && !seen.includes(p.n) && (o[0] == -1 || p.o >= Math.max(78, avg + 6)))
+        .sort((a, b) => (b[1][0] == -1) - (a[1][0] == -1) || b[0].o - a[0].o)[0];
+    if (best) {
+      const [p, o] = best,
+        cl = o[0] == -1 ? 'club non communiqué' : S.teams[o[0]].name;
+      seen.push(p.n);
+      if (seen.length > 40) seen.shift();
+      mail('Actualité : rumeur de prêt', `Selon nos informations, ${p.n} (${cl}) serait disponible au prêt dans les prochains jours. Affaire à suivre.`);
+      if (S.mail[0] && /rumeur/.test(S.mail[0].t)) S.mail[0].pl = [{ ...p }];
+    }
+  } catch (e) {}
+}
+// Contenu caché.
+function mkLoan() {
+  const k = S.mkl;
+  if (!k || S.mk || mkU() || S.ctx == 'C' || (k.st != 'wait' && k.st != 'shown')) return;
+  const inW = S.season == k.ws && S.md >= k.wm && S.md <= k.wm + 6,
+    past = S.season > k.ws || (S.season == k.ws && S.md > k.wm + 6);
+  if (past) {
+    if (k.st == 'shown') k.st = 'missed';
+    else if (k.st == 'wait') {
+      k.ws = S.season + (S.md > 3 ? 1 : 0);
+      k.wm = 3;
+    }
+    return;
+  }
+  if (!inW) return;
+  if (!k.p) {
+    const b = MKD.ro.find((x) => x[0] == MKD.b);
+    if (!b) return;
+    k.p = { n: b[0], p: b[1], o: b[2], e: 100, f: b[3], g: 0, og: MKD.nat, age: b[4], pr: 1 };
+  }
+  k.st = 'shown';
+  S.lo.splice((Math.random() * (S.lo.length + 1)) | 0, 0, [-1, MKD.b]);
 }
 // Génère les offres de prêt des autres clubs.
 function offers() {
@@ -14985,10 +15156,7 @@ const durSel = () =>
   `<select onchange="V.ln.m=+this.value;render()">${[6, 12, 18].map((m) => `<option value="${m}" ${V.ln.m == m ? 'selected' : ''}>${m} matchs</option>`).join('')}</select><label><input type="checkbox" ${V.ln.o ? 'checked' : ''} onchange="V.ln.o=this.checked?1:0;render()"> Option d’achat</label>`;
 // Page des prêts.
 function loanView() {
-  if (S.lod !== S.md || !S.lo) {
-    S.lo = offers();
-    S.lod = S.md;
-  }
+  loRefresh();
   const m = V.ln.m,
     mine = [];
   S.teams.forEach((t) =>
@@ -15016,11 +15184,38 @@ function loanView() {
     '</div>'
   );
 }
+// Contenu caché : prêt jusqu'à la fin de la saison au plus tard, sans option d'achat.
+function mkBorrow(i) {
+  const k = S.mkl,
+    t = me(),
+    p = k && k.p;
+  if (!p) return;
+  const m = Math.max(1, Math.min(V.ln.m, S.fx.length - S.md)),
+    f = lfee(p, m);
+  if (S.cash < f || sqN(t) >= 15) {
+    mail('Prêt impossible', 'Crédits insuffisants ou effectif complet (15 joueurs maximum).');
+    return render();
+  }
+  tx('Prêts', -f);
+  tlog('lin', p, 'Club non communiqué', f);
+  ensure(p);
+  p.ln = { own: -1, left: m, opt: 0 };
+  t.sq.push(p);
+  join(p, t);
+  S.lo.splice(i, 1);
+  k.st = 'taken';
+  k.p = null;
+  S.mk = { b: S.season, pp: f, ln: 1 };
+  mail('Prêt accepté', p.n + ' est prêté pour ' + m + ' matchs. Frais : ' + f + ' crédits. Il retournera dans son club au plus tard à la fin de la saison.');
+  save();
+  render();
+}
 // Emprunte un joueur à un autre club.
 function borrow(i) {
   const o = S.lo[i],
     t = me();
   if (!o) return;
+  if (o[0] == -1) return mkBorrow(i);
   const ow = S.teams[o[0]],
     k = ow.sq.findIndex((p) => p.n == o[1]);
   if (k < 0) return;
@@ -15110,7 +15305,7 @@ function loanSec(p, i) {
   const o = p.ln;
   if (o)
     return (
-      `<h2>Prêt</h2><div>Prêté par <b>${S.teams[o.own].name}</b> · reste <b>${o.left}</b> matchs${o.opt ? ' · option d’achat : <b>' + o.opt + '</b>' : ''}</div>` +
+      `<h2>Prêt</h2><div>Prêté par <b>${S.teams[o.own] ? S.teams[o.own].name : 'club non communiqué'}</b> · reste <b>${o.left}</b> matchs${o.opt ? ' · option d’achat : <b>' + o.opt + '</b>' : ''}</div>` +
       (o.opt
         ? `<button ${S.cash < o.opt ? 'disabled' : ''} onclick="optBuy(${i})">Lever l’option (${o.opt})</button>`
         : '')
@@ -15126,6 +15321,14 @@ function loans() {
         if (--p.ln.left > 0) return;
         const was = p.ln,
           o = S.teams[was.own];
+        if (was.own == -1) {
+          // contenu caché : retour dans son club d'origine
+          rmP(t, p);
+          delete p.ln;
+          if (S.mk) S.mk.back = p;
+          if (ti == S.t) mail('Fin de prêt', p.n + ' retourne dans son club d’origine.');
+          return;
+        }
         rmP(t, p);
         if (was.opt && was.own == S.t && ti != S.t && Math.random() < 0.35) {
           tx('Prêts', was.opt);
@@ -16194,6 +16397,9 @@ function dayTick() {
   if (S.ctx != 'C') aiTransfers();
   if (S.ctx != 'C') genOffer();
   mdPre();
+  cdrTick();
+  rkTick();
+  loRefresh();
 }
 // TRANSFERTS ENTRE CLUBS : de temps en temps, un club adverse vend un remplaçant à un autre club.
 // Chaque transfert est enregistré dans S.lt (tableau « Transferts de la Ligue »).
@@ -17477,7 +17683,7 @@ MDL.push(
 const PZ = [
   {
     t: 'Presse : le buteur du match', ne: 'sc', k: 'S',
-    b: (f) => `La rédaction de la Galactik Post s’intéresse à ${f.S}, buteur du match. « Est-il le futur visage de votre attaque ? »`,
+    b: (f) => `La rédaction d’Arcadia News s’intéresse à ${f.S}, buteur du match. « Est-il le futur visage de votre attaque ? »`,
     o: [
       { l: 'Le présenter comme un cadre', r: 'Le joueur gagne en confiance, la presse reprend votre phrase.', pm: ['S', 6] },
       { l: 'Parler d’un joueur parmi d’autres', r: 'Vous préservez l’équilibre du vestiaire.', mo: 2 },
@@ -17486,7 +17692,7 @@ const PZ = [
   },
   {
     t: 'Presse : l’homme du match', ne: 'mvp', k: 'M',
-    b: (f) => `${f.M} a été élu homme du match. La Galactik Post vous demande de le décrire en un mot.`,
+    b: (f) => `${f.M} a été élu homme du match. Arcadia News vous demande de le décrire en un mot.`,
     o: [
       { l: '« Irremplaçable »', r: 'Le joueur est flatté, ses coéquipiers un peu moins.', pm: ['M', 6], mo: -1 },
       { l: '« Travailleur »', r: 'Un compliment sobre, bien reçu par tout le vestiaire.', pm: ['M', 3], mo: 1 },
@@ -17531,7 +17737,7 @@ const PZ = [
   },
   {
     t: 'Presse : le vestiaire',
-    b: () => 'La Galactik Post prépare un reportage sur l’ambiance du vestiaire et vous propose de vous exprimer.',
+    b: () => 'Arcadia News prépare un reportage sur l’ambiance du vestiaire et vous propose de vous exprimer.',
     o: [
       { l: 'Ouvrir les portes aux caméras', r: 'Une belle image du club : les joueurs sont contents de l’exposition.', mo: 2, cf: 2 },
       { l: 'Préférer la discrétion', r: 'Le vestiaire reste un sanctuaire.', mo: 1 },
@@ -17730,7 +17936,7 @@ function pcBox() {
   const body = c.res
     ? `<div class="pcyou"><small>Votre réponse</small>${c.res.l}</div><div class="pcr"><b>${KALI}</b> ${c.res.r}</div>${c.res.fx.length ? `<div class="pcfx">${c.res.fx.map((f) => `<span>${f}</span>`).join('')}</div>` : '<div class="mu" style="margin:6px 0">Aucun effet notable.</div>'}<div class="ctl" style="justify-content:flex-end;margin-top:10px"><button class="p" onclick="pcNext()">${last ? 'Retour au jeu' : 'Question suivante'}</button></div>`
     : `<div class="pco">${Q.o.map((z, j) => `<button class="${c.sel == j ? 'on' : ''}" onclick="pcSel(${j})">${pcTxt(z.l, c.o, c.f)}</button>`).join('')}</div><div class="ctl" style="justify-content:space-between;margin-top:10px"><button onclick="pcOk(1)" title="Ne pas répondre (−1 de confiance du conseil)">Décliner</button><button class="p" onclick="pcOk()" ${c.sel < 0 ? 'disabled' : ''}>Valider la réponse</button></div>`;
-  return `<div class="mo pcm"><div class="card pcc"><div class="pch"><b>🎙️ Conférence de presse</b><span class="mu">${c.kind == 'pre' ? 'Avant le match' : 'Après le match'} contre ${c.o}${c.sc ? ' (' + c.sc + ')' : ''} · Galactik Post · question ${c.i + 1}/${c.qs.length}</span></div><div class="pcb">${kaliAv()}<div class="pcq"><div class="pcn">${KALI}<small>Journaliste · Galactik Post</small></div><div class="pcbb">${qt}</div></div></div>${body}</div></div>`;
+  return `<div class="mo pcm"><div class="card pcc"><div class="pch"><b>🎙️ Conférence de presse</b><span class="mu">${c.kind == 'pre' ? 'Avant le match' : 'Après le match'} contre ${c.o}${c.sc ? ' (' + c.sc + ')' : ''} · Arcadia News · question ${c.i + 1}/${c.qs.length}</span></div><div class="pcb">${kaliAv()}<div class="pcq"><div class="pcn">${KALI}<small>Journaliste · Arcadia News</small></div><div class="pcbb">${qt}</div></div></div>${body}</div></div>`;
 }
 // Applique les effets d'une réponse d'interview (moral, confiance du conseil, pari) et renvoie leur liste lisible.
 function mdEff(z, f) {
@@ -17978,6 +18184,7 @@ const sbTog = () => {
   goLab = () => {
     const e = nextEv();
     if (typeof tcgBusy == 'function' && tcgBusy()) return '🃏 Duel en cours';
+    if (typeof arBusy == 'function' && arBusy()) return '🌑 Duel en cours';
     return V.m && !V.m.done
       ? '⚽ Match en cours'
       : !V.m && mailReq().length
@@ -18006,6 +18213,7 @@ function seasonOver() {
 function cont2() {
   if (seasonOver()) return;
   if (typeof tcgBusy == 'function' && tcgBusy()) return; // duel de cartes en cours : le finir d'abord
+  if (typeof arBusy == 'function' && arBusy()) return; // duel nocturne en cours : le finir d'abord
   if (V.m && V.m.done) return cont();
   if (V.m) {
     V.tab = 'match';
@@ -18030,6 +18238,7 @@ function shell(c) {
           ['mail', '✉️', 'Boîte de réception'],
           ['tac', '📋', 'Tactique'],
           ['club', '👥', 'Équipe'],
+          ['adv', '🔎', 'Adversaires'],
           ['cal', '📅', 'Calendrier'],
         ],
       ],
@@ -18043,22 +18252,18 @@ function shell(c) {
         ]
           .concat(S.mode == 'C' ? [] : [['form', '🎓', 'Formation']])
           .concat([['ent', '🏋️', 'Entraînement']])
-          .concat(tcgOn() ? [['tcg', '🃏', 'Cartes']] : [])
           .concat([
             ['fin', '💰', 'Finances'],
             ['stat', '📊', 'Statistiques'],
-          ['adv', '🔎', 'Adversaires'],
             ['gal', '🏅', 'Galerie'],
-          ])
-          .concat(NBU() ? [['nb', '🌑', NB]] : []),
+          ]),
       ],
       [
         'Match et aide',
-        [
-          ['match', '⚽', 'Match'],
+        [['match', '⚽', 'Match']].concat(NBU() ? [['nb', '🌑', NB]] : []).concat(tcgOn() ? [['tcg', '🃏', 'Cartes']] : []).concat([
           ['set', '⚙️', 'Paramètres'],
           ['tuto', '❓', 'Aide'],
-        ],
+        ]),
       ],
     ],
     it = G.map(
@@ -18074,7 +18279,7 @@ function shell(c) {
   const foc = V.tab == 'match' && V.m; // MODE MATCH : plein écran, sans menus, jusqu'au bouton « Continuer »
   if (foc)
     return `<div class="sh foc"><div class="mn"><div class="tb"><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt=""><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span style="flex:1"></span>${V.m.done ? '' : `<button onclick="stop();V.menu=1;render()" title="Met le match en pause et ouvre le menu principal.">🏠 Menu</button>`}</div><div class="ct">${c}</div></div></div>`;
-  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div></aside><div class="mn"><div class="tb"><button class="hb${tcgN() ? ' tcgdot' : ''}" onclick="V.sb=!V.sb;render()" ${tcgN() ? 'title="Boosters à ouvrir dans l’onglet Cartes"' : ''}>☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()" ${seasonOver() ? 'disabled title="La saison est terminée : lancez une nouvelle saison depuis le Championnat."' : typeof tcgBusy == 'function' && tcgBusy() ? 'disabled title="Terminez votre duel de cartes avant de continuer la carrière."' : ''}>${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
+  return `<div class="sh">${V.sb ? '<div class="sbk" onclick="V.sb=0;render()"></div>' : ''}<aside class="sb ${V.sb ? 'open' : ''}${ST.sbm ? ' mini' : ''}"><div class="sbt"><span class="sbe" onclick="sbeClk()">${me().em}</span><div class="sbn"><b style="${tfont(me().name)}">${me().name}</b>${tsTxt()}</div></div><button class="sbm" onclick="sbTog()" title="Basculer entre le menu classique et le tiroir (icônes seulement)" aria-label="Réduire ou agrandir le menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 4v16" stroke="currentColor" stroke-width="2"/></svg><span class="lb">Réduire le menu</span></button>${S.mode == 'D' ? `<div class="ctl sbsw" style="padding:6px 14px 0"><button class="p" onclick="swapCtx()" ${V.m ? 'disabled' : ''} title="Passer de ${S.ctx == 'C' ? 'la Cup à la Ligue' : 'la Ligue à la Cup'} (impossible pendant un match)."><span class="si1">⇄</span><span class="lb">${S.ctx == 'C' ? 'Aller à la Ligue' : 'Aller à la Cup'}</span></button></div>` : ''}${it}<div class="ctl sbft" style="padding:10px 14px"><button onclick="V.sv=1;V.sn='';render()" title="Sauvegardes"><span class="si1">💾</span><span class="lb"> Sauvegardes</span></button><button onclick="V.menu=1;render()" title="Menu principal"><span class="si1">🏠</span><span class="lb"> Menu</span></button></div></aside><div class="mn"><div class="tb"><button class="hb${tcgN() ? ' tcgdot' : ''}" onclick="V.sb=!V.sb;render()" ${tcgN() ? 'title="Boosters à ouvrir dans l’onglet Cartes"' : ''}>☰</button><img class="cl" src="${S.ctx == 'C' ? LGC : LGL}" alt="${compName(S.ctx || 'L')}" title="${compName(S.ctx || 'L')}"><b class="tbn" style="font-size:17px">${me().em} ${me().name}</b><span class="ch">💰 ${S.cash}${hp('chc')}</span><span class="ch">🏛️ ${S.conf}%${hp('chf')}</span><span class="ch">📅 ${fmtDay(S.day)}${hp('chd')}</span><button class="go" onclick="cont2()" ${seasonOver() ? 'disabled title="La saison est terminée : lancez une nouvelle saison depuis le Championnat."' : typeof tcgBusy == 'function' && tcgBusy() ? 'disabled title="Terminez votre duel de cartes avant de continuer la carrière."' : typeof arBusy == 'function' && arBusy() ? 'disabled title="Terminez votre duel en cours avant de continuer la carrière."' : ''}>${goLab()}</button>${hp('go')}</div><div class="ct">${c}</div></div><div class="tk"><span>${news()}</span></div><div class="lgc" aria-hidden="true"></div></div>`;
 }
 // Dessine une jauge en arc (confiance, moral, note globale…).
 function gg(v, o = {}) {
@@ -18501,6 +18706,7 @@ function join(p, t) {
 // Section « Origine et Fluide » de la fiche d'un joueur.
 function fluSec(p, t) {
   const og = p.og || (t ? t.name : '?');
+  if (p.n == MKD.b && !mkHas(MKD.n)) return '<h2>Origine et Fluide</h2><div>Origine et Fluide non communiqués.</div>'; // contenu caché
   return (
     `<h2>Origine et Fluide</h2><div>Planète : <b>${planet(og)}</b> · Fluide d’origine : <b>${fluK(p) == 'multi' ? 'Multifluide (compatible avec tous les Fluides)' : fluK(p) == 'none' ? (p.og == 'Tigres Rouges' ? 'Aucun (le Souffle d’Akillian ne se manifeste pas encore chez les Tigres Rouges ; compensé par leurs bottes cybernétiques)' : 'Aucun (les Pirates n’ont pas de Fluide ; compensés par plus de physique, d’endurance et de détermination)') : (FX[og] || {}).n || '—'}</b></div>${p.nz ? `<div style="color:#d33"><b>${p.nz.x ? '🛌 Rejet sévère' : '🤢 Nausées'}</b> : rejet du Fluide de l’équipe${p.nz.x && p.inj ? ', incapable de jouer encore ' + p.inj + ' match' + (p.inj > 1 ? 's' : '') : ''}, adaptation dans ~${Math.ceil(p.nz.l)} match${Math.ceil(p.nz.l) > 1 ? 's' : ''}</div>` : '<div class="mu">État : 🙂 à l’aise avec le Fluide de son équipe</div>'}<details class="dd" style="margin-top:4px"><summary class="mu">▸ Compatibilité avec chaque Fluide (votre équipe : ${t ? compat(p, t.name) + ' %' : '—'})</summary><div class="fc">` +
     T.map((x) => {
@@ -18566,7 +18772,7 @@ function pfTrend(p) {
 function profBox() {
   const f = V.pf;
   if (!f) return '';
-  const p = f.k == 'sq' ? me().sq[f.i] : f.k == 'mk' ? S.mkt[f.i] : f.k == 'nv' ? NAV[f.i] : f.k == 'lo' ? lop(f.i) : f.k == 'nm' ? plIndex().get(f.i) : f.k == 'lt' ? (() => { const [a, n] = String(f.i).slice(1).split('|'); return ((S.teams[+a] || {}).sq || []).find((x) => x.n == n); })() : V.ep[f.i];
+  const p = f.k == 'sq' ? me().sq[f.i] : f.k == 'mk' ? S.mkt[f.i] : f.k == 'nv' ? NAV[f.i] : f.k == 'lo' ? lop(f.i) : f.k == 'nm' ? plIndex().get(f.i) : f.k == 'ml' ? (V.mpp || [])[f.i] : f.k == 'lt' ? (() => { const [a, n] = String(f.i).slice(1).split('|'); return ((S.teams[+a] || {}).sq || []).find((x) => x.n == n); })() : V.ep[f.i];
   if (!p) return '';
   ensure(p);
   const at = attrs(p),
@@ -18577,6 +18783,7 @@ function profBox() {
     pcol = { GK: '#e0a526', DEF: '#3b8fe8', MID: '#2fb36b', ATT: '#e5484d' }[p.p] || '#888',
     PN = { GK: 'Gardien', DEF: 'Défenseur', MID: 'Milieu', ATT: 'Attaquant' }[p.p],
     og = p.og || T0.name,
+    mkh = p.n == MKD.b && !mkHas(MKD.n), // contenu caché : origine non communiquée
     cp = compat(p, T0.name),
     rp = p.rp || [],
     avg = rp.length ? (rp.reduce((a, b) => a + b, 0) / rp.length).toFixed(1) : null;
@@ -18608,7 +18815,7 @@ function profBox() {
   const info = [];
   if (p.c) info.push(`${p.n} est un personnage de la série.`);
   if (p.pr) info.push('Carte prismatique : un joueur d’exception.');
-  info.push(`Originaire de ${planet(og)} · Fluide d’origine : ${(FX[og] || {}).n || '—'}.`);
+  info.push(mkh ? 'Origine et Fluide non communiqués.' : `Originaire de ${planet(og)} · Fluide d’origine : ${(FX[og] || {}).n || '—'}.`);
   info.push(
     cp >= 60
       ? `Il s’accorde bien au Fluide de ${T0.name} (${cp} %).`
@@ -18644,7 +18851,7 @@ function profBox() {
     rn = (r, ph) => (r && ROLES[r.g] ? ROLES[r.g][ph][r.i][0] : 'Standard'),
     row = (a, b) => `<div class="pfi"><span>${a}</span><b>${b}</b></div>`;
   const left =
-    `<div class="pk"><div class="pfi0">${row('Âge', p.age + ' ans')}${row('Pied', FTN[foot(p)])}${row('Planète', planet(og))}${row('Fluide d’origine', (FX[og] || {}).n || '—')}${row('Matchs joués', p.mp || 0)}${row('Valeur', price(p))}</div></div>` +
+    `<div class="pk"><div class="pfi0">${row('Âge', p.age + ' ans')}${row('Pied', FTN[foot(p)])}${row('Planète', mkh ? 'Non communiquée' : planet(og))}${row('Fluide d’origine', mkh ? 'Non communiqué' : (FX[og] || {}).n || '—')}${row('Matchs joués', p.mp || 0)}${row('Valeur', price(p))}</div></div>` +
     `<div class="pk"><div class="pkt"><b>Position et zones de jeu</b>${hp('heat')}</div>${pfPitch(p)}<div class="pfi0" style="margin-top:8px">${row('Poste', PN)}${row('Rôle avec ballon', rn(r1, 'ep'))}${row('Rôle sans ballon', rn(r2, 'sp'))}</div></div>` +
     (sq ? `<div class="pk"><div class="pkt"><b>Actions</b></div>${loanSec(p, f.i)}${rvSec(p, f.i)}</div>` : '');
   // Colonne de droite.
@@ -18655,7 +18862,7 @@ function profBox() {
       `<div class="pk"><div class="pkt"><b>Statistiques de la saison</b>${hp('pfs')}</div>${ic('team', 'Apparitions', p.mp || 0)}${ic('ball', 'Buts', p.g || 0)}${ic('swap', 'Passes décisives', st.a || 0)}${ic('target', 'Tirs cadrés', (st.ot || 0) + ' / ' + (st.sh || 0))}${p.p == 'GK' ? ic('glove', 'Arrêts', st.sv || 0) : ''}${p.p == 'GK' || p.p == 'DEF' ? ic('shield', 'Sans but encaissé', st.cs || 0) : ''}${ic('medal', 'Homme du match', st.mm || 0)}<div class="pfs"><i class="pfcc cy" style="background:#ff8a3b"></i><span>Exclusions</span><b>${yc + rc + (st.ex || 0)}</b></div></div>` +
       (tt ? `<div class="pk">${tt.replace(/^<h2>Titres<\/h2>/, '<div class="pkt"><b>Titres</b></div>')}</div>` : '');
   const shirt = `<div class="pk pfsh">${jersey(kitOf(T0), pnum(T0, p), p.n, 110)}<div class="pfl">Numéro de maillot : <b>${pnum(T0, p)}</b></div></div>`;
-  return `<div class="pfm" onclick="V.pf=null;render()"><div class="pfc${p.pr ? ' prs' : p.c ? ' chr' : ''}" style="--pc:${pcol}" onclick="event.stopPropagation()"><div class="pfh">${photo(p)}<div style="flex:1 1 auto;min-width:0"><div class="pfn">${p.c ? '★ ' : ''}<span class="${p.pr ? 'prn' : p.c ? 'chn' : ''}">${p.n}</span>${fp(p)}${p.nz ? ' ' + pfIc('sick') : ''}</div><div class="pfch"><span class="chp" style="background:var(--pc);color:#071016">${PN}</span>${tm ? `<span class="chp">${tm.name}</span>` : ''}<span class="chp" title="${FTN[foot(p)]}">${footIc(p)}${FTN[foot(p)]}</span><span class="chp">${p.age} ans</span><span class="chp">${planet(og)}</span>${p.inj ? `<span class="chp" style="background:#d33;color:#fff">${pfIc('warn')}indisponible ${p.inj} j.</span>` : ''}${p.ln ? `<span class="chp">${pfIc('loan')}prêt</span>` : ''}</div></div>${tm ? `<div class="pft" title="${tm.name}">${tm.em}</div>` : ''}<div class="pfv"><span>${pfIc('coin')}${price(p)}</span><span class="mu">${sal(p)} / match · ${p.ct} an${p.ct > 1 ? 's' : ''}</span></div><div class="pfrg"><div><span>Général</span><div class="pfo">${p.o}</div>${xpB(p, 'h')}</div><div><span>Potentiel</span><div class="pfo pt">${p.pt && p.age <= 26 ? p.pt : '—'}</div></div></div><button class="pfx" onclick="V.pf=null;V.pn='';render()" aria-label="Fermer">✕</button></div><div class="pfsc"><div class="pf2"><div class="pc1">${left}${mgC}</div><div class="pc2">${tiles}${attrCard}<div class="pf2r"><div class="pc2s">${infoCard}${trend}</div><div class="pc2s">${contrat}${fl}</div></div></div><div class="pc3">${stats}${shirt}${mgR}</div></div>${V.pn ? `<div style="margin:8px 18px 0"><b>${V.pn}</b></div>` : ''}</div></div></div>`;
+  return `<div class="pfm" onclick="V.pf=null;render()"><div class="pfc${p.pr ? ' prs' : p.c ? ' chr' : ''}" style="--pc:${pcol}" onclick="event.stopPropagation()"><div class="pfh">${photo(p)}<div style="flex:1 1 auto;min-width:0"><div class="pfn">${p.c ? '★ ' : ''}<span class="${p.pr ? 'prn' : p.c ? 'chn' : ''}">${p.n}</span>${fp(p)}${p.nz ? ' ' + pfIc('sick') : ''}</div><div class="pfch"><span class="chp" style="background:var(--pc);color:#071016">${PN}</span>${tm ? `<span class="chp">${tm.name}</span>` : mkh ? '<span class="chp">Club non communiqué</span>' : ''}<span class="chp" title="${FTN[foot(p)]}">${footIc(p)}${FTN[foot(p)]}</span><span class="chp">${p.age} ans</span><span class="chp">${mkh ? 'Planète non communiquée' : planet(og)}</span>${p.inj ? `<span class="chp" style="background:#d33;color:#fff">${pfIc('warn')}indisponible ${p.inj} j.</span>` : ''}${p.ln ? `<span class="chp">${pfIc('loan')}prêt</span>` : ''}</div></div>${tm ? `<div class="pft" title="${tm.name}">${tm.em}</div>` : ''}<div class="pfv"><span>${pfIc('coin')}${price(p)}</span><span class="mu">${sal(p)} / match · ${p.ct} an${p.ct > 1 ? 's' : ''}</span></div><div class="pfrg"><div><span>Général</span><div class="pfo">${p.o}</div>${xpB(p, 'h')}</div><div><span>Potentiel</span><div class="pfo pt">${p.pt && p.age <= 26 ? p.pt : '—'}</div></div></div><button class="pfx" onclick="V.pf=null;V.pn='';render()" aria-label="Fermer">✕</button></div><div class="pfsc"><div class="pf2"><div class="pc1">${left}${mgC}</div><div class="pc2">${tiles}${attrCard}<div class="pf2r"><div class="pc2s">${infoCard}${trend}</div><div class="pc2s">${contrat}${fl}</div></div></div><div class="pc3">${stats}${shirt}${mgR}</div></div>${V.pn ? `<div style="margin:8px 18px 0"><b>${V.pn}</b></div>` : ''}</div></div></div>`;
 }
 // Ajuste les barres de progression.
 function barFix() {
@@ -18760,8 +18967,10 @@ const slug = (s) =>
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, ''),
-  F = (m) => m.f || (m.f = snd(m.t, m.b));
+  F = (m) => (m.f && !/Galactik Post/.test(m.f.n) ? m.f : (m.f = snd(m.t, m.b)));
 // Associe un courrier à un expéditeur (nom, adresse, couleur) selon son contenu.
+// Photo de Callie Mystic (Arcadia News) pour l'avatar des mails de presse.
+const CALAV = '<img class="avp" src="img/callie_mystic.jpg" alt="Callie Mystic">';
 function snd(t, b) {
   const c = slug(me().name),
     L = 'galactikleague.gal',
@@ -18771,9 +18980,11 @@ function snd(t, b) {
   if (t[0] == '\u200b') return P('Monsieur Nether', 'monsieur.nether@ombre-mail.gal', '❓', '#555');
   if (/Offre suspecte/.test(t)) return P('Expéditeur inconnu', 'anonyme@ombre-mail.gal', '❓', '#555');
   if (/Scandale|Amende/.test(t)) return P('Commission de discipline', 'discipline@' + L, '⚖️', '#7a4dd8');
+  if (/^Galactik Cup : le tirage/.test(t)) return P('Callie Mystic · Arcadia News', 'calliemystic@arcadianews.gal', CALAV, '#e8743b');
+  if (/^Galactik Cup : invitation/.test(t)) return P('Comité de la Galactik Cup', 'comite@galactikcup.gal', '🏆', '#e0a526');
   if (/^Interview/.test(t))
-    return P('Galactik Post · Interview', 'interview@galactikpost.gal', '🎙️', '#e8743b');
-  if (/^Presse|^Actualité/.test(t)) return P('Galactik Post', 'redaction@galactikpost.gal', '📰', '#e8743b');
+    return P('Callie Mystic · Arcadia News', 'calliemystic@arcadianews.gal', CALAV, '#e8743b');
+  if (/^Presse|^Actualité/.test(t)) return P('Callie Mystic · Arcadia News', 'calliemystic@arcadianews.gal', CALAV, '#e8743b');
   if (/^Événement/.test(t)) return P('Ligue Galactique', 'ligue@' + L, '📣', '#3b8fe8');
   if (/Blessure|Remplacements automatiques|Rejet sévère|Nausées|Fluide accepté|Fluide maîtrisé/.test(t))
     return P('Service médical', 'medical@' + c + '.gal', '🩺', '#2fb36b');
@@ -18812,8 +19023,7 @@ function mSig(s) {
   if (/^Conseil d/.test(n)) r = ['Odile Marchand', 'Présidente du conseil d’administration · ' + c];
   else if (/^Service médical/.test(n)) r = ['Dr Haru Okamoto', 'Médecin du club · ' + c];
   else if (/^Centre de formation/.test(n)) r = ['Tiana Roux', 'Directrice de l’académie · ' + c];
-  else if (/Interview/.test(n)) r = ['Callie Mystic', 'Journaliste · Galactik Post'];
-  else if (/^Galactik Post/.test(n)) r = ['La rédaction', 'Galactik Post'];
+  else if (/Arcadia News/.test(n)) r = ['Callie Mystic', 'Arcadia News'];
   else if (/Sécurité/.test(n)) r = ['Direction de la sécurité', 'Ligue Galactique'];
   else if (/^Commission de discipline/.test(n))
     r = ['Le président de la commission', 'Ligue Galactique · Discipline'];
@@ -18845,10 +19055,17 @@ function plIndex() {
   return m;
 }
 // Dans le texte d'un mail : met en gras les noms de joueurs et retourne ces joueurs (pour afficher leurs cartes).
-function mailNames(b) {
+// pl : joueurs dont parle précisément le mail (rumeurs…) : leur nom est surligné et leur carte affichée en premier.
+function mailNames(b, pl) {
   const ix = plIndex(),
-    names = [...ix.keys()].sort((a, c) => c.length - a.length),
-    found = [];
+    hl = new Set();
+  (pl || []).forEach((q) => {
+    if (!q || !q.n) return;
+    hl.add(q.n);
+    if (!ix.has(q.n)) ix.set(q.n, q);
+  });
+  const names = [...ix.keys()].sort((a, c) => c.length - a.length),
+    found = (pl || []).map((q) => q && ix.get(q.n)).filter(Boolean);
   if (!names.length || !b) return { h: b, L: found };
   const re = new RegExp(
     '(?<![\\p{L}])(' + names.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![\\p{L}])',
@@ -18862,12 +19079,13 @@ function mailNames(b) {
         : x.replace(re, (n) => {
             const p = ix.get(n);
             if (p && !found.includes(p)) found.push(p);
-            return `<b>${n}</b>`;
+            return hl.has(n) ? `<mark class="mhl">${n}</mark>` : `<b>${n}</b>`;
           }),
     )
     .join('');
   const L = found.slice(0, 6);
   V.mpl = L.map((p) => p.n);
+  V.mpp = L;
   return { h, L };
 }
 // Ouvre la fiche d'un joueur cité dans un mail (V.mpl = noms affichés).
@@ -18876,6 +19094,7 @@ function prn(k) {
     t = me(),
     i = t.sq.findIndex((p) => p.n == n);
   if (i >= 0) return prof('sq', i);
+  if (!plIndex().has(n)) return; // joueur cité hors de la base (fiche non consultable)
   V.pf = { k: 'nm', i: n };
   V.pn = '';
   render();
@@ -18938,7 +19157,7 @@ function mailView() {
   const m = S.mail[V.mo],
     s = m && F(m),
     MB = m ? mailSplit(m.b) : { main: '', res: [] },
-    MN = m ? mailNames(MB.main) : { h: '', L: [] },
+    MN = m ? mailNames(MB.main, m.pl) : { h: '', L: [] },
     pane = m
       ? `<div class="ctl" style="justify-content:space-between"><button class="mb" onclick="V.mo=-1;render()">← Retour</button><span><button onclick="mUnread(${V.mo})">✉️ Non lu</button> <button onclick="mStar(${V.mo})">${m.s ? '⭐' : '☆'}</button> ${m.x ? `<button onclick="mRestore(${V.mo})">↩ Restaurer</button> <button onclick="mPurge(${V.mo})">❌ Supprimer définitivement</button>` : `<button onclick="mDel(${V.mo})">🗑</button>`}</span></div><h3 style="margin:10px 0 6px;font-size:18px">${m.t}</h3><div class="ctl" style="gap:10px;flex-wrap:nowrap"><span class="av" style="background:${s.k}">${s.i}</span><div><b>${s.n}</b> <span class="mu">&lt;${s.e}&gt;</span><div class="mu">à ${me().name} · ${fmtDay(m.dt || 0)} · J${m.d}</div></div></div><div style="white-space:pre-line;margin:12px 0 8px;line-height:1.5">${MN.h}</div>${MB.res.map(mailRes).join('')}${MN.L.length ? `<div class="mpl"><div class="mu" style="margin-bottom:4px">${MN.L.length > 1 ? 'Joueurs cités' : 'Joueur cité'}</div><div class="pg${V.vw == 'l' ? ' l' : ''}">${MN.L.map((p, k) => pc(p, '', 'prn(' + k + ')').replace(/prof\('(?:ed|sq|mk|lo)',[^)]*\)/g, 'prn(' + k + ')')).join('')}</div></div>` : ''}${mSig(s)}${m.a ? `<div class="ctl">${m.a.map((a, j) => `<button class="p" onclick="act(${V.mo},${j})">${a[0]}</button>`).join('')}</div>` : ''}${
           reps(m).length
@@ -19089,7 +19308,7 @@ function reps(m) {
         ['Laisser faire', 'm0'],
       ];
   }
-  if (n == 'Galactik Post' && /^Presse/.test(t)) {
+  if (/^(Galactik Post|Callie Mystic · Arcadia News)$/.test(n) && /^Presse/.test(t)) {
     if (PZ.some((x) => x.t == t)) return [];
     if (/^Presse : démonstration/.test(t))
       return [
@@ -19228,6 +19447,10 @@ const TEAM_IMG = {
   Rykers: ['img/equipes/rykers.jpg', '38% 22%'],
   'Tigres Rouges': ['img/equipes/tigres-rouges.jpg', '58% 14%'],
   Elektras: ['img/equipes/elektras.jpg', '49% 10%'],
+  Xenons: ['img/equipes/xenons.jpg', '57% 14%'],
+  'Team Paradisia': ['img/equipes/team-paradisia.jpg', '52% 14%'],
+  Cyclopes: ['img/equipes/cyclopes.jpg', '51% 18%'],
+  Technodroids: ['img/equipes/technodroids.jpg', '50% 12%'],
 };
 const TEAM_IMG_DEF = ['img/equipes/defaut.jpg', '58% 18%'];
 function teamPh(n) {
@@ -19238,7 +19461,7 @@ function menuView() {
   const au = slotMeta('gmauto'),
     has = !!S;
   const nw = V.nw
-    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Galactik Cartes, le jeu de cartes à collectionner</b> : un nouvel onglet « Cartes » dans la carrière (activé par défaut à la création, et d’office dans les anciennes sauvegardes). Choisissez votre deck de départ parmi les 14 clubs, puis affrontez l’IA en duel : 3 cartes face cachée par tour, attaque contre défense, le premier à 3 buts gagne.</li><li><b>Boosters après chaque match</b> : chaque match de votre club rapporte un booster Victoire, Match nul ou Défaite, avec ses propres illustrations et une ouverture animée (halo, particules, cartes à retourner).</li><li><b>Raretés et collection</b> : Classique, Chromatique, Prismatique et Mythique, avec étoiles, bordures animées et filigranes ; filigrane « œuvre originale » pour les personnages de la série. Revente des doublons contre des crédits, zoom des cartes au survol, plusieurs decks.</li><li><b>Cartes illustrées</b> : nouveaux modèles de cartes pour les gardiens, défenseurs, milieux, attaquants et tactiques, aux couleurs de chaque poste, avec le logo de l’équipe ; cartes de but sur le plateau.</li><li><b>Succès, Collector et Légendes</b> : 22 succès qui rapportent des crédits, des titres et des cartes Légende (+5 en attaque et en défense) ; Collector par équipe ; Légendes d’événement débloquées par des exploits en match (par exemple, une victoire avec les Snow Kids débloque Aarch).</li><li><b>Galerie refaite</b> : toutes les récompenses en tuiles (dorées quand elles sont obtenues), compteurs cliquables qui mènent à chaque section, et nouveaux titres Galactik Cartes à afficher sous le nom du club.</li><li><b>Image de club au menu</b> : la tuile « Continuer la carrière » affiche une illustration du club joué (Snow Kids, Shadows, Lightnings, Wambas, Pirates, Rykers, Tigres Rouges, Elektras ; une image commune pour les autres).</li><li><b>Règles avec Clamp</b> : les règles du duel sont expliquées par Clamp étape par étape ; le tutoriel et la visite guidée présentent aussi la Galerie et le jeu de cartes.</li><li><b>Confort</b> : le bouton « Continuer » est grisé pendant un duel de cartes ; événements spéciaux (pluie de météores, enlèvement…) plus rares ; code allégé.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
+    ? `<div class="mo" onclick="V.nw=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">✨ Les nouveautés</b><div class="mu" style="margin:2px 0 8px">Version ${GV}</div><ul style="line-height:1.45;margin:0 0 12px;padding-left:18px"><li><b>Tirage au sort de la Galactik Cup</b> : 7 jours avant la Cup, le joueur le plus souvent élu homme du match de la dernière édition est invité à tirer les poules. S’il joue dans votre sélection, un mail vous demande de l’envoyer (moral +15, confiance du conseil +3, prime d’image de 500 crédits) ou de décliner (le suivant tire à sa place). 3 jours avant, Callie Mystic vous envoie le tirage : les poules, vos adversaires et la date de votre premier match.</li><li><b>Arcadia News</b> : la presse du jeu s’appelle désormais Arcadia News. Les mails de Callie Mystic portent sa signature et sa photo.</li><li><b>Rumeurs de prêt</b> : quand un joueur fort est proposé en prêt, Arcadia News publie une rumeur ; le mail affiche la carte du joueur et son nom en surbrillance.</li><li><b>Évolution au classement</b> : dans le Championnat, chaque club affiche son évolution depuis la journée précédente (▲ +N en vert, ▼ −N en rouge, = en orange).</li><li><b>Pirates sans Fluide</b> : correction, les Pirates n’ont plus aucun pouvoir en match (ils ne peuvent plus voler le Fluide adverse) ; ils compensent toujours par le physique et l’endurance.</li><li><b>Menu latéral</b> : nouvel ordre des onglets (Adversaires juste après Équipe, Cartes juste après Match), sélection en rectangle sur toute la ligne, contour de la capsule du haut affiné.</li><li><b>Images de club au menu</b> : 12 clubs ont maintenant leur illustration sur la tuile « Continuer la carrière », dont les Xenons, la Team Paradisia, les Cyclopes et les Technodroids.</li><li><b>Roadmap</b> : elle ne montre plus que les étapes à venir.</li></ul><button class="p" onclick="V.nw=0;render()">Fermer</button></div></div>`
     : '';
   const ins = V.ins
     ? `<div class="mo" onclick="V.ins=0;render()"><div class="card" style="max-width:460px;width:100%" onclick="event.stopPropagation()"><b style="font-size:18px">📥 Télécharger et installer sur PC</b><p class="mu">Deux façons de jouer hors du navigateur par défaut :</p><p><b>1. Télécharger</b> : un dossier à extraire, avec un lanceur Windows.</p><div class="ctl"><button class="p" onclick="pcDl()">⬇ Télécharger pour PC (.zip)</button>${PWA ? '<button onclick="pwaI();V.ins=0;render()">Installer maintenant</button>' : ''}</div><p class="mu">${V.pcm || 'Le dossier contient le jeu et un lanceur Windows qui l’ouvre dans sa propre fenêtre (Edge ou Chrome), sans toucher à votre navigateur par défaut.'}</p><p><b>2. Installer comme application</b> :</p><ol style="line-height:1.5;padding-left:20px"><li>Ouvrez le jeu dans <b>Chrome</b> ou <b>Edge</b>, directement depuis son lien.</li><li>Cliquez sur l’icône d’installation à droite de la barre d’adresse, ou sur le menu ⋮ puis <b>« Installer Galactik Manager »</b>.</li></ol><p class="mu">Si l’option n’apparaît pas, le navigateur ne la propose pas pour cette page. Firefox et Safari ne permettent pas cette installation sur PC.</p><button onclick="V.ins=0;V.pcm='';render()">Fermer</button></div></div>`
@@ -19247,7 +19470,7 @@ function menuView() {
     ? `<div class="mo" onclick="V.mob=0;render()"><div class="card" style="max-width:460px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">📲 Installer sur mobile ou tablette</b><p class="mu">Le jeu peut s’installer comme une vraie application : icône sur l’écran d’accueil, plein écran, et il fonctionne même sans connexion une fois chargé.</p>${PWA ? '<div class="ctl"><button class="p" onclick="pwaI();V.mob=0;render()">Installer maintenant</button></div>' : ''}<p><b>🤖 Android (Chrome)</b></p><ol style="line-height:1.5;padding-left:20px;margin-top:0"><li>Ouvrez le jeu depuis son lien dans <b>Chrome</b>.</li><li>Touchez le menu <b>⋮</b>, puis <b>« Installer l’application »</b> (ou « Ajouter à l’écran d’accueil »).</li></ol><p><b>🍎 iPhone / iPad (Safari)</b></p><ol style="line-height:1.5;padding-left:20px;margin-top:0"><li>Ouvrez le jeu dans <b>Safari</b> (pas dans un autre navigateur).</li><li>Touchez <b>Partager</b> (le carré avec une flèche), puis <b>« Sur l’écran d’accueil »</b>.</li></ol><p class="mu">Le jeu doit être ouvert depuis son lien, pas depuis un fichier téléchargé. Conseil : sur tablette, passez en mode paysage.</p><button class="p" onclick="V.mob=0;render()">Fermer</button></div></div>`
     : '';
   const rmb = V.rm
-    ? `<div class="mo" onclick="V.rm=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">🚀 Roadmap</b><div class="mu" style="margin:2px 0 10px">Ce qui est déjà disponible et ce qui arrive, dans l’ordre prévu.</div><div class="rmt">${RMP.map(([t, d, st], i) => `<div class="rmn"><i class="rmd"></i><div><b>${t}</b> <span class="chp rms">${st}</span><div class="mu">${d}</div></div></div>`).join('')}</div><button class="p" onclick="V.rm=0;render()">Fermer</button></div></div>`
+    ? `<div class="mo" onclick="V.rm=0;render()"><div class="card" style="max-width:480px;width:100%;max-height:90vh;overflow:auto" onclick="event.stopPropagation()"><b style="font-size:18px">🚀 Roadmap</b><div class="mu" style="margin:2px 0 10px">Ce qui arrive prochainement, dans l’ordre prévu.</div><div class="rmt">${RMP.map(([t, d, st], i) => `<div class="rmn"><i class="rmd"></i><div><b>${t}</b> <span class="chp rms">${st}</span><div class="mu">${d}</div></div></div>`).join('')}</div><button class="p" onclick="V.rm=0;render()">Fermer</button></div></div>`
     : '';
   const bye = V.bye
     ? `<div class="mo" style="background:#000d"><div class="card" style="max-width:420px;text-align:center"><div style="font-size:44px">👋</div><b style="font-size:20px">À bientôt, manager !</b><p class="mu">${has ? 'Votre partie a été sauvegardée automatiquement. ' : ''}Vous pouvez fermer cet onglet.</p><button class="p" onclick="V.bye=0;render()">Retour au menu</button></div></div>`
